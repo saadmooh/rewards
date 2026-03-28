@@ -76,7 +76,10 @@ const useUserStore = create((set, get) => ({
             full_name: fullName,
             language_code: telegramData?.language_code || null,
             is_premium: telegramData?.is_premium || false,
+            is_bot: telegramData?.is_bot || false,
             photo_url: telegramData?.photo_url || null,
+            allows_write_to_pm: telegramData?.allows_write_to_pm || false,
+            added_to_attachment_menu: telegramData?.added_to_attachment_menu || false,
             phone_number: telegramData?.phone_number || null,
             raw_telegram_data: telegramData || null,
           })
@@ -178,6 +181,12 @@ const useUserStore = create((set, get) => ({
           first_name: telegramData?.first_name,
           last_name: telegramData?.last_name,
           full_name: `${telegramData?.first_name || 'User'} ${telegramData?.last_name || ''}`.trim(),
+          language_code: telegramData?.language_code || null,
+          is_premium: telegramData?.is_premium || false,
+          is_bot: telegramData?.is_bot || false,
+          photo_url: telegramData?.photo_url || null,
+          allows_write_to_pm: telegramData?.allows_write_to_pm || false,
+          added_to_attachment_menu: telegramData?.added_to_attachment_menu || false,
         },
         membership: {
           id: 'demo-mem-' + Date.now(),

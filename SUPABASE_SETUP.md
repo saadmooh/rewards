@@ -98,12 +98,26 @@ INSERT INTO products (name, description, price, category, is_active) VALUES
 
 ## Row Level Security
 
+Run this **once** to enable RLS and allow anonymous access:
+
 ```sql
+-- Enable RLS on all tables
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE redemptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if re-running
+DROP POLICY IF EXISTS "Allow anon select users" ON users;
+DROP POLICY IF EXISTS "Allow anon select transactions" ON transactions;
+DROP POLICY IF EXISTS "Allow anon select offers" ON offers;
+DROP POLICY IF EXISTS "Allow anon select products" ON products;
+DROP POLICY IF EXISTS "Allow anon select redemptions" ON redemptions;
+DROP POLICY IF EXISTS "Allow anon insert users" ON users;
+DROP POLICY IF EXISTS "Allow anon insert transactions" ON transactions;
+DROP POLICY IF EXISTS "Allow anon insert redemptions" ON redemptions;
+DROP POLICY IF EXISTS "Allow anon update users" ON users;
 
 -- Allow anonymous reads (required for the app to load data)
 CREATE POLICY "Allow anon select users" ON users FOR SELECT USING (true);

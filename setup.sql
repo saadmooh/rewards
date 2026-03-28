@@ -222,9 +222,13 @@ CREATE POLICY "Allow anon select products" ON products FOR SELECT USING (true);
 CREATE POLICY "Allow anon select redemptions" ON redemptions FOR SELECT USING (true);
 
 CREATE POLICY "Allow anon insert users" ON users FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow anon insert stores" ON stores FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow anon insert offers" ON offers FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow anon insert products" ON products FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow anon insert memberships" ON user_store_memberships FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow anon insert transactions" ON transactions FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow anon insert redemptions" ON redemptions FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Allow anon update users" ON users FOR UPDATE USING (true);
+CREATE POLICY "Allow anon update stores" ON stores FOR UPDATE USING (true);
 CREATE POLICY "Allow anon update memberships" ON user_store_memberships FOR UPDATE USING (true);

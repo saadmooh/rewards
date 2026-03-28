@@ -32,7 +32,7 @@ const useUserStore = create((set, get) => ({
         .from('users')
         .select('*')
         .eq('telegram_id', telegramId)
-        .single()
+        .maybeSingle()
 
       if (error && error.code !== 'PGRST116') {
         throw error

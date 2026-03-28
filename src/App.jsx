@@ -1,121 +1,83 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import useUserStore from './store/userStore'
+import { initTelegram, getTelegramUser } from './lib/telegram'
 
-function App() {
-  const [count, setCount] = useState(0)
+import SplashScreen from './components/SplashScreen'
+import BottomNav from './components/BottomNav'
+import Onboarding from './pages/Onboarding'
+import Home from './pages/Home'
+import Scanner from './pages/Scanner'
+import Offers from './pages/Offers'
+import OfferDetail from './pages/OfferDetail'
+import Products from './pages/Products'
+import ProductDetail from './pages/ProductDetail'
+import History from './pages/History'
+import Profile from './pages/Profile'
+
+function AppContent() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { user, loading, initUser, init } = useUserStore()
+
+  useEffect(() => {
+    // Initialize database
+    init()
+    
+    // Initialize Telegram
+    initTelegram()
+    const tgUser = getTelegramUser()
+    
+    if (tgUser) {
+      initUser(tgUser.id, tgUser)
+    } else {
+      // Demo user for testing
+      initUser(123456789, {
+        username: 'demo_user',
+        first_name: 'Ahmed',
+        last_name: 'Benali',
+      })
+    }
+  }, [init, initUser])
+
+  if (loading) return <SplashScreen />
+
+  const showBottomNav = user?.full_name && location.pathname !== '/scan'
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+    <div className="app-container min-h-screen bg-surface">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="pb-24"
         >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+          <Routes>
+            <Route path="/" element={!user?.full_name ? <Onboarding /> : <Home />} />
+            <Route path="/scan" element={<Scanner />} />
+            <Route path="/offers" element={<Offers />} />
+            <Route path="/offers/:id" element={<OfferDetail />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/profile" element={<Profile />} />
+          </Routes>
+        </motion.div>
+      </AnimatePresence>
+      
+      {showBottomNav && <BottomNav activePath={location.pathname} onNavigate={navigate} />}
+    </div>
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  )
+}

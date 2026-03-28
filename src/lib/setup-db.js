@@ -106,6 +106,13 @@ export async function initializeDatabase() {
 }
 
 export async function seedDemoData() {
+  // Check if data already exists
+  const { count: offerCount } = await supabase.from('offers').select('*', { count: 'exact', head: true })
+  if (offerCount > 0) {
+    console.log('Demo data already seeded!')
+    return
+  }
+
   // Seed demo offers
   const offers = [
     { title: '30% Off Shirts', description: 'Valid on all shirts and blouses', type: 'discount', discount_percent: 30, points_cost: 500, min_tier: 'bronze', occasion_type: 'always', is_active: true },
@@ -115,8 +122,8 @@ export async function seedDemoData() {
     { title: 'Flash Sale 50%', description: '50% off clearance items', type: 'flash', discount_percent: 50, points_cost: 0, min_tier: 'bronze', occasion_type: 'flash', is_active: true },
   ]
 
-  const { error: offersError } = await supabase.from('offers').upsert(offers, { onConflict: 'title' })
-  if (offersError) console.log('Offers seed:', offersError.message)
+  const { error: offersError } = await supabase.from('offers').insert(offers)
+  if (offersError && !offersError.message.includes('duplicate')) console.log('Offers seed:', offersError.message)
 
   // Seed demo products
   const products = [
@@ -128,8 +135,8 @@ export async function seedDemoData() {
     { name: 'Blender Set Professional', description: 'High-performance kitchen blender', price: 129, category: 'appliances', is_active: true },
   ]
 
-  const { error: productsError } = await supabase.from('products').upsert(products, { onConflict: 'name' })
-  if (productsError) console.log('Products seed:', productsError.message)
+  const { error: productsError } = await supabase.from('products').insert(products)
+  if (productsError && !productsError.message.includes('duplicate')) console.log('Products seed:', productsError.message)
 
   console.log('Demo data seeded!')
 }

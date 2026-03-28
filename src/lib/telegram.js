@@ -6,29 +6,35 @@ try {
   console.log('Running outside Telegram')
 }
 
-export const WebApp = telegram
+export function getWebApp() {
+  return window.Telegram?.WebApp || null
+}
+export const WebApp = null // Deprecated, use getWebApp()
 
 export const isDev = !telegram
 
 export function initTelegram() {
-  if (telegram) {
-    telegram.ready()
-    telegram.expand()
-    if (telegram.setHeaderColor) {
-      telegram.setHeaderColor('#0a0a0a')
+  const tg = window.Telegram?.WebApp
+  if (tg) {
+    tg.ready()
+    tg.expand()
+    if (tg.setHeaderColor) {
+      tg.setHeaderColor('#0a0a0a')
     }
-    if (telegram.setBackgroundColor) {
-      telegram.setBackgroundColor('#0a0a0a')
+    if (tg.setBackgroundColor) {
+      tg.setBackgroundColor('#0a0a0a')
     }
   }
 }
 
 export function getTelegramUser() {
-  return telegram?.initDataUnsafe?.user || null
+  const tg = window.Telegram?.WebApp
+  return tg?.initDataUnsafe?.user || null
 }
 
 export function getStartParam() {
-  return telegram?.initDataUnsafe?.start_param || null
+  const tg = window.Telegram?.WebApp
+  return tg?.initDataUnsafe?.start_param || null
 }
 
 export function ready(callback) {

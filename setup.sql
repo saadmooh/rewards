@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS users (
   language_code TEXT,
   is_premium BOOLEAN DEFAULT FALSE,
   photo_url TEXT,
+  phone_number TEXT,
   raw_telegram_data JSONB
 );
 

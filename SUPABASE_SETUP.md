@@ -96,7 +96,7 @@ INSERT INTO products (name, description, price, category, is_active) VALUES
 ('Blender Set Professional', 'High-performance kitchen blender', 129, 'appliances', true);
 ```
 
--- Optional: Enable Row Level Security
+## Row Level Security
 
 ```sql
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;

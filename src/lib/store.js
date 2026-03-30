@@ -10,7 +10,7 @@ export const getStoreSlug = () => {
   if (parts.length > 2) return parts[0]
 
   // Default fallback
-  return 'demo-store'
+  return 'store-alpha'
 }
 
 export const getStartParam = () => {

@@ -196,10 +196,10 @@ const useUserStore = create((set, get) => ({
           total_visits: 0,
         },
         store: {
-          id: '22222222-2222-2222-2222-222222222222',
-          slug: 'demo-store',
-          name: 'Demo Store',
-          primary_color: '#10b981',
+          id: '11111111-1111-1111-1111-111111111111',
+          slug: 'store-alpha',
+          name: 'متجر التجميع',
+          primary_color: '#D4AF37',
           tier_config: {
             bronze: { min: 0, max: 999 },
             silver: { min: 1000, max: 4999 },

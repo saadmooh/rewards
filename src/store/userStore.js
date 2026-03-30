@@ -196,8 +196,8 @@ const useUserStore = create((set, get) => ({
           total_visits: 0,
         },
         store: {
-          id: 'demo-store-id',
-          slug: getStoreSlug(),
+          id: '22222222-2222-2222-2222-222222222222',
+          slug: 'demo-store',
           name: 'Demo Store',
           primary_color: '#10b981',
           tier_config: {

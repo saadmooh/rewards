@@ -11,19 +11,6 @@ export const useProducts = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        if (store?.id?.startsWith('demo-')) {
-          setProducts([
-            { id: '1', name: 'Premium Coffee Maker', description: 'State-of-the-art', price: 299, category: 'appliances' },
-            { id: '2', name: 'Wireless Earbuds Pro', description: 'High-quality audio', price: 199, category: 'electronics' },
-            { id: '3', name: 'Yoga Mat Premium', description: 'Eco-friendly', price: 49, category: 'fitness' },
-            { id: '4', name: 'Smart Watch Series X', description: 'Advanced tracking', price: 349, category: 'electronics' },
-            { id: '5', name: 'Designer Handbag', description: 'Elegant leather', price: 179, category: 'fashion' },
-            { id: '6', name: 'Blender Set Professional', description: 'High-performance', price: 129, category: 'appliances' },
-          ])
-          setLoading(false)
-          return
-        }
-
         let query = supabase
           .from('products')
           .select('*')
@@ -40,14 +27,7 @@ export const useProducts = () => {
         setProducts(data || [])
       } catch (err) {
         console.error('useProducts error:', err)
-        setProducts([
-          { id: '1', name: 'Premium Coffee Maker', description: 'State-of-the-art', price: 299, category: 'appliances' },
-          { id: '2', name: 'Wireless Earbuds Pro', description: 'High-quality audio', price: 199, category: 'electronics' },
-          { id: '3', name: 'Yoga Mat Premium', description: 'Eco-friendly', price: 49, category: 'fitness' },
-          { id: '4', name: 'Smart Watch Series X', description: 'Advanced tracking', price: 349, category: 'electronics' },
-          { id: '5', name: 'Designer Handbag', description: 'Elegant leather', price: 179, category: 'fashion' },
-          { id: '6', name: 'Blender Set Professional', description: 'High-performance', price: 129, category: 'appliances' },
-        ])
+        setProducts([])
       } finally {
         setLoading(false)
       }

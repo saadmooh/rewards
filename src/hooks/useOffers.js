@@ -11,16 +11,6 @@ export const useOffers = () => {
   useEffect(() => {
     const fetchOffers = async () => {
       try {
-        if (store?.id?.startsWith('demo-')) {
-          setOffers([
-            { id: '1', title: '30% Off Shirts', description: 'Valid on all shirts', points_cost: 500, type: 'discount', valid_until: '2024-12-31' },
-            { id: '2', title: 'Double Points', description: 'Earn 2x points', points_cost: 0, type: 'double_points', valid_until: '2024-12-31' },
-            { id: '3', title: 'Free Gift', description: 'With purchase over 5000', points_cost: 300, type: 'gift', valid_until: '2024-12-31' },
-          ])
-          setLoading(false)
-          return
-        }
-
         let query = supabase
           .from('offers')
           .select('*')
@@ -37,11 +27,7 @@ export const useOffers = () => {
         setOffers(data || [])
       } catch (err) {
         console.error('useOffers error:', err)
-        setOffers([
-          { id: '1', title: '30% Off Shirts', description: 'Valid on all shirts', points_cost: 500, type: 'discount', valid_until: '2024-12-31' },
-          { id: '2', title: 'Double Points', description: 'Earn 2x points', points_cost: 0, type: 'double_points', valid_until: '2024-12-31' },
-          { id: '3', title: 'Free Gift', description: 'With purchase over 5000', points_cost: 300, type: 'gift', valid_until: '2024-12-31' },
-        ])
+        setOffers([])
       } finally {
         setLoading(false)
       }

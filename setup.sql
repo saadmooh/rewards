@@ -443,3 +443,27 @@ ON CONFLICT (slug) DO NOTHING;
 INSERT INTO public.user_store_memberships (user_id, store_id, role, points, tier, joined_at)
 VALUES ('b7849646-d726-4ece-ab01-f6180d99f8bd', '11111111-1111-1111-1111-111111111111', 'owner', 0, 'bronze', now())
 ON CONFLICT (user_id, store_id) DO NOTHING;
+
+-- Demo store for testing without Telegram
+INSERT INTO public.stores (id, slug, name, owner_email, category, points_rate, welcome_points, primary_color, plan, is_active, created_at, updated_at)
+VALUES ('22222222-2222-2222-2222-222222222222', 'demo-store', 'متجر التجريب', 'demo@example.com', 'تجارة عامة', 1, 100, '#10b981', 'basic', true, now(), now())
+ON CONFLICT (slug) DO NOTHING;
+
+-- Products for demo store
+INSERT INTO public.products (store_id, name, description, price, category, is_active, created_at)
+VALUES 
+  ('22222222-2222-2222-2222-222222222222', 'Premium Coffee Maker', 'State-of-the-art coffee machine', 299, 'appliances', true, now()),
+  ('22222222-2222-2222-2222-222222222222', 'Wireless Earbuds Pro', 'High-quality audio', 199, 'electronics', true, now()),
+  ('22222222-2222-2222-2222-222222222222', 'Yoga Mat Premium', 'Eco-friendly yoga mat', 49, 'fitness', true, now()),
+  ('22222222-2222-2222-2222-222222222222', 'Smart Watch Series X', 'Advanced tracking features', 349, 'electronics', true, now()),
+  ('22222222-2222-2222-2222-222222222222', 'Designer Handbag', 'Elegant leather handbag', 179, 'fashion', true, now()),
+  ('22222222-2222-2222-2222-222222222222', 'Blender Set Professional', 'High-performance blender', 129, 'appliances', true, now())
+ON CONFLICT DO NOTHING;
+
+-- Offers for demo store
+INSERT INTO public.offers (store_id, title, description, type, discount_percent, points_cost, min_tier, valid_until, is_active, created_at)
+VALUES 
+  ('22222222-2222-2222-2222-222222222222', '30% Off Shirts', 'Valid on all shirts', 'discount', 30, 500, 'bronze', '2026-12-31', true, now()),
+  ('22222222-2222-2222-2222-222222222222', 'Double Points', 'Earn 2x points on all purchases', 'double_points', null, 0, 'bronze', '2026-12-31', true, now()),
+  ('22222222-2222-2222-2222-222222222222', 'Free Gift', 'Free gift with purchase over 5000 points', 'gift', null, 300, 'silver', '2026-12-31', true, now())
+ON CONFLICT DO NOTHING;

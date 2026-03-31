@@ -13,6 +13,7 @@ DROP TABLE IF EXISTS promotions CASCADE;
 DROP TABLE IF EXISTS offers CASCADE;
 DROP TABLE IF EXISTS products CASCADE;
 DROP TABLE IF EXISTS user_store_memberships CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS stores CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
@@ -36,8 +37,28 @@ create table public.users (
   is_premium boolean default false,
   last_active timestamptz,
   permissions text[] default array['read']::text[],
-  ad_points_balance integer default 0
+  ad_points_balance integer default 0,
+  allows_write_to_pm boolean default false,
+  added_to_attachment_menu boolean default false,
+  phone_number text,
+  raw_telegram_data jsonb
 );
+
+-- Roles table for granular permissions
+create table public.roles (
+  id uuid default uuid_generate_v4() primary key,
+  name text not null,
+  slug text unique not null,
+  permissions jsonb default '{}'::jsonb,
+  created_at timestamptz default now()
+);
+
+-- Insert default roles
+INSERT INTO public.roles (name, slug, permissions) VALUES 
+  ('Owner', 'owner', '{"can_access_dashboard": true, "manage_products": true, "manage_offers": true, "manage_customers": true, "view_stats": true, "issue_points": true, "redeem_points": true}'),
+  ('Manager', 'manager', '{"can_access_dashboard": true, "manage_products": true, "manage_offers": true, "manage_customers": true, "view_stats": true, "issue_points": true, "redeem_points": true}'),
+  ('Cashier', 'cashier', '{"can_access_dashboard": true, "manage_products": false, "manage_offers": false, "manage_customers": true, "view_stats": false, "issue_points": true, "redeem_points": true}'),
+  ('Viewer', 'viewer', '{"can_access_dashboard": false, "manage_products": false, "manage_offers": false, "manage_customers": false, "view_stats": false, "issue_points": false, "redeem_points": false}');
 
 -- Stores table
 create table public.stores (
@@ -107,8 +128,7 @@ create table public.user_store_memberships (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.users(id) on delete cascade not null,
   store_id uuid references public.stores(id) on delete cascade not null,
-  role text default 'viewer' check (role in ('owner', 'manager', 'cashier', 'viewer')),
-  permissions jsonb default '{"view": true}'::jsonb,
+  role_id uuid references public.roles(id) on delete set null,
   points integer default 0,
   tier text default 'bronze' check (tier in ('bronze', 'silver', 'gold', 'platinum')),
   total_spent integer default 0,
@@ -116,6 +136,7 @@ create table public.user_store_memberships (
   last_purchase timestamptz,
   joined_at timestamptz default now(),
   updated_at timestamptz default now(),
+  referral_code text unique default substr(md5(random()::text), 1, 8),
   unique(user_id, store_id)
 );
 
@@ -124,9 +145,12 @@ create table public.transactions (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.users(id) on delete cascade not null,
   store_id uuid references public.stores(id) on delete cascade not null,
-  type text not null check (type in ('earn', 'redeem', 'adjust', 'expire')),
+  membership_id uuid references public.user_store_memberships(id) on delete cascade,
+  type text not null check (type in ('earn', 'redeem', 'adjust', 'expire', 'welcome')),
   points integer not null,
   amount integer,
+  note text,
+  offer_id uuid references public.offers(id) on delete set null,
   description text,
   created_at timestamptz default now()
 );
@@ -171,6 +195,7 @@ ON CONFLICT DO NOTHING;
 
 -- Row Level Security Policies
 alter table public.users enable row level security;
+alter table public.roles enable row level security;
 alter table public.stores enable row level security;
 alter table public.products enable row level security;
 alter table public.offers enable row level security;
@@ -179,94 +204,48 @@ alter table public.transactions enable row level security;
 alter table public.redemptions enable row level security;
 alter table public.promotions enable row level security;
 
--- Users policies - allow anonymous access for telegram-based auth
-create policy "Allow anon select users" on public.users for select using (true);
-create policy "Allow anon insert users" on public.users for insert with check (true);
-create policy "Allow anon update users" on public.users for update using (true);
+-- Roles policies
+create policy "Allow public select roles" on public.roles for select using (true);
 
--- Stores policies - allow anonymous select, insert
-create policy "Allow anon select stores" on public.stores for select using (true);
-create policy "Allow anon insert stores" on public.stores for insert with check (true);
-create policy "Allow anon update stores" on public.stores for update using (true);
-create policy "Super admins can manage all stores" on public.stores
-  for all using ( exists (
-    select 1 from public.users 
-    where users.id = auth.uid() and users.is_super_admin = true
-  ));
-create policy "Store owners can manage their stores" on public.stores
-  for all using (
-    exists (
-      select 1 from public.users 
-      where users.username = stores.owner_username
-      and users.telegram_id = (auth.jwt()->>'telegram_id')::bigint
-    )
-  );
+-- Users policies
+create policy "Allow public select users" on public.users for select using (true);
+create policy "Allow public insert users" on public.users for insert with check (true);
+create policy "Allow public update users" on public.users for update using (true);
 
--- Products policies - allow anonymous access
-create policy "Allow anon select products" on public.products for select using (true);
-create policy "Allow anon insert products" on public.products for insert with check (true);
-create policy "Allow anon update products" on public.products for update using (true);
-create policy "Super admins can manage products" on public.products
-  for all using ( exists (
-    select 1 from public.users 
-    where users.id = auth.uid() and users.is_super_admin = true
-  ));
-create policy "Store owners can manage products" on public.products
-  for all using (exists (
-    select 1 from public.stores where id = products.store_id and owner_email = auth.jwt()->>'email'
-  ));
+-- Stores policies
+create policy "Allow public select stores" on public.stores for select using (true);
+create policy "Allow public insert stores" on public.stores for insert with check (true);
+create policy "Allow public update stores" on public.stores for update using (true);
 
--- Offers policies - allow anonymous access
-create policy "Allow anon select offers" on public.offers for select using (true);
-create policy "Allow anon insert offers" on public.offers for insert with check (true);
-create policy "Allow anon update offers" on public.offers for update using (true);
-create policy "Super admins can manage offers" on public.offers
-  for all using ( exists (
-    select 1 from public.users 
-    where users.id = auth.uid() and users.is_super_admin = true
-  ));
-create policy "Store owners can manage offers" on public.offers
-  for all using (exists (
-    select 1 from public.stores where id = offers.store_id and owner_email = auth.jwt()->>'email'
-  ));
+-- Products policies
+create policy "Allow public select products" on public.products for select using (true);
 
--- User store memberships policies - allow anonymous access
-create policy "Allow anon select memberships" on public.user_store_memberships for select using (true);
-create policy "Allow anon insert memberships" on public.user_store_memberships for insert with check (true);
-create policy "Allow anon update memberships" on public.user_store_memberships for update using (true);
+-- Offers policies
+create policy "Allow public select offers" on public.offers for select using (true);
 
--- Transactions policies - allow anonymous access
-create policy "Allow anon select transactions" on public.transactions for select using (true);
-create policy "Allow anon insert transactions" on public.transactions for insert with check (true);
+-- User store memberships policies
+create policy "Allow public select memberships" on public.user_store_memberships for select using (true);
+create policy "Allow public insert memberships" on public.user_store_memberships for insert with check (true);
+create policy "Allow public update memberships" on public.user_store_memberships for update using (true);
+
+-- Transactions policies
+create policy "Allow public select transactions" on public.transactions for select using (true);
+create policy "Allow public insert transactions" on public.transactions for insert with check (true);
 
 -- Redemptions policies
-create policy "Allow anon select redemptions" on public.redemptions for select using (true);
-create policy "Allow anon insert redemptions" on public.redemptions for insert with check (true);
+create policy "Allow public select redemptions" on public.redemptions for select using (true);
+create policy "Allow public insert redemptions" on public.redemptions for insert with check (true);
 
--- Promotions policies - allow anonymous access
-create policy "Allow anon select promotions" on public.promotions for select using (true);
-create policy "Allow anon insert promotions" on public.promotions for insert with check (true);
-create policy "Allow anon update promotions" on public.promotions for update using (true);
-create policy "Super admins can manage promotions" on public.promotions
-  for all using ( exists (
-    select 1 from public.users 
-    where users.id = auth.uid() and users.is_super_admin = true
-  ));
-create policy "Store owners can manage promotions" on public.promotions
-  for all using (exists (
-    select 1 from public.stores where id = promotions.store_id and owner_email = auth.jwt()->>'email'
-  ));
+-- Promotions policies
+create policy "Allow public select promotions" on public.promotions for select using (true);
 
 -- Indexes
 create index idx_products_store_id on public.products(store_id);
 create index idx_offers_store_id on public.offers(store_id);
 create index idx_user_store_memberships_store_id on public.user_store_memberships(store_id);
-create index idx_user_store_memberships_tier on public.user_store_memberships(tier);
+create index idx_user_store_memberships_user_id on public.user_store_memberships(user_id);
 create index idx_transactions_store_id on public.transactions(store_id);
 create index idx_transactions_user_id on public.transactions(user_id);
-create index idx_redemptions_store_id on public.redemptions(store_id);
-create index idx_redemptions_offer_id on public.redemptions(offer_id);
-create index idx_promotions_store_id on public.promotions(store_id);
 
 -- Function to update tier based on points
 create or replace function public.update_user_tier()
@@ -279,8 +258,7 @@ begin
   begin
     select s.tier_config, new.points into tier_config, current_points
     from public.stores s
-    join public.user_store_memberships new on new.store_id = s.id
-    where new.id = tg.id;
+    where s.id = new.store_id;
 
     if current_points >= (tier_config->>'platinum')::integer then
       new_tier := 'platinum';
@@ -293,7 +271,7 @@ begin
     end if;
 
     if new_tier <> old.tier then
-      update public.user_store_memberships set tier = new_tier, updated_at = now() where id = tg.id;
+      update public.user_store_memberships set tier = new_tier, updated_at = now() where id = new.id;
     end if;
 
     return new;
@@ -306,230 +284,3 @@ DROP TRIGGER IF EXISTS update_tier_trigger ON public.user_store_memberships;
 CREATE TRIGGER update_tier_trigger
   AFTER UPDATE OF points ON public.user_store_memberships
   FOR EACH ROW EXECUTE FUNCTION public.update_user_tier();
-
--- Function to handle new user creation
-DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
-
-CREATE FUNCTION public.handle_new_user()
-RETURNS trigger AS $$
-BEGIN
-  INSERT INTO public.users (id, full_name, username, telegram_id)
-  VALUES (
-    new.id,
-    new.raw_user_meta_data->>'full_name',
-    new.raw_user_meta_data->>'username',
-    (new.raw_user_meta_data->>'telegram_id')::bigint
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Trigger for user creation
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
--- ============================================================
--- MIGRATION: Add missing columns to existing databases
--- Run these commands if you already have tables created
--- ============================================================
-
-DO $$
-BEGIN
-  -- Add language_code to users if not exists
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'users' AND column_name = 'language_code'
-  ) THEN
-    ALTER TABLE public.users ADD COLUMN language_code text;
-  END IF;
-
-  -- Add avatar_url to users if not exists
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'users' AND column_name = 'avatar_url'
-  ) THEN
-    ALTER TABLE public.users ADD COLUMN avatar_url text;
-  END IF;
-
-  -- Add photo_url to users if not exists
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'users' AND column_name = 'photo_url'
-  ) THEN
-    ALTER TABLE public.users ADD COLUMN photo_url text;
-  END IF;
-
-  -- Add last_active to users if not exists
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'users' AND column_name = 'last_active'
-  ) THEN
-    ALTER TABLE public.users ADD COLUMN last_active timestamptz;
-  END IF;
-
-  -- Add is_bot to users if not exists
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'users' AND column_name = 'is_bot'
-  ) THEN
-    ALTER TABLE public.users ADD COLUMN is_bot boolean DEFAULT false;
-  END IF;
-
-  -- Add is_premium to users if not exists
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'users' AND column_name = 'is_premium'
-  ) THEN
-    ALTER TABLE public.users ADD COLUMN is_premium boolean DEFAULT false;
-  END IF;
-
-  -- Add role to user_store_memberships if not exists
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'user_store_memberships' AND column_name = 'role'
-  ) THEN
-    ALTER TABLE public.user_store_memberships ADD COLUMN role text DEFAULT 'viewer';
-  END IF;
-
-  -- Add permissions to user_store_memberships if not exists
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'user_store_memberships' AND column_name = 'permissions'
-  ) THEN
-    ALTER TABLE public.user_store_memberships ADD COLUMN permissions jsonb DEFAULT '{"view": true}';
-  END IF;
-
-  -- Add missing columns to stores if not exist
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'stores' AND column_name = 'category'
-  ) THEN
-    ALTER TABLE public.stores ADD COLUMN category text;
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'stores' AND column_name = 'points_rate'
-  ) THEN
-    ALTER TABLE public.stores ADD COLUMN points_rate integer DEFAULT 1;
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'stores' AND column_name = 'welcome_points'
-  ) THEN
-    ALTER TABLE public.stores ADD COLUMN welcome_points integer DEFAULT 100;
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'stores' AND column_name = 'primary_color'
-  ) THEN
-    ALTER TABLE public.stores ADD COLUMN primary_color text DEFAULT '#D4AF37';
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'stores' AND column_name = 'plan'
-  ) THEN
-    ALTER TABLE public.stores ADD COLUMN plan text DEFAULT 'basic';
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'stores' AND column_name = 'bot_token'
-  ) THEN
-    ALTER TABLE public.stores ADD COLUMN bot_token text;
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'stores' AND column_name = 'bot_username'
-  ) THEN
-    ALTER TABLE public.stores ADD COLUMN bot_username text;
-  END IF;
-
-  -- Add owner_username to stores
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'stores' AND column_name = 'owner_username'
-  ) THEN
-    ALTER TABLE public.stores ADD COLUMN owner_username text NOT NULL DEFAULT '';
-    ALTER TABLE public.stores ALTER COLUMN owner_username DROP DEFAULT;
-  END IF;
-
-  -- Add missing columns to transactions
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'transactions' AND column_name = 'membership_id'
-  ) THEN
-    ALTER TABLE public.transactions ADD COLUMN membership_id uuid REFERENCES public.user_store_memberships(id);
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'transactions' AND column_name = 'note'
-  ) THEN
-    ALTER TABLE public.transactions ADD COLUMN note text;
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'transactions' AND column_name = 'offer_id'
-  ) THEN
-    ALTER TABLE public.transactions ADD COLUMN offer_id uuid REFERENCES public.offers(id);
-  END IF;
-
-  -- Add missing columns to users
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'users' AND column_name = 'allows_write_to_pm'
-  ) THEN
-    ALTER TABLE public.users ADD COLUMN allows_write_to_pm boolean DEFAULT false;
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'users' AND column_name = 'added_to_attachment_menu'
-  ) THEN
-    ALTER TABLE public.users ADD COLUMN added_to_attachment_menu boolean DEFAULT false;
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'users' AND column_name = 'phone_number'
-  ) THEN
-    ALTER TABLE public.users ADD COLUMN phone_number text;
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'users' AND column_name = 'raw_telegram_data'
-  ) THEN
-    ALTER TABLE public.users ADD COLUMN raw_telegram_data jsonb;
-  END IF;
-
-  -- Fix transactions.type constraint to include 'welcome'
-  BEGIN
-    ALTER TABLE public.transactions DROP CONSTRAINT IF EXISTS transactions_type_check;
-    ALTER TABLE public.transactions ADD CONSTRAINT transactions_type_check CHECK (type IN ('earn', 'redeem', 'adjust', 'expire', 'welcome'));
-  EXCEPTION WHEN undefined_object THEN
-    NULL;
-  END;
-
-  -- Fix RLS policy for stores to use owner_username
-  DROP POLICY IF EXISTS "Store owners can manage their stores" ON public.stores;
-  CREATE POLICY "Store owners can manage their stores" ON public.stores
-    FOR ALL USING (
-      EXISTS (
-        SELECT 1 FROM public.users 
-        WHERE users.username = stores.owner_username
-        AND users.telegram_id = (auth.jwt()->>'telegram_id')::bigint
-      )
-    );
-END $$;
-
--- No seed data - all data is created when users join via Telegram

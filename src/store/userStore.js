@@ -131,7 +131,7 @@ const useUserStore = create((set, get) => ({
       console.log('[initUser] Step 3: Looking up membership for user:', user.id, 'store:', store.id)
       let { data: membership, error: memError } = await supabase
         .from('user_store_memberships')
-        .select('*')
+        .select('*, roles(*)')
         .eq('user_id', user.id)
         .eq('store_id', store.id)
         .maybeSingle()
@@ -144,17 +144,32 @@ const useUserStore = create((set, get) => ({
       const isNewMembership = !membership
 
       if (!membership) {
-        const isOwner = storeJustCreated
-        console.log('[initUser] Membership not found, creating with role:', isOwner ? 'owner' : 'viewer', 'points:', store.welcome_points || 100)
+        // Check if this is the FIRST member for this store
+        const { count: memberCount } = await supabase
+          .from('user_store_memberships')
+          .select('*', { count: 'exact', head: true })
+          .eq('store_id', store.id)
+
+        const isOwner = memberCount === 0
+        const targetRoleSlug = isOwner ? 'owner' : 'viewer'
+        
+        console.log(`[initUser] Membership not found (Store member count: ${memberCount}), fetching role: ${targetRoleSlug}`)
+        const { data: roleData } = await supabase
+          .from('roles')
+          .select('id')
+          .eq('slug', targetRoleSlug)
+          .single()
+
+        console.log('[initUser] Creating membership with role_id:', roleData?.id, 'points:', store.welcome_points || 100)
         const { data: created, error: createErr } = await supabase
           .from('user_store_memberships')
           .insert({
             user_id: user.id,
             store_id: store.id,
             points: store.welcome_points || 100,
-            role: isOwner ? 'owner' : 'viewer',
+            role_id: roleData?.id,
           })
-          .select()
+          .select('*, roles(*)')
           .single()
         if (createErr) {
           console.error('[initUser] Membership create error:', createErr)

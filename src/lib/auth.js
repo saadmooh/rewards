@@ -48,29 +48,42 @@ export async function resolveUser() {
 
 // Get store and user membership
 export async function resolveStoreAccess(userId) {
-  const storeSlug = import.meta.env.VITE_STORE_SLUG
-
-  // Get store
-  const { data: store } = await supabase
-    .from('stores')
-    .select('*')
-    .eq('slug', storeSlug)
-    .single()
-
-  if (!store) return { store: null, membership: null, hasAccess: false }
-
-  // Get membership
-  const { data: membership } = await supabase
+  // 1. Look for memberships with their roles and store data
+  const { data: memberships, error } = await supabase
     .from('user_store_memberships')
-    .select('*')
+    .select('*, stores(*), roles(*)')
     .eq('user_id', userId)
-    .eq('store_id', store.id)
-    .single()
 
-  // Does user have access to dashboard?
-  const hasAccess = membership?.role === 'owner'
-    || membership?.role === 'manager'
-    || membership?.role === 'cashier'
+  if (error || !memberships || memberships.length === 0) {
+    return { store: null, membership: null, hasAccess: false }
+  }
 
-  return { store, membership, hasAccess }
+  // 2. Filter memberships that have dashboard access via their role permissions
+  const authorizedMemberships = memberships.filter(m => 
+    m.roles?.permissions?.can_access_dashboard === true
+  )
+
+  if (authorizedMemberships.length === 0) {
+    return { store: null, membership: null, hasAccess: false }
+  }
+
+  // 3. If VITE_STORE_SLUG is set, try to find that specific store first
+  const preferredSlug = import.meta.env.VITE_STORE_SLUG
+  let activeMembership = authorizedMemberships[0]
+  
+  if (preferredSlug) {
+    const match = authorizedMemberships.find(m => m.stores?.slug === preferredSlug)
+    if (match) activeMembership = match
+  }
+
+  const { stores: store, roles: role, ...membershipData } = activeMembership
+  
+  // Flatten membership for backward compatibility if needed, but include role
+  const membership = { ...membershipData, role: role?.slug }
+
+  return { 
+    store, 
+    membership, 
+    hasAccess: true 
+  }
 }

@@ -5,9 +5,11 @@
     <script>
       // Single-page app redirect for GitHub Pages
       // Stores the intended path as a query param, then loads index.html
-      var path = window.location.pathname.split('/').slice(2).join('/')
-      var search = window.location.search.replace(/&/g, '~and~')
-      window.location.replace('/rewards/?/' + path + search)
+      var pathSegments = window.location.pathname.split('/');
+      // Remove empty segments and the base segment 'rewards'
+      var path = pathSegments.filter(Boolean).filter(function(s) { return s !== 'rewards'; }).join('/');
+      var search = window.location.search.replace(/&/g, '~and~');
+      window.location.replace('/rewards/?/' + path + search + window.location.hash);
     </script>
   </head>
   <body>

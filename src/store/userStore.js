@@ -28,22 +28,29 @@ const useUserStore = create((set, get) => ({
   },
 
   initUser: async (telegramId, telegramData) => {
+    console.log('[initUser] Starting with telegramId:', telegramId, 'username:', telegramData?.username)
     set({ loading: true })
     const storeSlug = getStoreSlug()
     const startParam = getStartParam()
+    console.log('[initUser] storeSlug:', storeSlug, 'startParam:', startParam)
 
     try {
       // 1. Get or create store
+      console.log('[initUser] Step 1: Looking up store by slug:', storeSlug)
       let { data: store, error: storeError } = await supabase
         .from('stores')
         .select('*')
         .eq('slug', storeSlug)
         .maybeSingle()
 
-      if (storeError) throw storeError
+      if (storeError) {
+        console.error('[initUser] Store lookup error:', storeError)
+        throw storeError
+      }
 
       let storeJustCreated = false
       if (!store) {
+        console.log('[initUser] Store not found, creating new store:', storeSlug)
         const { data: created, error: createErr } = await supabase
           .from('stores')
           .insert({
@@ -56,21 +63,32 @@ const useUserStore = create((set, get) => ({
           })
           .select()
           .single()
-        if (createErr) throw createErr
+        if (createErr) {
+          console.error('[initUser] Store create error:', createErr)
+          throw createErr
+        }
         store = created
         storeJustCreated = true
+        console.log('[initUser] Store created:', store.id, store.name)
+      } else {
+        console.log('[initUser] Store found:', store.id, store.name)
       }
 
       // 2. Get or create user
+      console.log('[initUser] Step 2: Looking up user by telegram_id:', telegramId)
       let { data: user, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('telegram_id', telegramId)
         .maybeSingle()
 
-      if (userError) throw userError
+      if (userError) {
+        console.error('[initUser] User lookup error:', userError)
+        throw userError
+      }
 
       if (!user) {
+        console.log('[initUser] User not found, creating new user')
         const fullName = `${telegramData?.first_name || ''} ${telegramData?.last_name || ''}`.trim() || 'User'
         const { data: created, error: createErr } = await supabase
           .from('users')
@@ -89,19 +107,28 @@ const useUserStore = create((set, get) => ({
           })
           .select()
           .single()
-        if (createErr) throw createErr
+        if (createErr) {
+          console.error('[initUser] User create error:', createErr)
+          throw createErr
+        }
         user = created
+        console.log('[initUser] User created:', user.id, user.full_name)
 
         // Only seed data for the very first user
         const { count: userCount } = await supabase
           .from('users')
           .select('*', { count: 'exact', head: true })
+        console.log('[initUser] Total users in DB:', userCount)
         if (userCount <= 1) {
+          console.log('[initUser] First user, seeding store data')
           await seedStoreAlphaData(store.id, user.id)
         }
+      } else {
+        console.log('[initUser] User found:', user.id, user.full_name)
       }
 
       // 3. Get or create membership
+      console.log('[initUser] Step 3: Looking up membership for user:', user.id, 'store:', store.id)
       let { data: membership, error: memError } = await supabase
         .from('user_store_memberships')
         .select('*')
@@ -109,13 +136,16 @@ const useUserStore = create((set, get) => ({
         .eq('store_id', store.id)
         .maybeSingle()
 
-      if (memError) throw memError
+      if (memError) {
+        console.error('[initUser] Membership lookup error:', memError)
+        throw memError
+      }
 
       const isNewMembership = !membership
 
       if (!membership) {
         const isOwner = storeJustCreated
-        console.log('[initUser] Creating new membership with welcome_points:', store.welcome_points || 100, 'role:', isOwner ? 'owner' : 'viewer')
+        console.log('[initUser] Membership not found, creating with role:', isOwner ? 'owner' : 'viewer', 'points:', store.welcome_points || 100)
         const { data: created, error: createErr } = await supabase
           .from('user_store_memberships')
           .insert({
@@ -126,10 +156,15 @@ const useUserStore = create((set, get) => ({
           })
           .select()
           .single()
-        if (createErr) throw createErr
+        if (createErr) {
+          console.error('[initUser] Membership create error:', createErr)
+          throw createErr
+        }
         membership = created
+        console.log('[initUser] Membership created:', membership.id, 'tier:', membership.tier)
 
         // Welcome transaction
+        console.log('[initUser] Creating welcome transaction')
         await supabase.from('transactions').insert({
           user_id: user.id,
           store_id: store.id,
@@ -138,11 +173,14 @@ const useUserStore = create((set, get) => ({
           points: store.welcome_points || 100,
           note: 'نقاط الترحيب',
         })
+      } else {
+        console.log('[initUser] Membership found:', membership.id, 'points:', membership.points, 'tier:', membership.tier)
       }
 
       // 4. Handle referral
       if (isNewMembership && startParam?.startsWith('ref_')) {
         const referralCode = startParam.replace('ref_', '')
+        console.log('[initUser] Step 4: Processing referral code:', referralCode)
         const { data: referrerMem } = await supabase
           .from('user_store_memberships')
           .select('user_id, id, points')
@@ -151,6 +189,7 @@ const useUserStore = create((set, get) => ({
           .maybeSingle()
 
         if (referrerMem) {
+          console.log('[initUser] Referrer found, awarding points')
           // Points for referrer
           await supabase
             .from('user_store_memberships')
@@ -176,17 +215,22 @@ const useUserStore = create((set, get) => ({
             .eq('id', membership.id)
             .single()
           if (updated) membership = updated
+          console.log('[initUser] Referral complete, new points:', membership.points)
+        } else {
+          console.log('[initUser] No referrer found for code:', referralCode)
         }
       }
 
       // Apply store accent color
       if (store.primary_color) {
         document.documentElement.style.setProperty('--accent', store.primary_color)
+        console.log('[initUser] Applied accent color:', store.primary_color)
       }
 
+      console.log('[initUser] Done! user:', user.id, 'store:', store.id, 'membership:', membership.id, 'points:', membership.points)
       set({ user, membership, store, loading: false, error: null })
     } catch (err) {
-      console.error('initUser error:', err)
+      console.error('[initUser] FATAL error:', err.message, err)
       // Fallback with demo data
       set({
         user: {

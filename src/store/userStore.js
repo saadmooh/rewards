@@ -48,7 +48,6 @@ const useUserStore = create((set, get) => ({
         throw storeError
       }
 
-      let storeJustCreated = false
       if (!store) {
         console.log('[initUser] Store not found, creating new store:', storeSlug)
         const { data: created, error: createErr } = await supabase
@@ -68,7 +67,6 @@ const useUserStore = create((set, get) => ({
           throw createErr
         }
         store = created
-        storeJustCreated = true
         console.log('[initUser] Store created:', store.id, store.name)
       } else {
         console.log('[initUser] Store found:', store.id, store.name)
@@ -134,8 +132,8 @@ const useUserStore = create((set, get) => ({
       // REPAIR LOGIC: If membership exists but missing role_id (legacy data)
       if (membership && !membership.role_id) {
         console.log('[initUser] Membership found but missing role_id, repairing...')
-        const oldRoleString = membership.role || 'viewer'
-        const { data: roleData } = await supabase.from('roles').select('id').eq('slug', oldRoleString).single()
+        const oldRoleSlug = membership.role || 'client'
+        const { data: roleData } = await supabase.from('roles').select('id').eq('slug', oldRoleSlug).single()
         if (roleData) {
           const { data: updated } = await supabase
             .from('user_store_memberships')
@@ -150,48 +148,58 @@ const useUserStore = create((set, get) => ({
       const isNewMembership = !membership
 
       if (!membership) {
-        // Check if this is the FIRST member for this store
-        const { count: memberCount } = await supabase
+        // Check if this is the FIRST member for this specific store
+        const { count: currentMemberCount, error: countErr } = await supabase
           .from('user_store_memberships')
           .select('*', { count: 'exact', head: true })
           .eq('store_id', store.id)
 
-        const isFirstUser = storeMemberCount === 0
-        const targetRoleSlug = isFirstUser ? 'owner' : 'client'
+        if (countErr) {
+          console.error('[initUser] Error counting store members:', countErr)
+          throw countErr
+        }
 
-        console.log(`[initUser] New member for store. Member count: ${storeMemberCount}. Assigning role: ${targetRoleSlug}`)
-        const { data: roleData } = await supabase
+        const isFirstUser = (currentMemberCount === 0)
+        const targetRoleSlug = isFirstUser ? 'owner' : 'client'
+        
+        console.log(`[initUser] Creating new membership. Store current members: ${currentMemberCount}. Assigned role: ${targetRoleSlug}`)
+        
+        const { data: roleData, error: roleErr } = await supabase
           .from('roles')
           .select('id')
           .eq('slug', targetRoleSlug)
           .single()
 
-        console.log('[initUser] Creating membership with role_id:', roleData?.id, 'points:', store.welcome_points || 100)
+        if (roleErr || !roleData) {
+          console.error(`[initUser] Could not find role with slug: ${targetRoleSlug}.`, roleErr)
+          throw new Error(`Role '${targetRoleSlug}' missing in database`)
+        }
+
         const { data: created, error: createErr } = await supabase
           .from('user_store_memberships')
           .insert({
             user_id: user.id,
             store_id: store.id,
             points: store.welcome_points || 100,
-            role_id: roleData?.id,
+            role_id: roleData.id,
           })
           .select('*, roles(*)')
           .single()
+        
         if (createErr) {
-          console.error('[initUser] Membership create error:', createErr)
+          console.error('[initUser] Membership insert failed:', createErr)
           throw createErr
         }
         membership = created
-        console.log('[initUser] Membership created:', membership.id, 'role:', targetRoleSlug)
+        console.log('[initUser] Membership successfully created:', membership.id)
 
         // Seed store data IF this is the first user
         if (isFirstUser) {
-          console.log('[initUser] First user entered the store, seeding store data...')
+          console.log('[initUser] First user join, seeding default store data...')
           await seedStoreAlphaData(store.id, user.id)
         }
 
         // Welcome transaction
-        console.log('[initUser] Creating welcome transaction')
         await supabase.from('transactions').insert({
           user_id: user.id,
           store_id: store.id,
@@ -201,7 +209,7 @@ const useUserStore = create((set, get) => ({
           note: 'نقاط الترحيب',
         })
       } else {
-        console.log('[initUser] Membership found:', membership.id, 'points:', membership.points)
+        console.log('[initUser] User is already a member of this store.')
       }
 
       // 4. Handle referral
@@ -217,82 +225,33 @@ const useUserStore = create((set, get) => ({
 
         if (referrerMem) {
           console.log('[initUser] Referrer found, awarding points')
-          // Points for referrer
-          await supabase
-            .from('user_store_memberships')
-            .update({ points: referrerMem.points + 200 })
-            .eq('id', referrerMem.id)
-
-          // Points for referred user
-          await supabase
-            .from('user_store_memberships')
-            .update({ points: membership.points + 100 })
-            .eq('id', membership.id)
-
+          await supabase.from('user_store_memberships').update({ points: referrerMem.points + 200 }).eq('id', referrerMem.id)
+          await supabase.from('user_store_memberships').update({ points: membership.points + 100 }).eq('id', membership.id)
           await supabase.from('referrals').insert({
             store_id: store.id,
             referrer_id: referrerMem.user_id,
             referred_id: user.id,
           })
 
-          // Refresh membership
-          const { data: updated } = await supabase
-            .from('user_store_memberships')
-            .select('*')
-            .eq('id', membership.id)
-            .single()
+          const { data: updated } = await supabase.from('user_store_memberships').select('*, roles(*)').eq('id', membership.id).single()
           if (updated) membership = updated
-          console.log('[initUser] Referral complete, new points:', membership.points)
-        } else {
-          console.log('[initUser] No referrer found for code:', referralCode)
         }
       }
 
       // Apply store accent color
       if (store.primary_color) {
         document.documentElement.style.setProperty('--accent', store.primary_color)
-        console.log('[initUser] Applied accent color:', store.primary_color)
       }
 
-      console.log('[initUser] Done! user:', user.id, 'store:', store.id, 'membership:', membership.id, 'points:', membership.points)
+      console.log('[initUser] Complete! user:', user.id, 'store:', store.id, 'membership:', membership.id)
       set({ user, membership, store, loading: false, error: null })
     } catch (err) {
-      console.error('[initUser] FATAL error:', err.message, err)
-      // Fallback with demo data
+      console.error('[initUser] FATAL error during initialization:', err.message, err)
+      // Fallback with demo data so the app doesn't crash completely
       set({
-        user: {
-          id: 'demo-' + Date.now(),
-          telegram_id: telegramId,
-          username: telegramData?.username,
-          first_name: telegramData?.first_name,
-          last_name: telegramData?.last_name,
-          full_name: `${telegramData?.first_name || 'User'} ${telegramData?.last_name || ''}`.trim(),
-          language_code: telegramData?.language_code || null,
-          is_premium: telegramData?.is_premium || false,
-          is_bot: telegramData?.is_bot || false,
-          photo_url: telegramData?.photo_url || null,
-          allows_write_to_pm: telegramData?.allows_write_to_pm || false,
-          added_to_attachment_menu: telegramData?.added_to_attachment_menu || false,
-        },
-        membership: {
-          id: 'demo-mem-' + Date.now(),
-          points: 4250,
-          tier: 'gold',
-          total_spent: 0,
-          total_visits: 0,
-        },
-        store: {
-          id: '11111111-1111-1111-1111-111111111111',
-          slug: storeSlug,
-          name: getStoreName(),
-          primary_color: '#D4AF37',
-          tier_config: {
-            bronze: { min: 0, max: 999 },
-            silver: { min: 1000, max: 4999 },
-            gold: { min: 5000, max: 9999 },
-            platinum: { min: 10000, max: 999999 },
-          },
-        },
+        user: { id: 'demo-' + Date.now(), telegram_id: telegramId, full_name: `${telegramData?.first_name || 'User'} ${telegramData?.last_name || ''}`.trim() },
+        membership: { id: 'demo-mem', points: 4250, tier: 'gold', roles: { slug: 'owner', permissions: { can_access_dashboard: true } } },
+        store: { id: 'demo-store', name: getStoreName(), primary_color: '#D4AF37' },
         loading: false,
         error: err.message,
       })
@@ -302,95 +261,32 @@ const useUserStore = create((set, get) => ({
   refreshMembership: async () => {
     const { user, store } = get()
     if (!user?.id || !store?.id) return
-
-    try {
-      const { data, error } = await supabase
-        .from('user_store_memberships')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('store_id', store.id)
-        .single()
-
-      if (error) throw error
-      if (data) set({ membership: data })
-    } catch (err) {
-      set({ error: err.message })
-    }
+    const { data, error } = await supabase.from('user_store_memberships').select('*, roles(*)').eq('user_id', user.id).eq('store_id', store.id).single()
+    if (!error && data) set({ membership: data })
   },
 
   addPoints: async (points, note) => {
     const { user, membership, store } = get()
     if (!user?.id || !membership?.id || !store?.id) return
-
     try {
       const newPoints = membership.points + points
-
-      // Update membership points
-      await supabase
-        .from('user_store_memberships')
-        .update({ points: newPoints })
-        .eq('id', membership.id)
-
-      // Record transaction
-      await supabase.from('transactions').insert({
-        user_id: user.id,
-        store_id: store.id,
-        membership_id: membership.id,
-        type: 'earn',
-        points: points,
-        note: note,
-      })
-
+      await supabase.from('user_store_memberships').update({ points: newPoints }).eq('id', membership.id)
+      await supabase.from('transactions').insert({ user_id: user.id, store_id: store.id, membership_id: membership.id, type: 'earn', points, note })
       set({ membership: { ...membership, points: newPoints } })
-    } catch (err) {
-      set({ error: err.message })
-    }
+    } catch (err) { set({ error: err.message }) }
   },
 
   redeemOffer: async (offerId, pointsCost) => {
     const { user, membership, store } = get()
-    if (!user?.id || !membership?.id || !store?.id) return false
-    if (membership.points < pointsCost) return false
-
+    if (!user?.id || !membership?.id || !store?.id || membership.points < pointsCost) return false
     try {
       const newPoints = membership.points - pointsCost
-
-      // Create redemption
-      const { data: redemption, error: redeemError } = await supabase
-        .from('redemptions')
-        .insert({
-          user_id: user.id,
-          store_id: store.id,
-          offer_id: offerId,
-        })
-        .select()
-        .single()
-
-      if (redeemError) throw redeemError
-
-      // Deduct from membership
-      await supabase
-        .from('user_store_memberships')
-        .update({ points: newPoints })
-        .eq('id', membership.id)
-
-      // Record transaction
-      await supabase.from('transactions').insert({
-        user_id: user.id,
-        store_id: store.id,
-        membership_id: membership.id,
-        type: 'redeem',
-        points: -pointsCost,
-        offer_id: offerId,
-        note: 'Used offer',
-      })
-
+      const { data: redemption } = await supabase.from('redemptions').insert({ user_id: user.id, store_id: store.id, offer_id: offerId }).select().single()
+      await supabase.from('user_store_memberships').update({ points: newPoints }).eq('id', membership.id)
+      await supabase.from('transactions').insert({ user_id: user.id, store_id: store.id, membership_id: membership.id, type: 'redeem', points: -pointsCost, offer_id: offerId, note: 'Used offer' })
       set({ membership: { ...membership, points: newPoints } })
       return redemption
-    } catch (err) {
-      set({ error: err.message })
-      return null
-    }
+    } catch (err) { set({ error: err.message }); return null }
   },
 
   setError: (error) => set({ error }),

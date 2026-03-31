@@ -58,7 +58,7 @@ INSERT INTO public.roles (name, slug, permissions) VALUES
   ('Owner', 'owner', '{"can_access_dashboard": true, "manage_products": true, "manage_offers": true, "manage_customers": true, "view_stats": true, "issue_points": true, "redeem_points": true}'),
   ('Manager', 'manager', '{"can_access_dashboard": true, "manage_products": true, "manage_offers": true, "manage_customers": true, "view_stats": true, "issue_points": true, "redeem_points": true}'),
   ('Cashier', 'cashier', '{"can_access_dashboard": true, "manage_products": false, "manage_offers": false, "manage_customers": true, "view_stats": false, "issue_points": true, "redeem_points": true}'),
-  ('Viewer', 'viewer', '{"can_access_dashboard": false, "manage_products": false, "manage_offers": false, "manage_customers": false, "view_stats": false, "issue_points": false, "redeem_points": false}');
+  ('Client', 'client', '{"can_access_dashboard": false, "manage_products": false, "manage_offers": false, "manage_customers": false, "view_stats": false, "issue_points": false, "redeem_points": false}');
 
 -- Stores table
 create table public.stores (

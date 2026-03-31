@@ -113,16 +113,6 @@ const useUserStore = create((set, get) => ({
         }
         user = created
         console.log('[initUser] User created:', user.id, user.full_name)
-
-        // Only seed data for the very first user
-        const { count: userCount } = await supabase
-          .from('users')
-          .select('*', { count: 'exact', head: true })
-        console.log('[initUser] Total users in DB:', userCount)
-        if (userCount <= 1) {
-          console.log('[initUser] First user, seeding store data')
-          await seedStoreAlphaData(store.id, user.id)
-        }
       } else {
         console.log('[initUser] User found:', user.id, user.full_name)
       }
@@ -141,6 +131,22 @@ const useUserStore = create((set, get) => ({
         throw memError
       }
 
+      // REPAIR LOGIC: If membership exists but missing role_id (legacy data)
+      if (membership && !membership.role_id) {
+        console.log('[initUser] Membership found but missing role_id, repairing...')
+        const oldRoleString = membership.role || 'viewer'
+        const { data: roleData } = await supabase.from('roles').select('id').eq('slug', oldRoleString).single()
+        if (roleData) {
+          const { data: updated } = await supabase
+            .from('user_store_memberships')
+            .update({ role_id: roleData.id })
+            .eq('id', membership.id)
+            .select('*, roles(*)')
+            .single()
+          if (updated) membership = updated
+        }
+      }
+
       const isNewMembership = !membership
 
       if (!membership) {
@@ -150,10 +156,10 @@ const useUserStore = create((set, get) => ({
           .select('*', { count: 'exact', head: true })
           .eq('store_id', store.id)
 
-        const isOwner = memberCount === 0
-        const targetRoleSlug = isOwner ? 'owner' : 'viewer'
-        
-        console.log(`[initUser] Membership not found (Store member count: ${memberCount}), fetching role: ${targetRoleSlug}`)
+        const isFirstUser = storeMemberCount === 0
+        const targetRoleSlug = isFirstUser ? 'owner' : 'client'
+
+        console.log(`[initUser] New member for store. Member count: ${storeMemberCount}. Assigning role: ${targetRoleSlug}`)
         const { data: roleData } = await supabase
           .from('roles')
           .select('id')
@@ -176,7 +182,13 @@ const useUserStore = create((set, get) => ({
           throw createErr
         }
         membership = created
-        console.log('[initUser] Membership created:', membership.id, 'tier:', membership.tier)
+        console.log('[initUser] Membership created:', membership.id, 'role:', targetRoleSlug)
+
+        // Seed store data IF this is the first user
+        if (isFirstUser) {
+          console.log('[initUser] First user entered the store, seeding store data...')
+          await seedStoreAlphaData(store.id, user.id)
+        }
 
         // Welcome transaction
         console.log('[initUser] Creating welcome transaction')
@@ -189,7 +201,7 @@ const useUserStore = create((set, get) => ({
           note: 'نقاط الترحيب',
         })
       } else {
-        console.log('[initUser] Membership found:', membership.id, 'points:', membership.points, 'tier:', membership.tier)
+        console.log('[initUser] Membership found:', membership.id, 'points:', membership.points)
       }
 
       // 4. Handle referral

@@ -11,13 +11,21 @@ const navItems = [
 ]
 
 export default function BottomNav({ activePath = '/', onNavigate }) {
-  const { user } = useUserStore()
+  const { membership } = useUserStore()
 
   const handleNav = (path) => {
     if (path && onNavigate) {
       onNavigate(path)
     }
   }
+
+  // Filter items based on permissions
+  const visibleItems = navItems.filter(item => {
+    if (item.isDashboard) {
+      return membership?.roles?.permissions?.can_access_dashboard === true
+    }
+    return true
+  })
 
   return (
     <motion.div
@@ -27,7 +35,7 @@ export default function BottomNav({ activePath = '/', onNavigate }) {
       className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-border z-50"
     >
       <div className="flex justify-around items-center max-w-md mx-auto px-2 py-3">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = activePath === item.path
           const isScan = item.isScan
 

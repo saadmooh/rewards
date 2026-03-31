@@ -44,57 +44,59 @@ export default function Scanner() {
               .single()
 
             if (txError || !tx) {
-              // Create a demo transaction for testing
-              const amount = qrData.amount || Math.floor(Math.random() * 500) + 100
-              const points = Math.floor(amount / 10) // 1 point per 10 DZD
-              
-              // Save to Supabase
-              if (user?.id) {
-                await supabase.from('transactions').insert({
-                  user_id: user.id,
-                  store_id: store?.id,
-                  membership_id: membership?.id,
-                  type: 'earn',
-                  points: points,
-                  amount: amount,
-                  note: `Purchase - ${amount} DZD`,
-                })
+              setError('Invalid or expired QR code')
+              setPhase('error')
+              return
+            }
 
-                // Update membership points
-                if (membership?.id) {
-                  await supabase
-                    .from('user_store_memberships')
-                    .update({
-                      points: (membership.points || 0) + points,
-                      last_purchase: new Date().toISOString(),
-                    })
-                    .eq('id', membership.id)
-                }
-              }
-
-              setPointsEarned(points)
-              setPhase('success')
-            } else if (tx.qr_used) {
+            if (tx.qr_used) {
               setError('This code has already been used')
               setPhase('error')
-            } else {
-              // Mark as used
-              await supabase
-                .from('transactions')
-                .update({ qr_used: true, user_id: user.id })
-                .eq('id', tx.id)
-
-              // Add points to user
-              await addPoints(tx.points, 'QR Scan')
-              setPointsEarned(tx.points)
-              setPhase('success')
+              return
             }
-          } else {
-            // Demo: simulate points
-            const amount = qrData.amount || 450
-            const points = Math.floor(amount / 10)
-            setPointsEarned(points)
+
+            if (new Date(tx.expires_at) < new Date()) {
+              setError('This code has expired')
+              setPhase('error')
+              return
+            }
+
+            // Mark as used and assign to the current user
+            const { error: updateErr } = await supabase
+              .from('transactions')
+              .update({ 
+                qr_used: true, 
+                user_id: user.id,
+                membership_id: membership?.id,
+                note: `Redeemed QR - ${tx.amount} DZD`
+              })
+              .eq('id', tx.id)
+
+            if (updateErr) {
+              console.error('Error updating transaction:', updateErr)
+              setError('Failed to process points')
+              setPhase('error')
+              return
+            }
+
+            // Add points to user membership in the store
+            const { error: memErr } = await supabase
+              .from('user_store_memberships')
+              .update({
+                points: (membership.points || 0) + tx.points,
+                last_purchase: new Date().toISOString(),
+              })
+              .eq('id', membership.id)
+
+            if (memErr) {
+              console.error('Error updating membership points:', memErr)
+            }
+
+            setPointsEarned(tx.points)
             setPhase('success')
+          } else {
+            setError('Invalid QR code format')
+            setPhase('error')
           }
         } catch (err) {
           console.error('Scan error:', err)
@@ -114,7 +116,7 @@ export default function Scanner() {
         scannerRef.current.clear().catch(console.error)
       }
     }
-  }, [phase, user, addPoints])
+  }, [phase, user, addPoints, membership, store])
 
   const handleRetry = () => {
     scannerRef.current = null

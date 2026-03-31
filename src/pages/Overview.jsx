@@ -8,8 +8,9 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Responsive
 import StatCard from '../components/StatCard'
 
 export default function Overview() {
-  const { store } = useDashboardStore()
+  const { store, membership } = useDashboardStore()
   const navigate = useNavigate()
+  const isOwner = membership?.role === 'owner'
 
   // Summary stats query
   const { data: stats } = useQuery({
@@ -132,13 +133,22 @@ export default function Overview() {
   })
 
   return (
-    <div className="page p-4 lg:p-6 max-w-5xl mx-auto">
+    <div className="page p-4 lg:p-6 max-w-5xl mx-auto pb-24">
       {/* Header */}
-      <div className="page-header mb-6">
+      <div className="page-header mb-6 flex justify-between items-start">
         <div>
           <h1 className="text-xl lg:text-2xl font-bold text-[#f0f0f0]">مرحباً، {store?.name}</h1>
           <p className="text-sm text-[#888888]">{format(new Date(), 'EEEE، d MMMM yyyy')}</p>
         </div>
+        {isOwner && (
+          <button
+            onClick={() => navigate('/dashboard/roles')}
+            className="bg-[#2a2a2a] text-[#D4AF37] border border-[#3a3a3a] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#333] transition-colors flex items-center gap-2"
+          >
+            <span>🛡️</span>
+            إدارة الصلاحيات
+          </button>
+        )}
       </div>
 
       {/* Stats grid */}

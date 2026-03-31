@@ -143,7 +143,7 @@ create table public.user_store_memberships (
 -- Transactions table
 create table public.transactions (
   id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.users(id) on delete cascade not null,
+  user_id uuid references public.users(id) on delete cascade, -- Nullable for pending QR codes
   store_id uuid references public.stores(id) on delete cascade not null,
   membership_id uuid references public.user_store_memberships(id) on delete cascade,
   type text not null check (type in ('earn', 'redeem', 'adjust', 'expire', 'welcome')),
@@ -152,6 +152,9 @@ create table public.transactions (
   note text,
   offer_id uuid references public.offers(id) on delete set null,
   description text,
+  qr_token text unique,
+  qr_used boolean default false,
+  expires_at timestamptz,
   created_at timestamptz default now()
 );
 

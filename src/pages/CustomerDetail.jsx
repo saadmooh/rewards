@@ -1,7 +1,7 @@
 // CustomerDetail - Individual customer view with transaction history
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useDashboardStore } from '../store/dashboardStore'
 import { format, formatDistanceToNow } from 'date-fns'
@@ -10,6 +10,7 @@ import { ar } from 'date-fns/locale'
 export default function CustomerDetail() {
   const { memberId } = useParams()
   const { store } = useDashboardStore()
+  const queryClient = useQueryClient()
   const [grantPts, setGrantPts] = useState('')
   const [grantNote, setGrantNote] = useState('')
 
@@ -17,11 +18,30 @@ export default function CustomerDetail() {
     queryKey: ['membership-detail', memberId],
     queryFn: () => supabase
       .from('user_store_memberships')
-      .select('*, users(*)')
+      .select('*, users(*), roles(*)')
       .eq('id', memberId)
       .single()
       .then(r => r.data),
     enabled: !!memberId
+  })
+
+  const { data: roles } = useQuery({
+    queryKey: ['roles'],
+    queryFn: () => supabase.from('roles').select('*').order('name').then(r => r.data)
+  })
+
+  const updateRoleMutation = useMutation({
+    mutationFn: async (roleId) => {
+      const { error } = await supabase
+        .from('user_store_memberships')
+        .update({ role_id: roleId })
+        .eq('id', memberId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['membership-detail', memberId])
+      alert('تم تحديث الدور بنجاح')
+    }
   })
 
   const { data: txHistory } = useQuery({
@@ -78,25 +98,41 @@ export default function CustomerDetail() {
   const TIER_COLORS = { bronze: '#CD7F32', silver: '#C0C0C0', gold: '#FFD700', platinum: '#E8E8E8' }
 
   return (
-    <div className="page p-4 lg:p-6 max-w-3xl mx-auto">
+    <div className="page p-4 lg:p-6 max-w-3xl mx-auto pb-24">
       {/* Customer card */}
       <div className="bg-[#1e1e1e] rounded-xl p-6 border border-[#2a2a2a] mb-6">
-        <div className="flex items-center gap-4 mb-4">
-          {u?.photo_url
-            ? <img src={u.photo_url} alt={u.full_name} className="w-16 h-16 rounded-full object-cover" />
-            : <div className="w-16 h-16 rounded-full bg-[#2a2a2a] flex items-center justify-center text-[#888888] text-xl">
-                {u?.full_name?.[0] ?? '?'}
-              </div>
-          }
-          <div>
-            <h2 className="text-xl font-bold text-[#f0f0f0]">{u?.full_name}</h2>
-            <p className="text-[#888888]">@{u?.username ?? '—'}</p>
-            <p className="text-lg font-bold" style={{ color: TIER_COLORS[membership.tier] }}>
-              {membership.tier}
-            </p>
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center gap-4">
+            {u?.photo_url
+              ? <img src={u.photo_url} alt={u.full_name} className="w-16 h-16 rounded-full object-cover" />
+              : <div className="w-16 h-16 rounded-full bg-[#2a2a2a] flex items-center justify-center text-[#888888] text-xl">
+                  {u?.full_name?.[0] ?? '?'}
+                </div>
+            }
+            <div>
+              <h2 className="text-xl font-bold text-[#f0f0f0]">{u?.full_name}</h2>
+              <p className="text-[#888888]">@{u?.username ?? '—'}</p>
+              <p className="text-lg font-bold" style={{ color: TIER_COLORS[membership.tier] }}>
+                {membership.tier}
+              </p>
+            </div>
+          </div>
+
+          <div className="text-left">
+            <label className="block text-[10px] text-[#888888] mb-1">الدور الحالي</label>
+            <select
+              value={membership.role_id || ''}
+              onChange={(e) => updateRoleMutation.mutate(e.target.value)}
+              className="bg-[#2a2a2a] text-[#f0f0f0] text-sm rounded-lg px-2 py-1 border border-[#3a3a3a] focus:outline-none focus:border-[#D4AF37]"
+            >
+              <option value="" disabled>اختر دوراً</option>
+              {roles?.map(r => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="bg-[#161616] rounded-lg p-3">
             <p className="text-[#888888] text-xs">النقاط</p>

@@ -23,16 +23,21 @@ export default function QRGenerator() {
     const token = `QR-${store.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`
     const expiresAt = new Date(Date.now() + EXPIRY_SECONDS * 1000)
 
+    // Insert pending transaction (no user_id yet)
     const { error } = await supabase.from('transactions').insert({
       store_id: store.id,
-      user_id: store.id,
       type: 'earn',
       points,
       amount: Number(amount),
-      description: `QR:${token}:${expiresAt.toISOString()}`,
+      qr_token: token,
+      expires_at: expiresAt.toISOString(),
+      note: 'Generated QR Code',
     })
 
-    if (error) { console.error(error); return }
+    if (error) { 
+      console.error('Error generating QR transaction:', error)
+      return 
+    }
 
     setQrToken(token)
     setTimeLeft(EXPIRY_SECONDS)

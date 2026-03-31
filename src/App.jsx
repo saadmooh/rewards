@@ -25,6 +25,7 @@ import CustomersPage from './pages/Customers'
 import CustomerDetail from './pages/CustomerDetail'
 import Notifications from './pages/Notifications'
 import Settings from './pages/Settings'
+import RolesManagement from './pages/RolesManagement'
 
 const queryClient = new QueryClient()
 
@@ -116,6 +117,7 @@ function AppContent() {
                 <Route path="customers/:memberId" element={<CustomerDetail />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="roles" element={<RolesManagement />} />
               </Route>
             </Route>
 

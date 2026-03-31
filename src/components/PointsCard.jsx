@@ -7,21 +7,29 @@ export default function PointsCard() {
 
   const points = membership?.points || 0
   const tier = membership?.tier || 'bronze'
-  const tierConfig = store?.tier_config || {
-    bronze: { min: 0, max: 999 },
-    silver: { min: 1000, max: 4999 },
-    gold: { min: 5000, max: 9999 },
-    platinum: { min: 10000, max: 999999 },
+  
+  // Normalize tier config to handle both { bronze: 0 } and { bronze: { min: 0 } }
+  const rawTierConfig = store?.tier_config || {
+    bronze: 0,
+    silver: 1000,
+    gold: 5000,
+    platinum: 10000,
   }
 
+  const tierConfig = {}
+  Object.keys(rawTierConfig).forEach(key => {
+    const val = rawTierConfig[key]
+    tierConfig[key] = typeof val === 'number' ? { min: val } : val
+  })
+
   const tierKey = tier?.toLowerCase() || 'bronze'
-  const currentTier = tierConfig[tierKey] || tierConfig.bronze
+  const currentTier = tierConfig[tierKey] || tierConfig.bronze || { min: 0 }
 
   const nextTierKey = { bronze: 'silver', silver: 'gold', gold: 'platinum', platinum: null }[tierKey]
   const nextTier = nextTierKey ? tierConfig[nextTierKey] : null
 
-  const progress = nextTier
-    ? ((points - currentTier.min) / (nextTier.min - currentTier.min)) * 100
+  const progress = (nextTier && nextTier.min !== undefined)
+    ? ((points - (currentTier.min || 0)) / (nextTier.min - (currentTier.min || 0))) * 100
     : 100
 
   const joinedDate = membership?.joined_at
@@ -50,7 +58,7 @@ export default function PointsCard() {
         <TierBadge tier={tier} size="large" />
       </div>
 
-      {nextTier && (
+      {nextTier && nextTier.min !== undefined && (
         <div className="mb-4">
           <div className="flex justify-between text-xs text-muted mb-2">
             <span>Progress to {nextTierKey}</span>

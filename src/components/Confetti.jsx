@@ -18,6 +18,7 @@ function Confetti({ isActive = true, onComplete }) {
       scale: Math.random() * 0.5 + 0.5,
       delay: Math.random() * 0.5,
       duration: Math.random() * 1.5 + 1.5,
+      borderRadius: Math.random() > 0.5 ? '50%' : '2px',
     }));
     setParticles(newParticles);
 
@@ -67,7 +68,7 @@ function Confetti({ isActive = true, onComplete }) {
             width: '10px',
             height: '10px',
             backgroundColor: particle.color,
-            borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+            borderRadius: particle.borderRadius,
             transform: `scale(${particle.scale})`,
           }}
         />

@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { getStoreSlug } from './store'
 
 export async function initializeDatabase() {
   console.log('Checking database tables...')
@@ -27,7 +28,7 @@ export async function seedDemoData() {
   const { data: store } = await supabase
     .from('stores')
     .select('id')
-    .eq('slug', 'store-alpha')
+    .eq('slug', getStoreSlug())
     .maybeSingle()
 
   if (!store) {

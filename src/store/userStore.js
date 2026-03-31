@@ -92,7 +92,13 @@ const useUserStore = create((set, get) => ({
         if (createErr) throw createErr
         user = created
 
-        await seedStoreAlphaData(store.id, user.id)
+        // Only seed data for the very first user
+        const { count: userCount } = await supabase
+          .from('users')
+          .select('*', { count: 'exact', head: true })
+        if (userCount <= 1) {
+          await seedStoreAlphaData(store.id, user.id)
+        }
       }
 
       // 3. Get or create membership

@@ -120,7 +120,7 @@ export default function QRGenerator() {
                 <span className="text-[#888888]">{tx.users?.full_name ?? '—'}</span>
                 <div className="flex gap-3">
                   <span className="text-[#22c55e]">+{tx.points} نقطة</span>
-                  <span className="text-[#888888]">{tx.amount?.toLocaleString()} دج</span>
+                  <span className="text-[#888888]">{(tx.amount ?? 0).toLocaleString()} دج</span>
                 </div>
               </div>
             ))}

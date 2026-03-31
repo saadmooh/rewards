@@ -1,4 +1,7 @@
 export const getStoreSlug = () => {
+  // From env var (highest priority)
+  if (import.meta.env.VITE_STORE_SLUG) return import.meta.env.VITE_STORE_SLUG
+
   // From query param (dev/testing)
   const params = new URLSearchParams(window.location.search)
   const fromQuery = params.get('store')
@@ -8,9 +11,6 @@ export const getStoreSlug = () => {
   const host = window.location.hostname
   const parts = host.split('.')
   if (parts.length > 2) return parts[0]
-
-  // From env var
-  if (import.meta.env.VITE_STORE_SLUG) return import.meta.env.VITE_STORE_SLUG
 
   // Default fallback
   return 'store-alpha'

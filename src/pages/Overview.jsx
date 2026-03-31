@@ -228,7 +228,7 @@ export default function Overview() {
                 </div>
                 <div className="text-left">
                   <p className="text-[#22c55e] text-sm font-medium">+{tx.points} نقطة</p>
-                  <p className="text-[#888888] text-xs">{tx.amount?.toLocaleString()} دج</p>
+                  <p className="text-[#888888] text-xs">{(tx.amount ?? 0).toLocaleString()} دج</p></p>
                 </div>
               </div>
             ))}

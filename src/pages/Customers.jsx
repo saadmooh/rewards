@@ -102,8 +102,8 @@ export default function Customers() {
                 <p className="text-[#f0f0f0] font-bold" style={{ color: TIER_COLORS[m.tier] }}>
                   {m.tier}
                 </p>
-                <p className="text-[#D4AF37] text-sm font-medium">{m.points?.toLocaleString()} نقطة</p>
-                <p className="text-[#888888] text-xs">{m.total_spent?.toLocaleString()} دج</p>
+                <p className="text-[#D4AF37] text-sm font-medium">{(m.points ?? 0).toLocaleString()} نقطة</p>
+                <p className="text-[#888888] text-xs">{(m.total_spent ?? 0).toLocaleString()} دج</p>
               </div>
             </div>
           </div>

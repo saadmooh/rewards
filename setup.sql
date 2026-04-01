@@ -1,409 +1,444 @@
--- Supabase Schema for Rewards Dashboard
--- Authentication and Users extension
-create extension if not exists "uuid-ossp";
+-- ============================================================
+--  Rewards Dashboard — Database Schema
+--  Engine : PostgreSQL (Supabase)
+--  Version: 2.0
+-- ============================================================
 
--- Drop existing tables (in order to handle foreign key dependencies)
-DROP TABLE IF EXISTS ad_impressions CASCADE;
-DROP TABLE IF EXISTS user_behavior_tags CASCADE;
-DROP TABLE IF EXISTS cross_promotions CASCADE;
-DROP TABLE IF EXISTS referrals CASCADE;
-DROP TABLE IF EXISTS redemptions CASCADE;
-DROP TABLE IF EXISTS transactions CASCADE;
-DROP TABLE IF EXISTS promotions CASCADE;
-DROP TABLE IF EXISTS offer_products CASCADE;
-DROP TABLE IF EXISTS offers CASCADE;
-DROP TABLE IF EXISTS products CASCADE;
-DROP TABLE IF EXISTS user_store_memberships CASCADE;
-DROP TABLE IF EXISTS roles CASCADE;
-DROP TABLE IF EXISTS stores CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+-- ─────────────────────────────────────────────
+--  Extensions
+-- ─────────────────────────────────────────────
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Users table (identified by telegram_id, no auth.users dependency)
-create table public.users (
-  id uuid default gen_random_uuid() primary key,
-  full_name text,
-  username text unique,
-  telegram_id bigint unique,
-  language_code text,
-  avatar_url text,
-  photo_url text,
-  phone text,
-  birth_date date,
-  gender text check (gender in ('male', 'female')),
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  role text default 'user' check (role in ('user', 'admin', 'super_admin')),
-  is_super_admin boolean default false,
-  is_bot boolean default false,
-  is_premium boolean default false,
-  last_active timestamptz,
-  permissions text[] default array['read']::text[],
-  ad_points_balance integer default 0,
-  allows_write_to_pm boolean default false,
-  added_to_attachment_menu boolean default false,
-  phone_number text,
-  raw_telegram_data jsonb
+-- ─────────────────────────────────────────────
+--  Tear-down (reverse dependency order)
+-- ─────────────────────────────────────────────
+DROP TABLE IF EXISTS
+  pending_point_claims,
+  ad_impressions,
+  user_behavior_tags,
+  cross_promotions,
+  redemptions,
+  transactions,
+  promotions,
+  offer_products,
+  offers,
+  products,
+  user_store_memberships,
+  referrals,
+  roles,
+  stores,
+  users
+CASCADE;
+
+
+-- ============================================================
+--  CORE TABLES
+-- ============================================================
+
+-- ─────────────────────────────────────────────
+--  users
+--  Identified by telegram_id; no auth.users dependency.
+-- ─────────────────────────────────────────────
+CREATE TABLE public.users (
+  id                       UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+  telegram_id              BIGINT        UNIQUE,
+  username                 TEXT          UNIQUE,
+  full_name                TEXT,
+  phone                    TEXT,
+  phone_number             TEXT,                          -- raw field from Telegram payload
+  birth_date               DATE,
+  gender                   TEXT          CHECK (gender IN ('male', 'female')),
+  language_code            TEXT,
+  avatar_url               TEXT,
+  photo_url                TEXT,
+
+  -- Role & access
+  role                     TEXT          NOT NULL DEFAULT 'user'
+                                         CHECK (role IN ('user', 'admin', 'super_admin')),
+  is_super_admin           BOOLEAN       NOT NULL DEFAULT FALSE,
+  permissions              TEXT[]        NOT NULL DEFAULT ARRAY['read']::TEXT[],
+
+  -- Telegram flags
+  is_bot                   BOOLEAN       NOT NULL DEFAULT FALSE,
+  is_premium               BOOLEAN       NOT NULL DEFAULT FALSE,
+  allows_write_to_pm       BOOLEAN       NOT NULL DEFAULT FALSE,
+  added_to_attachment_menu BOOLEAN       NOT NULL DEFAULT FALSE,
+
+  -- Points & activity
+  ad_points_balance        INTEGER       NOT NULL DEFAULT 0,
+  last_active              TIMESTAMPTZ,
+  raw_telegram_data        JSONB,
+
+  created_at               TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  updated_at               TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 
--- Roles table for granular permissions
-create table public.roles (
-  id uuid default uuid_generate_v4() primary key,
-  name text not null,
-  slug text unique not null,
-  permissions jsonb default '{}'::jsonb,
-  created_at timestamptz default now()
+-- ─────────────────────────────────────────────
+--  roles  –  granular permission profiles
+-- ─────────────────────────────────────────────
+CREATE TABLE public.roles (
+  id          UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name        TEXT        NOT NULL,
+  slug        TEXT        UNIQUE NOT NULL,
+  permissions JSONB       NOT NULL DEFAULT '{}',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Insert default roles
-INSERT INTO public.roles (name, slug, permissions) VALUES 
-  ('Owner', 'owner', '{"can_access_dashboard": true, "manage_products": true, "manage_offers": true, "manage_customers": true, "view_stats": true, "issue_points": true, "redeem_points": true}'),
-  ('Manager', 'manager', '{"can_access_dashboard": true, "manage_products": true, "manage_offers": true, "manage_customers": true, "view_stats": true, "issue_points": true, "redeem_points": true}'),
-  ('Cashier', 'cashier', '{"can_access_dashboard": true, "manage_products": false, "manage_offers": false, "manage_customers": true, "view_stats": false, "issue_points": true, "redeem_points": true}'),
-  ('Client', 'client', '{"can_access_dashboard": false, "manage_products": false, "manage_offers": false, "manage_customers": false, "view_stats": false, "issue_points": false, "redeem_points": false}');
+INSERT INTO public.roles (name, slug, permissions) VALUES
+  ('Owner',   'owner',   '{"can_access_dashboard":true,"manage_products":true,"manage_offers":true,"manage_customers":true,"view_stats":true,"issue_points":true,"redeem_points":true}'),
+  ('Manager', 'manager', '{"can_access_dashboard":true,"manage_products":true,"manage_offers":true,"manage_customers":true,"view_stats":true,"issue_points":true,"redeem_points":true}'),
+  ('Cashier', 'cashier', '{"can_access_dashboard":true,"manage_products":false,"manage_offers":false,"manage_customers":true,"view_stats":false,"issue_points":true,"redeem_points":true}'),
+  ('Client',  'client',  '{"can_access_dashboard":false,"manage_products":false,"manage_offers":false,"manage_customers":false,"view_stats":false,"issue_points":false,"redeem_points":false}');
 
--- Stores table
-create table public.stores (
-  id uuid default uuid_generate_v4() primary key,
-  owner_email text not null,
-  owner_username text not null,
-  name text not null,
-  slug text unique not null,
-  description text,
-  logo_url text,
-  phone text,
-  address text,
-  city text,
-  category text,
-  tier_config jsonb default '{"bronze": 0, "silver": 10000, "gold": 50000, "platinum": 100000}'::jsonb,
-  points_rate integer default 1,
-  welcome_points integer default 100,
-  primary_color text default '#D4AF37',
-  plan text default 'basic',
-  created_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  is_active boolean default true,
-  ad_points_balance integer default 0,
-  bot_token text,
-  bot_username text
+-- ─────────────────────────────────────────────
+--  stores
+-- ─────────────────────────────────────────────
+CREATE TABLE public.stores (
+  id               UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  owner_email      TEXT        NOT NULL,
+  owner_username   TEXT        NOT NULL,
+  name             TEXT        NOT NULL,
+  slug             TEXT        UNIQUE NOT NULL,
+  description      TEXT,
+  logo_url         TEXT,
+  phone            TEXT,
+  address          TEXT,
+  city             TEXT,
+  category         TEXT,
+
+  -- Loyalty configuration
+  tier_config      JSONB       NOT NULL DEFAULT '{"bronze":0,"silver":10000,"gold":50000,"platinum":100000}',
+  points_rate      INTEGER     NOT NULL DEFAULT 1,
+  welcome_points   INTEGER     NOT NULL DEFAULT 100,
+  primary_color    TEXT        NOT NULL DEFAULT '#D4AF37',
+  plan             TEXT        NOT NULL DEFAULT 'basic',
+
+  -- Advertising
+  ad_points_balance INTEGER    NOT NULL DEFAULT 0,
+
+  -- Telegram bot
+  bot_token        TEXT,
+  bot_username     TEXT,
+
+  is_active        BOOLEAN     NOT NULL DEFAULT TRUE,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Products table
-create table public.products (
-  id uuid default uuid_generate_v4() primary key,
-  store_id uuid references public.stores(id) on delete cascade not null,
-  name text not null,
-  description text,
-  price integer not null,
-  category text default 'عام',
-  image_url text,
-  is_exclusive boolean default false,
-  min_tier_to_view text default 'bronze' check (min_tier_to_view in ('bronze', 'silver', 'gold', 'platinum')),
-  is_active boolean default true,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+-- ─────────────────────────────────────────────
+--  products
+-- ─────────────────────────────────────────────
+CREATE TABLE public.products (
+  id               UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  store_id         UUID        NOT NULL REFERENCES public.stores (id) ON DELETE CASCADE,
+  name             TEXT        NOT NULL,
+  description      TEXT,
+  price            INTEGER     NOT NULL,
+  category         TEXT        NOT NULL DEFAULT 'عام',
+  image_url        TEXT,
+  is_exclusive     BOOLEAN     NOT NULL DEFAULT FALSE,
+  min_tier_to_view TEXT        NOT NULL DEFAULT 'bronze'
+                               CHECK (min_tier_to_view IN ('bronze','silver','gold','platinum')),
+  is_active        BOOLEAN     NOT NULL DEFAULT TRUE,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Offers table
-create table public.offers (
-  id uuid default uuid_generate_v4() primary key,
-  store_id uuid references public.stores(id) on delete cascade not null,
-  title text not null,
-  description text,
-  type text not null check (type in ('discount', 'gift', 'double_points', 'flash', 'exclusive')),
-  target_type text default 'all' check (target_type in ('all', 'products')),
-  discount_percent integer,
-  points_cost integer default 0,
-  min_tier text default 'bronze' check (min_tier in ('bronze', 'silver', 'gold', 'platinum')),
-  occasion_type text default 'always' check (occasion_type in ('always', 'fixed', 'birthday', 'anniversary', 'win_back', 'flash')),
-  occasion_date date,
-  valid_from timestamptz,
-  valid_until timestamptz,
-  usage_limit integer,
-  image_url text,
-  is_active boolean default true,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+-- ─────────────────────────────────────────────
+--  offers
+-- ─────────────────────────────────────────────
+CREATE TABLE public.offers (
+  id               UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  store_id         UUID        NOT NULL REFERENCES public.stores (id) ON DELETE CASCADE,
+  title            TEXT        NOT NULL,
+  description      TEXT,
+  type             TEXT        NOT NULL
+                               CHECK (type IN ('discount','gift','double_points','flash','exclusive')),
+  target_type      TEXT        NOT NULL DEFAULT 'all'
+                               CHECK (target_type IN ('all','products')),
+  discount_percent INTEGER,
+  points_cost      INTEGER     NOT NULL DEFAULT 0,
+  min_tier         TEXT        NOT NULL DEFAULT 'bronze'
+                               CHECK (min_tier IN ('bronze','silver','gold','platinum')),
+  occasion_type    TEXT        NOT NULL DEFAULT 'always'
+                               CHECK (occasion_type IN ('always','fixed','birthday','anniversary','win_back','flash')),
+  occasion_date    DATE,
+  valid_from       TIMESTAMPTZ,
+  valid_until      TIMESTAMPTZ,
+  usage_limit      INTEGER,
+  image_url        TEXT,
+  is_active        BOOLEAN     NOT NULL DEFAULT TRUE,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Offer-Products linking table
-create table public.offer_products (
-  id uuid default gen_random_uuid() primary key,
-  offer_id uuid references public.offers(id) on delete cascade not null,
-  product_id uuid references public.products(id) on delete cascade not null,
-  created_at timestamptz default now(),
-  unique(offer_id, product_id)
+-- ─────────────────────────────────────────────
+--  offer_products  –  many-to-many join
+-- ─────────────────────────────────────────────
+CREATE TABLE public.offer_products (
+  id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  offer_id   UUID        NOT NULL REFERENCES public.offers   (id) ON DELETE CASCADE,
+  product_id UUID        NOT NULL REFERENCES public.products (id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (offer_id, product_id)
 );
 
--- User-Store Memberships table
-create table public.user_store_memberships (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.users(id) on delete cascade not null,
-  store_id uuid references public.stores(id) on delete cascade not null,
-  role_id uuid references public.roles(id) on delete set null,
-  points integer default 0,
-  tier text default 'bronze' check (tier in ('bronze', 'silver', 'gold', 'platinum')),
-  total_spent integer default 0,
-  visit_count integer default 0,
-  last_purchase timestamptz,
-  joined_at timestamptz default now(),
-  updated_at timestamptz default now(),
-  referral_code text unique default substr(md5(random()::text), 1, 8),
-  unique(user_id, store_id)
+-- ─────────────────────────────────────────────
+--  user_store_memberships
+-- ─────────────────────────────────────────────
+CREATE TABLE public.user_store_memberships (
+  id            UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id       UUID        NOT NULL REFERENCES public.users  (id) ON DELETE CASCADE,
+  store_id      UUID        NOT NULL REFERENCES public.stores (id) ON DELETE CASCADE,
+  role_id       UUID        REFERENCES public.roles (id) ON DELETE SET NULL,
+
+  -- Loyalty state
+  points        INTEGER     NOT NULL DEFAULT 0,
+  tier          TEXT        NOT NULL DEFAULT 'bronze'
+                            CHECK (tier IN ('bronze','silver','gold','platinum')),
+  total_spent   INTEGER     NOT NULL DEFAULT 0,
+  visit_count   INTEGER     NOT NULL DEFAULT 0,
+  last_purchase TIMESTAMPTZ,
+
+  -- Referral
+  referral_code TEXT        UNIQUE DEFAULT SUBSTR(MD5(RANDOM()::TEXT), 1, 8),
+
+  joined_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  UNIQUE (user_id, store_id)
 );
 
--- Transactions table
-create table public.transactions (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.users(id) on delete cascade, -- Nullable for pending QR codes
-  store_id uuid references public.stores(id) on delete cascade not null,
-  membership_id uuid references public.user_store_memberships(id) on delete cascade,
-  type text not null check (type in ('earn', 'redeem', 'adjust', 'expire', 'welcome')),
-  points integer not null,
-  amount integer,
-  note text,
-  offer_id uuid references public.offers(id) on delete set null,
-  description text,
-  qr_token text unique,
-  qr_used boolean default false,
-  expires_at timestamptz,
-  created_at timestamptz default now()
+-- ─────────────────────────────────────────────
+--  transactions
+--  user_id is nullable to support pending QR-code flows.
+-- ─────────────────────────────────────────────
+CREATE TABLE public.transactions (
+  id            UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  store_id      UUID        NOT NULL REFERENCES public.stores (id) ON DELETE CASCADE,
+  user_id       UUID        REFERENCES public.users  (id) ON DELETE CASCADE,
+  membership_id UUID        REFERENCES public.user_store_memberships (id) ON DELETE CASCADE,
+  offer_id      UUID        REFERENCES public.offers (id) ON DELETE SET NULL,
+
+  type          TEXT        NOT NULL
+                            CHECK (type IN ('earn','redeem','adjust','expire','welcome')),
+  points        INTEGER     NOT NULL,
+  amount        INTEGER,
+  note          TEXT,
+  description   TEXT,
+
+  -- QR-code fields
+  qr_token      TEXT        UNIQUE,
+  qr_used       BOOLEAN     NOT NULL DEFAULT FALSE,
+  expires_at    TIMESTAMPTZ,
+
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Redemptions table
-create table public.redemptions (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.users(id) on delete cascade not null,
-  store_id uuid references public.stores(id) on delete cascade not null,
-  offer_id uuid references public.offers(id) on delete cascade not null,
-  points_spent integer not null,
-  discount_applied integer,
-  created_at timestamptz default now()
+-- ─────────────────────────────────────────────
+--  redemptions
+-- ─────────────────────────────────────────────
+CREATE TABLE public.redemptions (
+  id                      UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id                 UUID        NOT NULL REFERENCES public.users  (id) ON DELETE CASCADE,
+  store_id                UUID        NOT NULL REFERENCES public.stores (id) ON DELETE CASCADE,
+  offer_id                UUID        NOT NULL REFERENCES public.offers (id) ON DELETE CASCADE,
+  points_spent            INTEGER     NOT NULL,
+  discount_applied        INTEGER,
+
+  -- Coupon
+  coupon_code             VARCHAR(10),
+  coupon_code_expires_at  TIMESTAMPTZ,
+  products                JSONB,
+
+  created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Promotions/Advertising Campaigns table
-create table public.promotions (
-  id uuid default uuid_generate_v4() primary key,
-  store_id uuid references public.stores(id) on delete cascade not null,
-  title text not null,
-  body text,
-  image_url text,
-  cta_label text default 'اكتشف المتجر',
-  cta_url text,
-  target_tiers text[] default array['bronze', 'silver', 'gold', 'platinum'],
-  target_gender text check (target_gender in ('male', 'female', null)),
-  target_city text,
-  target_min_spent integer,
-  reward_points integer default 50,
-  budget_points integer default 1000,
-  starts_at timestamptz,
-  ends_at timestamptz,
-  is_active boolean default true,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+-- ─────────────────────────────────────────────
+--  promotions  –  advertising campaigns
+-- ─────────────────────────────────────────────
+CREATE TABLE public.promotions (
+  id               UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  store_id         UUID        NOT NULL REFERENCES public.stores (id) ON DELETE CASCADE,
+  title            TEXT        NOT NULL,
+  body             TEXT,
+  image_url        TEXT,
+  cta_label        TEXT        NOT NULL DEFAULT 'اكتشف المتجر',
+  cta_url          TEXT,
+
+  -- Targeting
+  target_tiers     TEXT[]      NOT NULL DEFAULT ARRAY['bronze','silver','gold','platinum'],
+  target_gender    TEXT        CHECK (target_gender IN ('male','female')),
+  target_city      TEXT,
+  target_min_spent INTEGER,
+
+  -- Budget
+  reward_points    INTEGER     NOT NULL DEFAULT 50,
+  budget_points    INTEGER     NOT NULL DEFAULT 1000,
+
+  starts_at        TIMESTAMPTZ,
+  ends_at          TIMESTAMPTZ,
+  is_active        BOOLEAN     NOT NULL DEFAULT TRUE,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Storage buckets
-INSERT INTO storage.buckets (id, name, public) VALUES 
-  ('product-images', 'product-images', true)
+-- ─────────────────────────────────────────────
+--  pending_point_claims
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.pending_point_claims (
+  id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  store_id       UUID        REFERENCES public.stores               (id) ON DELETE CASCADE,
+  user_id        UUID        REFERENCES public.users                (id) ON DELETE CASCADE,
+  membership_id  UUID        REFERENCES public.user_store_memberships (id) ON DELETE CASCADE,
+
+  status         VARCHAR(20) NOT NULL DEFAULT 'waiting',
+  amount_claimed NUMERIC,
+  points_claimed INTEGER,
+
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at     TIMESTAMPTZ,
+  claimed_at     TIMESTAMPTZ
+);
+
+
+-- ============================================================
+--  STORAGE
+-- ============================================================
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('product-images', 'product-images', TRUE)
 ON CONFLICT DO NOTHING;
 
--- Storage policies
-drop policy if exists "Allow public read product-images" on storage.objects;
-drop policy if exists "Allow public insert product-images" on storage.objects;
-drop policy if exists "Allow public update product-images" on storage.objects;
-drop policy if exists "Allow public delete product-images" on storage.objects;
-create policy "Allow public read product-images" on storage.objects for select using ( bucket_id = 'product-images' );
-create policy "Allow public insert product-images" on storage.objects for insert with check ( bucket_id = 'product-images' );
-create policy "Allow public update product-images" on storage.objects for update using ( bucket_id = 'product-images' );
-create policy "Allow public delete product-images" on storage.objects for delete using ( bucket_id = 'product-images' );
+-- Storage policies (public bucket — all operations permitted)
+DO $$ BEGIN
+  DROP POLICY IF EXISTS "product_images_select" ON storage.objects;
+  DROP POLICY IF EXISTS "product_images_insert" ON storage.objects;
+  DROP POLICY IF EXISTS "product_images_update" ON storage.objects;
+  DROP POLICY IF EXISTS "product_images_delete" ON storage.objects;
+END $$;
 
--- Row Level Security Policies
-alter table public.users enable row level security;
-alter table public.roles enable row level security;
-alter table public.stores enable row level security;
-alter table public.products enable row level security;
-alter table public.offers enable row level security;
-alter table public.offer_products enable row level security;
-alter table public.user_store_memberships enable row level security;
-alter table public.transactions enable row level security;
-alter table public.redemptions enable row level security;
-alter table public.promotions enable row level security;
+CREATE POLICY "product_images_select" ON storage.objects FOR SELECT USING (bucket_id = 'product-images');
+CREATE POLICY "product_images_insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'product-images');
+CREATE POLICY "product_images_update" ON storage.objects FOR UPDATE USING (bucket_id = 'product-images');
+CREATE POLICY "product_images_delete" ON storage.objects FOR DELETE USING (bucket_id = 'product-images');
 
--- Roles policies
-drop policy if exists "Allow public select roles" on public.roles;
-drop policy if exists "Allow public insert roles" on public.roles;
-drop policy if exists "Allow public update roles" on public.roles;
-drop policy if exists "Allow public delete roles" on public.roles;
-create policy "Allow public select roles" on public.roles for select using (true);
-create policy "Allow public insert roles" on public.roles for insert with check (true);
-create policy "Allow public update roles" on public.roles for update using (true);
-create policy "Allow public delete roles" on public.roles for delete using (true);
 
--- Users policies
-drop policy if exists "Allow public select users" on public.users;
-drop policy if exists "Allow public insert users" on public.users;
-drop policy if exists "Allow public update users" on public.users;
-drop policy if exists "Allow public delete users" on public.users;
-create policy "Allow public select users" on public.users for select using (true);
-create policy "Allow public insert users" on public.users for insert with check (true);
-create policy "Allow public update users" on public.users for update using (true);
-create policy "Allow public delete users" on public.users for delete using (true);
+-- ============================================================
+--  ROW-LEVEL SECURITY
+-- ============================================================
 
--- Stores policies
-drop policy if exists "Allow public select stores" on public.stores;
-drop policy if exists "Allow public insert stores" on public.stores;
-drop policy if exists "Allow public update stores" on public.stores;
-drop policy if exists "Allow public delete stores" on public.stores;
-create policy "Allow public select stores" on public.stores for select using (true);
-create policy "Allow public insert stores" on public.stores for insert with check (true);
-create policy "Allow public update stores" on public.stores for update using (true);
-create policy "Allow public delete stores" on public.stores for delete using (true);
+ALTER TABLE public.users                   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.roles                   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stores                  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products                ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.offers                  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.offer_products          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_store_memberships  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.transactions            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.redemptions             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.promotions              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.pending_point_claims    ENABLE ROW LEVEL SECURITY;
 
--- Products policies
-drop policy if exists "Allow public select products" on public.products;
-drop policy if exists "Allow public insert products" on public.products;
-drop policy if exists "Allow public update products" on public.products;
-drop policy if exists "Allow public delete products" on public.products;
-create policy "Allow public select products" on public.products for select using (true);
-create policy "Allow public insert products" on public.products for insert with check (true);
-create policy "Allow public update products" on public.products for update using (true);
-create policy "Allow public delete products" on public.products for delete using (true);
+-- Helper macro: open policies for all tables (Telegram-authenticated apps)
+DO $policies$
+DECLARE
+  tbl TEXT;
+  tables TEXT[] := ARRAY[
+    'users','roles','stores','products','offers','offer_products',
+    'user_store_memberships','transactions','redemptions','promotions',
+    'pending_point_claims'
+  ];
+BEGIN
+  FOREACH tbl IN ARRAY tables LOOP
+    EXECUTE FORMAT('DROP POLICY IF EXISTS "%s_select" ON public.%I', tbl, tbl);
+    EXECUTE FORMAT('DROP POLICY IF EXISTS "%s_insert" ON public.%I', tbl, tbl);
+    EXECUTE FORMAT('DROP POLICY IF EXISTS "%s_update" ON public.%I', tbl, tbl);
+    EXECUTE FORMAT('DROP POLICY IF EXISTS "%s_delete" ON public.%I', tbl, tbl);
+    EXECUTE FORMAT('CREATE POLICY "%s_select" ON public.%I FOR SELECT USING (TRUE)',      tbl, tbl);
+    EXECUTE FORMAT('CREATE POLICY "%s_insert" ON public.%I FOR INSERT WITH CHECK (TRUE)', tbl, tbl);
+    EXECUTE FORMAT('CREATE POLICY "%s_update" ON public.%I FOR UPDATE USING (TRUE)',      tbl, tbl);
+    EXECUTE FORMAT('CREATE POLICY "%s_delete" ON public.%I FOR DELETE USING (TRUE)',      tbl, tbl);
+  END LOOP;
+END;
+$policies$;
 
--- Offers policies
-drop policy if exists "Allow public select offers" on public.offers;
-drop policy if exists "Allow public insert offers" on public.offers;
-drop policy if exists "Allow public update offers" on public.offers;
-drop policy if exists "Allow public delete offers" on public.offers;
-create policy "Allow public select offers" on public.offers for select using (true);
-create policy "Allow public insert offers" on public.offers for insert with check (true);
-create policy "Allow public update offers" on public.offers for update using (true);
-create policy "Allow public delete offers" on public.offers for delete using (true);
 
--- Offer products policies
-drop policy if exists "Allow public select offer_products" on public.offer_products;
-drop policy if exists "Allow public insert offer_products" on public.offer_products;
-drop policy if exists "Allow public update offer_products" on public.offer_products;
-drop policy if exists "Allow public delete offer_products" on public.offer_products;
-create policy "Allow public select offer_products" on public.offer_products for select using (true);
-create policy "Allow public insert offer_products" on public.offer_products for insert with check (true);
-create policy "Allow public update offer_products" on public.offer_products for update using (true);
-create policy "Allow public delete offer_products" on public.offer_products for delete using (true);
+-- ============================================================
+--  INDEXES
+-- ============================================================
 
--- User store memberships policies
-drop policy if exists "Allow public select memberships" on public.user_store_memberships;
-drop policy if exists "Allow public insert memberships" on public.user_store_memberships;
-drop policy if exists "Allow public update memberships" on public.user_store_memberships;
-drop policy if exists "Allow public delete memberships" on public.user_store_memberships;
-create policy "Allow public select memberships" on public.user_store_memberships for select using (true);
-create policy "Allow public insert memberships" on public.user_store_memberships for insert with check (true);
-create policy "Allow public update memberships" on public.user_store_memberships for update using (true);
-create policy "Allow public delete memberships" on public.user_store_memberships for delete using (true);
+-- products
+CREATE INDEX idx_products_store_id                    ON public.products               (store_id);
 
--- Transactions policies
-drop policy if exists "Allow public select transactions" on public.transactions;
-drop policy if exists "Allow public insert transactions" on public.transactions;
-drop policy if exists "Allow public update transactions" on public.transactions;
-drop policy if exists "Allow public delete transactions" on public.transactions;
-create policy "Allow public select transactions" on public.transactions for select using (true);
-create policy "Allow public insert transactions" on public.transactions for insert with check (true);
-create policy "Allow public update transactions" on public.transactions for update using (true);
-create policy "Allow public delete transactions" on public.transactions for delete using (true);
+-- offers
+CREATE INDEX idx_offers_store_id                      ON public.offers                 (store_id);
 
--- Redemptions policies
-drop policy if exists "Allow public select redemptions" on public.redemptions;
-drop policy if exists "Allow public insert redemptions" on public.redemptions;
-drop policy if exists "Allow public update redemptions" on public.redemptions;
-drop policy if exists "Allow public delete redemptions" on public.redemptions;
-create policy "Allow public select redemptions" on public.redemptions for select using (true);
-create policy "Allow public insert redemptions" on public.redemptions for insert with check (true);
-create policy "Allow public update redemptions" on public.redemptions for update using (true);
-create policy "Allow public delete redemptions" on public.redemptions for delete using (true);
+-- offer_products
+CREATE INDEX idx_offer_products_offer_id              ON public.offer_products         (offer_id);
+CREATE INDEX idx_offer_products_product_id            ON public.offer_products         (product_id);
 
--- Promotions policies
-drop policy if exists "Allow public select promotions" on public.promotions;
-drop policy if exists "Allow public insert promotions" on public.promotions;
-drop policy if exists "Allow public update promotions" on public.promotions;
-drop policy if exists "Allow public delete promotions" on public.promotions;
-create policy "Allow public select promotions" on public.promotions for select using (true);
-create policy "Allow public insert promotions" on public.promotions for insert with check (true);
-create policy "Allow public update promotions" on public.promotions for update using (true);
-create policy "Allow public delete promotions" on public.promotions for delete using (true);
+-- user_store_memberships
+CREATE INDEX idx_memberships_store_id                 ON public.user_store_memberships (store_id);
+CREATE INDEX idx_memberships_user_id                  ON public.user_store_memberships (user_id);
 
--- Indexes
-create index idx_products_store_id on public.products(store_id);
-create index idx_offers_store_id on public.offers(store_id);
-create index idx_user_store_memberships_store_id on public.user_store_memberships(store_id);
-create index idx_user_store_memberships_user_id on public.user_store_memberships(user_id);
-create index idx_transactions_store_id on public.transactions(store_id);
-create index idx_transactions_user_id on public.transactions(user_id);
-create index idx_offer_products_offer_id on public.offer_products(offer_id);
-create index idx_offer_products_product_id on public.offer_products(product_id);
+-- transactions
+CREATE INDEX idx_transactions_store_id                ON public.transactions           (store_id);
+CREATE INDEX idx_transactions_user_id                 ON public.transactions           (user_id);
 
--- Function to update tier based on points
-create or replace function public.update_user_tier()
-returns trigger as $$
-begin
-  declare
-    tier_config jsonb;
-    current_points integer;
-    new_tier text;
-  begin
-    select s.tier_config, new.points into tier_config, current_points
-    from public.stores s
-    where s.id = new.store_id;
+-- redemptions
+CREATE INDEX idx_redemptions_coupon_code              ON public.redemptions            (coupon_code);
 
-    if current_points >= (tier_config->>'platinum')::integer then
-      new_tier := 'platinum';
-    elsif current_points >= (tier_config->>'gold')::integer then
-      new_tier := 'gold';
-    elsif current_points >= (tier_config->>'silver')::integer then
-      new_tier := 'silver';
-    else
-      new_tier := 'bronze';
-    end if;
+-- pending_point_claims
+CREATE INDEX idx_claims_store_status                  ON public.pending_point_claims   (store_id, status);
+CREATE INDEX idx_claims_user_store                    ON public.pending_point_claims   (user_id,  store_id);
+CREATE INDEX idx_claims_expires_at                    ON public.pending_point_claims   (expires_at);
 
-    if new_tier <> old.tier then
-      update public.user_store_memberships set tier = new_tier, updated_at = now() where id = new.id;
-    end if;
 
-    return new;
-  end;
-end;
-$$ language plpgsql;
+-- ============================================================
+--  FUNCTIONS & TRIGGERS
+-- ============================================================
 
--- Trigger for automatic tier updates
-DROP TRIGGER IF EXISTS update_tier_trigger ON public.user_store_memberships;
-CREATE TRIGGER update_tier_trigger
+-- ─────────────────────────────────────────────
+--  update_user_tier()
+--  Automatically promotes/demotes a member's tier
+--  whenever their points balance changes.
+-- ─────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.update_user_tier()
+RETURNS TRIGGER
+LANGUAGE plpgsql AS
+$$
+DECLARE
+  v_tier_config  JSONB;
+  v_new_tier     TEXT;
+BEGIN
+  SELECT tier_config
+    INTO v_tier_config
+    FROM public.stores
+   WHERE id = NEW.store_id;
+
+  v_new_tier :=
+    CASE
+      WHEN NEW.points >= (v_tier_config->>'platinum')::INTEGER THEN 'platinum'
+      WHEN NEW.points >= (v_tier_config->>'gold')::INTEGER     THEN 'gold'
+      WHEN NEW.points >= (v_tier_config->>'silver')::INTEGER   THEN 'silver'
+      ELSE 'bronze'
+    END;
+
+  IF v_new_tier IS DISTINCT FROM OLD.tier THEN
+    UPDATE public.user_store_memberships
+       SET tier       = v_new_tier,
+           updated_at = NOW()
+     WHERE id = NEW.id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_update_tier ON public.user_store_memberships;
+
+CREATE TRIGGER trg_update_tier
   AFTER UPDATE OF points ON public.user_store_memberships
-  FOR EACH ROW EXECUTE FUNCTION public.update_user_tier();
-
--- Additional migrations from supabase/migrations/
-
--- Add coupon columns to redemptions (from redemptions_coupon.sql)
-ALTER TABLE redemptions
-ADD COLUMN IF NOT EXISTS coupon_code VARCHAR(10),
-ADD COLUMN IF NOT EXISTS coupon_code_expires_at TIMESTAMP WITH TIME ZONE,
-ADD COLUMN IF NOT EXISTS products JSONB;
-
--- Create pending_point_claims table (from 003_create_pending_claims.sql)
-CREATE TABLE IF NOT EXISTS pending_point_claims (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  store_id UUID REFERENCES stores(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  membership_id UUID REFERENCES user_store_memberships(id) ON DELETE CASCADE,
-  status VARCHAR(20) DEFAULT 'waiting',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  expires_at TIMESTAMPTZ,
-  claimed_at TIMESTAMPTZ NULL,
-  amount_claimed NUMERIC NULL,
-  points_claimed INTEGER NULL
-);
-
--- Enable RLS on pending_point_claims
-ALTER TABLE pending_point_claims ENABLE ROW LEVEL SECURITY;
-
--- Indexes for pending_point_claims
-CREATE INDEX IF NOT EXISTS idx_pending_point_claims_store_status ON pending_point_claims (store_id, status);
-CREATE INDEX IF NOT EXISTS idx_pending_point_claims_user_store ON pending_point_claims (user_id, store_id);
-CREATE INDEX IF NOT EXISTS idx_pending_point_claims_expires_at ON pending_point_claims (expires_at);
-CREATE INDEX IF NOT EXISTS idx_redemptions_coupon_code ON redemptions (coupon_code);
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_user_tier();

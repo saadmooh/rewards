@@ -130,7 +130,7 @@ export default function ClientProducts() {
                       borderColor: '#D4AF37' // Add accent border on hover
                     }}
                     onClick={() => navigate(`/products/${product.id}`)}
-                    className="bg-white rounded-3xl overflow-hidden border border-border shadow-soft cursor-pointer active:scale-[0.98] transition-transform hover:shadow-xl hover:border-accent" // Added hover effects
+                    className="bg-white rounded-3xl overflow-hidden border border-border shadow-soft cursor-pointer active:scale-[0.98] transition-transform hover:shadow-xl hover:border-accent" // Added hover effects and accent border
                   >
                     <div className="aspect-square bg-surface relative">
                       {product.image_url ? (
@@ -146,9 +146,9 @@ export default function ClientProducts() {
                           <Lock size={14} className="text-white" />
                         </div>
                       )}
-                      {/* Discount Badge */}
+                      {/* Discount Badge - Positioned top-right as per plan */}
                       {isActiveOfferWithDiscount && (
-                        <div className="absolute top-1 right-1 p-1 bg-red-600/80 backdrop-blur-sm rounded-md z-10 flex items-center"> {/* Positioned top-right */}
+                        <div className="absolute top-1 right-1 p-1 bg-red-600/80 backdrop-blur-sm rounded-md z-10 flex items-center"> {/* Positioned top-right, red background */}
                           <Tag size={14} className="text-white" />
                           <span className="text-[10px] font-bold text-white ml-0.5">-{product.offer_products[0].offers.discount_percentage}%</span>
                         </div>

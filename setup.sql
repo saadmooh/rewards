@@ -223,31 +223,34 @@ alter table public.transactions enable row level security;
 alter table public.redemptions enable row level security;
 alter table public.promotions enable row level security;
 
--- Offer products policies
-create policy "Allow public select offer_products" on public.offer_products for select using (true);
-
 -- Roles policies
 create policy "Allow public select roles" on public.roles for select using (true);
+create policy "Allow public insert roles" on public.roles for insert with check (true);
+create policy "Allow public update roles" on public.roles for update using (true);
+create policy "Allow public delete roles" on public.roles for delete using (true);
 
 -- Users policies
-create policy "Allow public select users" on public.users for select using (true);
-create policy "Allow public insert users" on public.users for insert with check (true);
-create policy "Allow public update users" on public.users for update using (true);
+create policy "Allow public insert roles" on public.roles for insert with check (true);
+create policy "Allow public update roles" on public.roles for update using (true);
+create policy "Allow public delete roles" on public.roles for delete using (true);
 
 -- Stores policies
 create policy "Allow public select stores" on public.stores for select using (true);
 create policy "Allow public insert stores" on public.stores for insert with check (true);
 create policy "Allow public update stores" on public.stores for update using (true);
+create policy "Allow public delete stores" on public.stores for delete using (true);
 
 -- Products policies
 create policy "Allow public select products" on public.products for select using (true);
 create policy "Allow public insert products" on public.products for insert with check (true);
 create policy "Allow public update products" on public.products for update using (true);
+create policy "Allow public delete products" on public.products for delete using (true);
 
 -- Offers policies
 create policy "Allow public select offers" on public.offers for select using (true);
 create policy "Allow public insert offers" on public.offers for insert with check (true);
 create policy "Allow public update offers" on public.offers for update using (true);
+create policy "Allow public delete offers" on public.offers for delete using (true);
 
 -- Offer products policies
 create policy "Allow public select offer_products" on public.offer_products for select using (true);
@@ -259,17 +262,25 @@ create policy "Allow public delete offer_products" on public.offer_products for 
 create policy "Allow public select memberships" on public.user_store_memberships for select using (true);
 create policy "Allow public insert memberships" on public.user_store_memberships for insert with check (true);
 create policy "Allow public update memberships" on public.user_store_memberships for update using (true);
+create policy "Allow public delete memberships" on public.user_store_memberships for delete using (true);
 
 -- Transactions policies
 create policy "Allow public select transactions" on public.transactions for select using (true);
 create policy "Allow public insert transactions" on public.transactions for insert with check (true);
+create policy "Allow public update transactions" on public.transactions for update using (true);
+create policy "Allow public delete transactions" on public.transactions for delete using (true);
 
 -- Redemptions policies
 create policy "Allow public select redemptions" on public.redemptions for select using (true);
 create policy "Allow public insert redemptions" on public.redemptions for insert with check (true);
+create policy "Allow public update redemptions" on public.redemptions for update using (true);
+create policy "Allow public delete redemptions" on public.redemptions for delete using (true);
 
 -- Promotions policies
 create policy "Allow public select promotions" on public.promotions for select using (true);
+create policy "Allow public insert promotions" on public.promotions for insert with check (true);
+create policy "Allow public update promotions" on public.promotions for update using (true);
+create policy "Allow public delete promotions" on public.promotions for delete using (true);
 
 -- Indexes
 create index idx_products_store_id on public.products(store_id);

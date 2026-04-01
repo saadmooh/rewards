@@ -206,6 +206,12 @@ INSERT INTO storage.buckets (id, name, public) VALUES
   ('product-images', 'product-images', true)
 ON CONFLICT DO NOTHING;
 
+-- Storage policies
+create policy "Allow public read product-images" on storage.objects for select using ( bucket_id = 'product-images' );
+create policy "Allow public insert product-images" on storage.objects for insert with check ( bucket_id = 'product-images' );
+create policy "Allow public update product-images" on storage.objects for update using ( bucket_id = 'product-images' );
+create policy "Allow public delete product-images" on storage.objects for delete using ( bucket_id = 'product-images' );
+
 -- Row Level Security Policies
 alter table public.users enable row level security;
 alter table public.roles enable row level security;
@@ -235,9 +241,19 @@ create policy "Allow public update stores" on public.stores for update using (tr
 
 -- Products policies
 create policy "Allow public select products" on public.products for select using (true);
+create policy "Allow public insert products" on public.products for insert with check (true);
+create policy "Allow public update products" on public.products for update using (true);
 
 -- Offers policies
 create policy "Allow public select offers" on public.offers for select using (true);
+create policy "Allow public insert offers" on public.offers for insert with check (true);
+create policy "Allow public update offers" on public.offers for update using (true);
+
+-- Offer products policies
+create policy "Allow public select offer_products" on public.offer_products for select using (true);
+create policy "Allow public insert offer_products" on public.offer_products for insert with check (true);
+create policy "Allow public update offer_products" on public.offer_products for update using (true);
+create policy "Allow public delete offer_products" on public.offer_products for delete using (true);
 
 -- User store memberships policies
 create policy "Allow public select memberships" on public.user_store_memberships for select using (true);

@@ -201,24 +201,36 @@ function ProductForm({ product, storeId, onSave, onClose }) {
     try {
       const ext = file.name.split('.').pop()
       const path = `${storeId}/${Date.now()}.${ext}`
-      await supabase.storage.from('product-images').upload(path, file, { upsert: true })
-      const { data } = supabase.storage.from('product-images').getPublicUrl(path)
-      setForm(f => ({ ...f, image_url: data.publicUrl }))
+      const { data, error } = await supabase.storage.from('product-images').upload(path, file, { upsert: true })
+      if (error) throw error
+      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path)
+      setForm(f => ({ ...f, image_url: urlData.publicUrl }))
     } catch (err) {
       console.error('Upload error:', err)
+      alert('فشل رفع الصورة: ' + err.message)
     }
     setUploading(false)
   }
 
   const handleSave = async () => {
-    if (!form.name || !form.price) return
-    
-    if (product?.id) {
-      await supabase.from('products').update({ ...form, updated_at: new Date() }).eq('id', product.id)
-    } else {
-      await supabase.from('products').insert({ ...form, store_id: storeId })
+    if (!form.name || !form.price) {
+      alert('الرجاء إدخال اسم المنتج والسعر')
+      return
     }
-    onSave()
+    
+    try {
+      if (product?.id) {
+        const { error } = await supabase.from('products').update({ ...form, updated_at: new Date() }).eq('id', product.id)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('products').insert({ ...form, store_id: storeId })
+        if (error) throw error
+      }
+      onSave()
+    } catch (err) {
+      console.error('Save error:', err)
+      alert('فشل حفظ المنتج: ' + err.message)
+    }
   }
 
   return (

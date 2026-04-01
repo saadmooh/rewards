@@ -203,8 +203,6 @@ create table public.promotions (
 );
 
 -- Storage buckets
-DROP TABLE IF EXISTS storage.buckets CASCADE;
-DROP TABLE IF EXISTS storage.objects CASCADE;
 INSERT INTO storage.buckets (id, name, public) VALUES 
   ('product-images', 'product-images', true)
 ON CONFLICT DO NOTHING;

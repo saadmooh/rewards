@@ -18,9 +18,9 @@ export default function ClientProducts() {
       .from('products')
       .select(`
         id, name, price, image_url, is_active, category, is_exclusive, min_tier_to_view,
-        offer_products:offer_products( // Alias for clarity
+        offer_products:offer_products(
           offer_id, 
-          offers(id, discount_percentage, original_price, valid_until, type) // Fetch offer details
+          offers(id, type, discount_percent, valid_from, valid_until)
         )
       `)
       .eq('store_id', store.id)
@@ -45,24 +45,22 @@ export default function ClientProducts() {
 
   // Helper function to display price info, handling discounts from offers
   const displayProductPriceInfo = (product) => {
-    const offerDetails = product.offer_products?.[0]?.offers; // Accessing the first offer for simplicity
+    const offerDetails = product.offer_products?.[0]?.offers;
     
-    // Check if an offer with a discount percentage is available
-    if (offerDetails && offerDetails.discount_percentage !== null && offerDetails.discount_percentage !== undefined && offerDetails.discount_percentage > 0) {
-      const discountAmount = offerDetails.original_price * (offerDetails.discount_percentage / 100);
-      const discountedPrice = offerDetails.original_price - discountAmount;
+    if (offerDetails && offerDetails.discount_percent && offerDetails.discount_percent > 0) {
+      const discountAmount = product.price * (offerDetails.discount_percent / 100);
+      const discountedPrice = product.price - discountAmount;
       return (
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-muted line-through text-sm">{offerDetails.original_price?.toLocaleString()} دج</span>
+          <span className="text-muted line-through text-sm">{product.price?.toLocaleString()} دج</span>
           <span className="text-accent font-black text-base">{discountedPrice?.toLocaleString()} دج</span>
-          <span className="text-xs text-green-600 font-bold">-{offerDetails.discount_percentage}%</span>
+          <span className="text-xs text-green-600 font-bold">-{offerDetails.discount_percent}%</span>
         </div>
       );
     } else if (product.price) {
-      // Fallback to just displaying price if no explicit discount fields from an offer
       return <span className="text-accent font-black text-sm">{product.price?.toLocaleString()} <span className="text-[10px]">دج</span></span>;
     }
-    return null; // No price info to display
+    return null;
   };
 
   // Filter products based on category and user's tier access
@@ -106,11 +104,10 @@ export default function ClientProducts() {
           <div className="grid grid-cols-2 gap-4">
             <AnimatePresence>
               {filteredProducts.map((product, i) => {
-                // Determine if there's an active offer with discount
-                const isActiveOfferWithDiscount = product.offer_products?.[0]?.offers && 
-                                                 product.offer_products[0].offers.discount_percentage !== null && 
-                                                 product.offer_products[0].offers.discount_percentage !== undefined &&
-                                                 product.offer_products[0].offers.discount_percentage > 0;
+                const offerDetails = product.offer_products?.[0]?.offers;
+                const isActiveOfferWithDiscount = offerDetails && 
+                                                 offerDetails.discount_percent && 
+                                                 offerDetails.discount_percent > 0;
                 
                 // Determine if the product is exclusive and requires a specific tier
                 const isExclusiveAndTierRestricted = product.is_exclusive && 
@@ -148,9 +145,9 @@ export default function ClientProducts() {
                       )}
                       {/* Discount Badge - Positioned top-right as per plan */}
                       {isActiveOfferWithDiscount && (
-                        <div className="absolute top-1 right-1 p-1 bg-red-600/80 backdrop-blur-sm rounded-md z-10 flex items-center"> {/* Positioned top-right, red background */}
+                        <div className="absolute top-1 right-1 p-1 bg-red-600/80 backdrop-blur-sm rounded-md z-10 flex items-center">
                           <Tag size={14} className="text-white" />
-                          <span className="text-[10px] font-bold text-white ml-0.5">-{product.offer_products[0].offers.discount_percentage}%</span>
+                          <span className="text-[10px] font-bold text-white ml-0.5">-{offerDetails.discount_percent}%</span>
                         </div>
                       )}
                     </div>

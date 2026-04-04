@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { supabase} from '../lib/supabase';
+import useUserStore from '../store/userStore';
 
 export const useOfferWithProducts = (offerId) => {
   const [offer, setOffer] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { store } = useUserStore();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,14 +22,21 @@ export const useOfferWithProducts = (offerId) => {
       setError(null);
 
       try {
-        // Fetch offer details
-        const { data: offerData, error: offerError } = await supabase
+        // Fetch offer details filtered by store
+        const query = supabase
           .from('offers')
           .select('*')
-          .eq('id', offerId)
-          .single();
+          .eq('id', offerId);
+        
+        // If store is available, filter by it to ensure we only get offers from user's store
+        if (store?.id) {
+          query.eq('store_id', store.id);
+        }
+        
+        const { data: offerData, error: offerError } = await query.single();
 
         if (offerError) throw offerError;
+        if (!offerData) throw new Error('Offer not found');
         setOffer(offerData);
 
         // Fetch linked products
@@ -82,7 +91,7 @@ export const useOfferWithProducts = (offerId) => {
     };
 
     fetchData();
-  }, [offerId]);
+  }, [offerId, store?.id]);
 
   return { offer, products, loading, error };
 };

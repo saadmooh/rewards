@@ -259,19 +259,18 @@ const useUserStore = create((set, get) => ({
     const { user, membership, store } = get()
     if (!user?.id || !membership?.id || !store?.id || membership.points < pointsCost) return false
     try {
-      // Fetch products associated with the offer
-      let productIds = [];
-      const { data: products, error: productError } = await supabase
-        .from('products')
-        .select('id')
-        .neq('id', null)
-        .or(`id.in.(SELECT product_id FROM offer_products WHERE offer_id='${offerId}')`);
+      // Fetch products associated with the offer via offer_products junction
+      const { data: offerProductData, error: offerProductError } = await supabase
+        .from('offer_products')
+        .select('product_id')
+        .eq('offer_id', offerId);
 
-      if (productError) {
-        console.error('Error fetching products for offer:', productError);
-        throw productError;
+      if (offerProductError) {
+        console.error('Error fetching products for offer:', offerProductError);
+        throw offerProductError;
       }
-      productIds = products ? products.map(p => p.id) : [];
+
+      const productIds = offerProductData ? offerProductData.map(op => op.product_id) : [];
 
       // Generate 4-digit coupon code
       const couponCode = generateFourDigitCode();

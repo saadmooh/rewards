@@ -10,13 +10,14 @@ export default function ClientOffers() {
   const navigate = useNavigate()
   const { store } = useUserStore()
 
-  const { data: discountedProducts, isLoading } = useQuery({
+  const { data: offersWithProducts, isLoading } = useQuery({
     queryKey: ['discounted-products', store?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('offers')
         .select(`
           id,
+          type,
           offer_products (
             products (*)
           )
@@ -26,16 +27,19 @@ export default function ClientOffers() {
       
       if (error) throw error;
       
-      // Flatten and deduplicate products from all active offers
-      const products = data.flatMap(o => o.offer_products.map(op => ({
-        ...op.products,
-        offer_id: o.id
-      })));
+      // Flatten and add offer type to each product
+      const productsWithTypes = data.flatMap(o => 
+        o.offer_products.map(op => ({
+          ...op.products,
+          offer_id: o.id,
+          offer_type: o.type
+        }))
+      );
 
       // Deduplicate by ID
       const uniqueProducts = [];
       const seen = new Set();
-      for (const p of products) {
+      for (const p of productsWithTypes) {
         if (!seen.has(p.id)) {
           uniqueProducts.push(p);
           seen.add(p.id);
@@ -69,10 +73,10 @@ export default function ClientOffers() {
               <div key={i} className="h-32 bg-white rounded-3xl border border-border animate-pulse" />
             ))}
           </div>
-        ) : discountedProducts?.length > 0 ? (
+        ) : offersWithProducts?.length > 0 ? (
           <div className="grid gap-4">
             <AnimatePresence>
-              {discountedProducts.map((product, i) => (
+              {offersWithProducts.map((product, i) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, x: 20 }}
@@ -81,6 +85,7 @@ export default function ClientOffers() {
                 >
                   <ProductOfferCard
                     product={product}
+                    offerType={product.offer_type}
                     onProductClick={() => navigate(`/offers/${product.offer_id}`)}
                   />
                 </motion.div>
@@ -108,7 +113,7 @@ export default function ClientOffers() {
       <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
         <div className="bg-white/80 backdrop-blur-md border border-border px-4 py-2 rounded-full shadow-xl flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          <span className="text-[10px] font-black text-text uppercase tracking-widest">مباشر: {discountedProducts?.length || 0} صفقات</span>
+          <span className="text-[10px] font-black text-text uppercase tracking-widest">مباشر: {offersWithProducts?.length || 0} صفقات</span>
         </div>
       </div>
     </div>

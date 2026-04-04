@@ -39,8 +39,22 @@ export const useOfferWithProducts = (offerId) => {
         if (!offerData) throw new Error('Offer not found');
         setOffer(offerData);
 
-        // Fetch linked products
+        // Fetch linked products via offer_products junction
         if (offerData) {
+          const { data: offerProductData, error: offerProductError } = await supabase
+            .from('offer_products')
+            .select('product_id')
+            .eq('offer_id', offerId);
+          
+          if (offerProductError) throw offerProductError;
+
+          const productIds = offerProductData.map(op => op.product_id);
+          
+          if (productIds.length === 0) {
+            setProducts([]);
+            return;
+          }
+
           const { data: productData, error: productError } = await supabase
             .from('products')
             .select(`
@@ -48,8 +62,7 @@ export const useOfferWithProducts = (offerId) => {
               original_price, discount_percentage,
               is_exclusive, min_tier_to_view
             `)
-            .neq('id', null)
-            .or(`id.in.(SELECT product_id FROM offer_products WHERE offer_id='${offerId}')`);
+            .in('id', productIds);
           
           if (productError) throw productError;
 

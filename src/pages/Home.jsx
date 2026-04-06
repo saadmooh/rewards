@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
+import { TrendingUp } from 'lucide-react'
 import useUserStore from '../store/userStore'
 import { supabase } from '../lib/supabase'
 import { useProducts } from '../hooks/useProducts'
@@ -9,11 +10,28 @@ import PointsCard from '../components/PointsCard'
 import ProductCard from '../components/ProductCard'
 import ProductOfferCard from '../components/ProductOfferCard'
 import { calculateProductPrice } from '../lib/offers'
+import { ProductCardSkeleton, OfferCardSkeleton } from '../components/CardSkeleton'
+import { hapticFeedback } from '../lib/telegram'
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+}
 
 export default function Home() {
   const navigate = useNavigate()
   const { user, store, membership } = useUserStore()
-  const { products } = useProducts()
+  const { products, isLoading: isProductsLoading } = useProducts()
   const [scanning, setScanning] = useState(false)
 
   const { data: offersWithProducts, isLoading: isOffersLoading } = useQuery({
@@ -36,7 +54,6 @@ export default function Home() {
       
       if (error) throw error;
       
-      // Flatten and add offer type + calculate prices to each product
       const productsWithTypes = (data || []).flatMap(o => 
         (o.offer_products || []).map(op => {
           if (!op.products) return null;
@@ -51,7 +68,6 @@ export default function Home() {
         }).filter(Boolean)
       );
 
-      // Deduplicate by ID
       const uniqueProducts = [];
       const seen = new Set();
       for (const p of productsWithTypes) {
@@ -61,7 +77,6 @@ export default function Home() {
         }
       }
 
-      // Logic: Prioritize products the user can afford with points
       const userPoints = membership?.points || 0;
       const affordable = uniqueProducts.filter(p => p.points_cost <= userPoints);
       const expensive = uniqueProducts.filter(p => p.points_cost > userPoints);
@@ -82,7 +97,48 @@ export default function Home() {
     enabled: !!store?.id
   })
 
-  // Map products to their offers for quick lookup in New Arrivals
+  // Trending Products Query
+  const { data: trendingProducts, isLoading: isTrendingLoading } = useQuery({
+    queryKey: ['trending-products', store?.id],
+    queryFn: async () => {
+      if (!store?.id) return [];
+      
+      // Get counts from redemptions
+      const { data: redemptions, error: redError } = await supabase
+        .from('redemptions')
+        .select('products')
+        .eq('store_id', store.id)
+        .limit(100);
+
+      if (redError) throw redError;
+
+      // Count occurrences of each product ID
+      const counts = {};
+      redemptions.forEach(r => {
+        const productIds = r.products || [];
+        productIds.forEach(id => {
+          counts[id] = (counts[id] || 0) + 1;
+        });
+      });
+
+      // Sort by count and get top 6
+      const sortedIds = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 6);
+      
+      if (sortedIds.length === 0) return [];
+
+      const { data: productsData, error: prodError } = await supabase
+        .from('products')
+        .select('*')
+        .in('id', sortedIds)
+        .eq('is_active', true);
+
+      if (prodError) throw prodError;
+
+      return productsData.map(p => calculateProductPrice(p));
+    },
+    enabled: !!store?.id
+  })
+
   const productToOfferMap = useMemo(() => {
     const map = new Map();
     if (!offersWithProducts) return map;
@@ -93,6 +149,7 @@ export default function Home() {
   }, [offersWithProducts]);
 
   const handleScan = () => {
+    hapticFeedback('medium')
     setScanning(true)
     setTimeout(() => {
       setScanning(false)
@@ -100,17 +157,23 @@ export default function Home() {
     }, 500)
   }
 
-  // Calculate prices for latest products (New Arrivals) to show discounts
+  const handleCardClick = (path) => {
+    hapticFeedback('light')
+    navigate(path)
+  }
+
   const latestProducts = useMemo(() => {
     const forYouIds = new Set(offersWithProducts?.map(p => p.id) || []);
+    const trendingIds = new Set(trendingProducts?.map(p => p.id) || []);
+    
     return products
-      ?.filter(p => !forYouIds.has(p.id))
+      ?.filter(p => !forYouIds.has(p.id) && !trendingIds.has(p.id))
       .slice(0, 8)
       .map(p => {
         const offer = productToOfferMap.get(p.id);
         return calculateProductPrice(p, offer);
       }) || [];
-  }, [products, offersWithProducts, productToOfferMap]);
+  }, [products, offersWithProducts, trendingProducts, productToOfferMap]);
 
   return (
     <div className="min-h-screen bg-white pb-24">
@@ -154,54 +217,120 @@ export default function Home() {
           </motion.button>
         </section>
 
+        {/* For You Section */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-medium text-gray-900">For You</h2>
             <button
-              onClick={() => navigate('/offers')}
+              onClick={() => handleCardClick('/offers')}
               className="text-gray-500 font-medium text-sm"
             >
               See All
             </button>
           </div>
 
-          <div className="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide"
+          >
             {isOffersLoading ? (
               [1, 2].map((i) => (
-                <div key={i} className="min-w-[280px] h-32 bg-gray-100 rounded-2xl animate-pulse" />
+                <div key={i} className="min-w-[280px]">
+                  <OfferCardSkeleton />
+                </div>
               ))
             ) : offersWithProducts?.length > 0 ? (
               offersWithProducts.map((product) => (
-                <div key={product.id} className="min-w-[280px]">
+                <motion.div 
+                  key={product.id} 
+                  variants={itemVariants}
+                  className="min-w-[280px]"
+                >
                   <ProductOfferCard
                     product={product}
                     offerType={product.offer_type}
-                    onProductClick={() => navigate(`/offers/${product.offer_id}`)}
+                    onProductClick={() => handleCardClick(`/offers/${product.offer_id}`)}
                   />
-                </div>
+                </motion.div>
               ))
             ) : (
               <div className="text-center py-8 text-gray-400 w-full">
                 <p>No special offers today</p>
               </div>
             )}
-          </div>
+          </motion.div>
         </section>
 
+        {/* Trending Section */}
+        {trendingProducts?.length > 0 && (
+          <section className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp size={20} className="text-accent" />
+                <h2 className="text-lg font-medium text-gray-900">Trending Now</h2>
+              </div>
+            </div>
+
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide"
+            >
+              {trendingProducts.map((product) => (
+                <motion.div 
+                  key={product.id} 
+                  variants={itemVariants}
+                  className="min-w-[160px]"
+                >
+                  <ProductCard
+                    id={product.id}
+                    name={product.name}
+                    price={product.price}
+                    original_price={product.original_price}
+                    imageUrl={product.image_url}
+                    onClick={() => handleCardClick(`/products/${product.id}`)}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          </section>
+        )}
+
+        {/* New Arrivals Section */}
         <section>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-medium text-gray-900">New Arrivals</h2>
             <button
-              onClick={() => navigate('/products')}
+              onClick={() => handleCardClick('/products')}
               className="text-gray-500 font-medium text-sm"
             >
               See All
             </button>
           </div>
 
-          <div className="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide">
-            {latestProducts.length > 0 ? latestProducts.map((product) => (
-              <div key={product.id} className="min-w-[160px]">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide"
+          >
+            {isProductsLoading ? (
+              [1, 2, 3].map((i) => (
+                <div key={i} className="min-w-[160px]">
+                  <ProductCardSkeleton />
+                </div>
+              ))
+            ) : latestProducts.length > 0 ? latestProducts.map((product) => (
+              <motion.div 
+                key={product.id} 
+                variants={itemVariants}
+                className="min-w-[160px]"
+              >
                 <ProductCard
                   id={product.id}
                   name={product.name}
@@ -209,15 +338,15 @@ export default function Home() {
                   original_price={product.original_price}
                   imageUrl={product.image_url}
                   showOriginalPrice={false}
-                  onClick={() => navigate(`/products/${product.id}`)}
+                  onClick={() => handleCardClick(`/products/${product.id}`)}
                 />
-              </div>
+              </motion.div>
             )) : (
               <div className="text-center py-8 text-gray-400 w-full">
                 <p>Loading products...</p>
               </div>
             )}
-          </div>
+          </motion.div>
         </section>
       </div>
     </div>

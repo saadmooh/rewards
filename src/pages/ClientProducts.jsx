@@ -4,12 +4,34 @@ import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Package, ChevronRight, Zap, Crown, Tag, Lock } from 'lucide-react' // Import Tag for discount badge, Lock for exclusive
 import useUserStore from '../store/userStore'
-import { supabase} from '../lib/supabase'
+import { supabase } from '../lib/supabase'
+import { ProductCardSkeleton } from '../components/CardSkeleton'
+import { hapticFeedback } from '../lib/telegram'
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05
+    }
+  }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { opacity: 1, scale: 1 }
+}
 
 export default function ClientProducts() {
   const navigate = useNavigate()
   const { store, membership } = useUserStore()
   const [catFilter, setCatFilter] = useState('الكل')
+
+  const handleProductClick = (path) => {
+    hapticFeedback('light')
+    navigate(path)
+  }
 
   // Updated query to fetch products with associated offers and discount details
   const { data: products, isLoading } = useQuery({
@@ -95,14 +117,19 @@ export default function ClientProducts() {
 
         {isLoading ? (
           <div className="grid grid-cols-2 gap-4">
-            {[1,2,3,4].map(i => (
-              <div key={i} className="aspect-square bg-gray-100 rounded-2xl animate-pulse" />
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <ProductCardSkeleton key={i} />
             ))}
           </div>
         ) : filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-2 gap-4"
+          >
             <AnimatePresence>
-              {filteredProducts.map((product, i) => {
+              {filteredProducts.map((product) => {
                 const offerDetails = product.offer_products?.[0]?.offers;
                 const isActiveOfferWithDiscount = offerDetails && 
                                                  offerDetails.discount_percent && 
@@ -115,10 +142,8 @@ export default function ClientProducts() {
                 return (
                   <motion.div
                     key={product.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.03 }}
-                    onClick={() => navigate(`/products/${product.id}`)}
+                    variants={itemVariants}
+                    onClick={() => handleProductClick(`/products/${product.id}`)}
                     className="bg-white rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
                   >
                     <div className="aspect-square bg-gray-50 relative">
@@ -154,7 +179,7 @@ export default function ClientProducts() {
                 )
               })}
             </AnimatePresence>
-          </div>
+          </motion.div>
         ) : (
           <div className="text-center py-20">
             <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">

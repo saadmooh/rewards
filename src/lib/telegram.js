@@ -180,6 +180,13 @@ export function showAlert(message) {
   }
 }
 
+export function hapticFeedback(style = 'light') {
+  const tg = window.Telegram?.WebApp
+  if (tg?.HapticFeedback) {
+    tg.HapticFeedback.impactOccurred(style)
+  }
+}
+
 export function showConfirm(message) {
   const tg = window.Telegram?.WebApp
   if (tg) {

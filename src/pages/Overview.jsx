@@ -133,6 +133,35 @@ export default function Overview() {
     enabled: !!store?.id
   })
 
+  // Offer performance query
+  const { data: offerPerformance } = useQuery({
+    queryKey: ['offer-performance', store?.id],
+    queryFn: async () => {
+      if (!store?.id) return []
+      
+      const { data: offers } = await supabase
+        .from('offers')
+        .select('id, title')
+        .eq('store_id', store.id)
+
+      const { data: redemptions } = await supabase
+        .from('redemptions')
+        .select('offer_id')
+        .eq('store_id', store.id)
+
+      const counts = {}
+      redemptions?.forEach(r => {
+        counts[r.offer_id] = (counts[r.offer_id] || 0) + 1
+      })
+
+      return offers?.map(o => ({
+        title: o.title,
+        redemptions: counts[o.id] || 0
+      })).sort((a, b) => b.redemptions - a.redemptions).slice(0, 5)
+    },
+    enabled: !!store?.id
+  })
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Welcome & Action Header */}
@@ -303,6 +332,31 @@ export default function Overview() {
           </button>
         </motion.div>
       )}
+
+      {/* Offer Performance */}
+      <div className="bg-white rounded-3xl p-6 border border-border shadow-soft">
+        <h3 className="text-lg font-black text-text tracking-tight mb-6">أداء العروض</h3>
+        <div className="space-y-4">
+          {offerPerformance?.map(o => (
+            <div key={o.title} className="space-y-1">
+              <div className="flex justify-between text-sm font-bold">
+                <span className="text-text">{o.title}</span>
+                <span className="text-muted">{o.redemptions} استخدام</span>
+              </div>
+              <div className="h-2 bg-surface rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${Math.min(100, (o.redemptions / (stats?.activeOffers || 1)) * 100)}%` }}
+                  className="h-full bg-accent"
+                />
+              </div>
+            </div>
+          ))}
+          {!offerPerformance?.length && (
+            <p className="text-center text-muted py-4 font-medium">لا توجد بيانات للعروض بعد</p>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

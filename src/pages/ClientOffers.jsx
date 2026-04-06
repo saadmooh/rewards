@@ -6,10 +6,32 @@ import useUserStore from '../store/userStore'
 import { supabase } from '../lib/supabase'
 import ProductOfferCard from '../components/ProductOfferCard'
 import { calculateProductPrice } from '../lib/offers'
+import { OfferCardSkeleton } from '../components/CardSkeleton'
+import { hapticFeedback } from '../lib/telegram'
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05
+    }
+  }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: { opacity: 1, x: 0 }
+}
 
 export default function ClientOffers() {
   const navigate = useNavigate()
   const { store } = useUserStore()
+
+  const handleProductClick = (path) => {
+    hapticFeedback('light')
+    navigate(path)
+  }
 
   const { data: offersWithProducts, isLoading } = useQuery({
     queryKey: ['discounted-products', store?.id],
@@ -72,29 +94,32 @@ export default function ClientOffers() {
 
         {isLoading ? (
           <div className="grid gap-4">
-            {[1,2,3,4].map(i => (
-              <div key={i} className="h-24 bg-gray-100 rounded-2xl animate-pulse" />
+            {[1, 2, 3, 4].map(i => (
+              <OfferCardSkeleton key={i} />
             ))}
           </div>
         ) : offersWithProducts?.length > 0 ? (
-          <div className="grid gap-3">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid gap-3"
+          >
             <AnimatePresence>
-              {offersWithProducts.map((product, i) => (
+              {offersWithProducts.map((product) => (
                 <motion.div
                   key={product.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.03 }}
+                  variants={itemVariants}
                 >
                   <ProductOfferCard
                     product={product}
                     offerType={product.offer_type}
-                    onProductClick={() => navigate(`/offers/${product.offer_id}`)}
+                    onProductClick={() => handleProductClick(`/offers/${product.offer_id}`)}
                   />
                 </motion.div>
               ))}
             </AnimatePresence>
-          </div>
+          </motion.div>
         ) : (
           <div className="text-center py-24">
             <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">

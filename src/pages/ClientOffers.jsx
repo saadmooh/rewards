@@ -5,6 +5,7 @@ import { Tag } from 'lucide-react'
 import useUserStore from '../store/userStore'
 import { supabase } from '../lib/supabase'
 import ProductOfferCard from '../components/ProductOfferCard'
+import { calculateProductPrice } from '../lib/offers'
 
 export default function ClientOffers() {
   const navigate = useNavigate()
@@ -29,33 +30,17 @@ export default function ClientOffers() {
       if (error) throw error;
       
       // Flatten and add offer type + calculate prices to each product
-      const productsWithTypes = data.flatMap(o => 
-        o.offer_products.map(op => {
-          const product = { ...op.products };
-          
-          if (o.type === 'gift') {
-            product.original_price = product.price;
-            product.discount_percentage = 100;
-            product.price = 0;
-          } else if (o.discount_percent && o.discount_percent > 0) {
-            const discountAmount = Math.round(product.price * (o.discount_percent / 100));
-            product.original_price = product.price;
-            product.discount_percentage = o.discount_percent;
-            product.price = product.price - discountAmount;
-          } else if (product.discount_percentage && product.discount_percentage > 0) {
-            const discountAmount = Math.round(product.price * (product.discount_percentage / 100));
-            if (!product.original_price) {
-              product.original_price = product.price;
-            }
-            product.price = product.price - discountAmount;
-          }
+      const productsWithTypes = (data || []).flatMap(o => 
+        (o.offer_products || []).map(op => {
+          if (!op.products) return null;
+          const product = calculateProductPrice(op.products, o);
           
           return {
             ...product,
             offer_id: o.id,
             offer_type: o.type
           };
-        })
+        }).filter(Boolean)
       );
 
       // Deduplicate by ID

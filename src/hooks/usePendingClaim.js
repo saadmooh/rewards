@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import useUserStore from '../store/userStore'
 
+const CLAIM_EXPIRY_MINUTES = 10
+
 export const usePendingClaim = (storeId) => {
   const { user, membership } = useUserStore()
   const [claim, setClaim] = useState(null)

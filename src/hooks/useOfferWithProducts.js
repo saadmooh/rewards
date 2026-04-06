@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import { supabase} from '../lib/supabase';
 import useUserStore from '../store/userStore';
+import { calculateProductPrice } from '../lib/offers';
 
 export const useOfferWithProducts = (offerId) => {
   const [offer, setOffer] = useState(null);
   const [products, setProducts] = useState([]);
+  const [activeRedemption, setActiveRedemption] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { store } = useUserStore();
+  const { store, user } = useUserStore();
 
   useEffect(() => {
     const fetchData = async () => {
       if (!offerId) {
         setOffer(null);
         setProducts([]);
+        setActiveRedemption(null);
         setLoading(false);
         return;
       }
@@ -38,6 +41,23 @@ export const useOfferWithProducts = (offerId) => {
         if (offerError) throw offerError;
         if (!offerData) throw new Error('Offer not found');
         setOffer(offerData);
+
+        // Fetch active redemption if user exists
+        if (user?.id) {
+          const { data: redemptionData } = await supabase
+            .from('redemptions')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('offer_id', offerId)
+            .gt('expires_at', new Date().toISOString())
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          if (redemptionData) {
+            setActiveRedemption(redemptionData);
+          }
+        }
 
         // Fetch linked products via offer_products junction
         if (offerData) {
@@ -68,27 +88,7 @@ export const useOfferWithProducts = (offerId) => {
 
           // Calculate discounted prices based on offer type and discount_percent
           const productsWithCalculatedPrices = (productData || []).map(product => {
-            const updatedProduct = { ...product };
-            
-            if (offerData.type === 'gift') {
-              updatedProduct.original_price = product.price;
-              updatedProduct.discount_percentage = 100;
-              updatedProduct.price = 0;
-            } else if (offerData.discount_percent && offerData.discount_percent > 0) {
-              const discountAmount = Math.round(product.price * (offerData.discount_percent / 100));
-              updatedProduct.original_price = product.price;
-              updatedProduct.discount_percentage = offerData.discount_percent;
-              updatedProduct.price = product.price - discountAmount;
-            } else if (product.discount_percentage && product.discount_percentage > 0) {
-              // Use product's own discount if no offer discount
-              const discountAmount = Math.round(product.price * (product.discount_percentage / 100));
-              if (!updatedProduct.original_price) {
-                updatedProduct.original_price = product.price;
-              }
-              updatedProduct.price = product.price - discountAmount;
-            }
-            
-            return updatedProduct;
+            return calculateProductPrice(product, offerData);
           });
           
           setProducts(productsWithCalculatedPrices);
@@ -98,13 +98,14 @@ export const useOfferWithProducts = (offerId) => {
         setError(err.message);
         setOffer(null);
         setProducts([]);
+        setActiveRedemption(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [offerId, store?.id]);
+  }, [offerId, store?.id, user?.id]);
 
-  return { offer, products, loading, error };
+  return { offer, products, activeRedemption, loading, error };
 };

@@ -1,13 +1,16 @@
 import { motion } from 'framer-motion'
+import { formatCurrency } from '../lib/offers'
 
 export default function ProductCard({
-  id,
   name,
   price,
+  original_price,
   imageUrl,
   isExclusive = false,
   onClick,
 }) {
+  const hasDiscount = original_price && original_price > price;
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 20 }}
@@ -27,8 +30,13 @@ export default function ProductCard({
             <span className="text-white text-2xl">🔒</span>
           </div>
         )}
-        <div className="absolute top-2 right-2 px-2 py-1 bg-white/90 rounded-lg text-xs font-bold text-accent">
-          ${price}
+        <div className="absolute top-2 right-2 px-2 py-1 bg-white/90 rounded-lg text-xs font-bold text-gray-900 flex flex-col items-end">
+          {hasDiscount && (
+            <span className="text-[10px] text-gray-400 line-through leading-none mb-0.5">
+              {formatCurrency(original_price)}
+            </span>
+          )}
+          <span>{formatCurrency(price)}</span>
         </div>
       </div>
 

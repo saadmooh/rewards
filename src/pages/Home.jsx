@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
@@ -8,10 +8,11 @@ import { useProducts } from '../hooks/useProducts'
 import PointsCard from '../components/PointsCard'
 import ProductCard from '../components/ProductCard'
 import ProductOfferCard from '../components/ProductOfferCard'
+import { calculateProductPrice } from '../lib/offers'
 
 export default function Home() {
   const navigate = useNavigate()
-  const { user, store } = useUserStore()
+  const { user, store, membership } = useUserStore()
   const { products } = useProducts()
   const [scanning, setScanning] = useState(false)
 
@@ -39,18 +40,7 @@ export default function Home() {
       const productsWithTypes = (data || []).flatMap(o => 
         (o.offer_products || []).map(op => {
           if (!op.products) return null;
-          const product = { ...op.products };
-          
-          if (o.type === 'gift') {
-            product.original_price = product.price;
-            product.discount_percentage = 100;
-            product.price = 0;
-          } else if (o.discount_percent && o.discount_percent > 0) {
-            const discountAmount = Math.round(product.price * (o.discount_percent / 100));
-            product.original_price = product.price;
-            product.discount_percentage = o.discount_percent;
-            product.price = product.price - discountAmount;
-          }
+          const product = calculateProductPrice(op.products, o);
           
           return {
             ...product,
@@ -73,11 +63,9 @@ export default function Home() {
 
       // Logic: Prioritize products the user can afford with points
       const userPoints = membership?.points || 0;
-      
       const affordable = uniqueProducts.filter(p => p.points_cost <= userPoints);
       const expensive = uniqueProducts.filter(p => p.points_cost > userPoints);
 
-      // Simple pseudo-random shuffle based on user ID for personalization within each group
       const shuffle = (array) => {
         if (!user?.id) return array;
         const seed = user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -89,10 +77,20 @@ export default function Home() {
       };
 
       const result = [...shuffle(affordable), ...shuffle(expensive)];
-      return result.slice(0, 8); // Top 8 for home
+      return result.slice(0, 8);
     },
     enabled: !!store?.id
   })
+
+  // Map products to their offers for quick lookup in New Arrivals
+  const productToOfferMap = useMemo(() => {
+    const map = new Map();
+    if (!offersWithProducts) return map;
+    offersWithProducts.forEach(p => {
+      map.set(p.id, { type: p.offer_type, discount_percent: p.discount_percentage });
+    });
+    return map;
+  }, [offersWithProducts]);
 
   const handleScan = () => {
     setScanning(true)
@@ -102,9 +100,17 @@ export default function Home() {
     }, 500)
   }
 
-  // Filter out products that are already in the "For You" section
-  const forYouIds = new Set(offersWithProducts?.map(p => p.id) || []);
-  const latestProducts = products?.filter(p => !forYouIds.has(p.id)).slice(0, 6) || []
+  // Calculate prices for latest products (New Arrivals) to show discounts
+  const latestProducts = useMemo(() => {
+    const forYouIds = new Set(offersWithProducts?.map(p => p.id) || []);
+    return products
+      ?.filter(p => !forYouIds.has(p.id))
+      .slice(0, 8)
+      .map(p => {
+        const offer = productToOfferMap.get(p.id);
+        return calculateProductPrice(p, offer);
+      }) || [];
+  }, [products, offersWithProducts, productToOfferMap]);
 
   return (
     <div className="min-h-screen bg-white pb-24">
@@ -200,6 +206,7 @@ export default function Home() {
                   id={product.id}
                   name={product.name}
                   price={product.price}
+                  original_price={product.original_price}
                   imageUrl={product.image_url}
                   onClick={() => navigate(`/products/${product.id}`)}
                 />

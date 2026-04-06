@@ -5,14 +5,15 @@ import { QRCodeCanvas } from 'qrcode.react'
 import useUserStore from '../store/userStore'
 import { useOfferWithProducts } from '../hooks/useOfferWithProducts'
 import OfferProductList from '../components/OfferProductList'
+import { formatCurrency } from '../lib/offers'
 
 const OFFER_COUPON_EXPIRY_SECONDS = 86400
 
 export default function OfferDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { user, redeemOffer } = useUserStore()
-  const { offer, products, loading: offerLoading, error: offerError } = useOfferWithProducts(id)
+  const { redeemOffer } = useUserStore()
+  const { offer, products, activeRedemption, loading: offerLoading, error: offerError } = useOfferWithProducts(id)
   const [showConfirm, setShowConfirm] = useState(false)
   const [redeemed, setRedeemed] = useState(false)
   const [coupon, setCoupon] = useState(null)
@@ -20,19 +21,21 @@ export default function OfferDetail() {
   const timerRef = useRef(null)
   const [timeLeft, setTimeLeft] = useState(OFFER_COUPON_EXPIRY_SECONDS)
 
+  // Synchronize with active redemption from hook
+  useEffect(() => {
+    if (activeRedemption) {
+      setCoupon(activeRedemption.coupon_code)
+      setRedeemed(true)
+      const expiry = new Date(activeRedemption.expires_at)
+      setCouponExpiry(expiry)
+      const secondsLeft = Math.max(0, Math.floor((expiry.getTime() - Date.now()) / 1000))
+      setTimeLeft(secondsLeft)
+    }
+  }, [activeRedemption])
+
   const handleRedeem = async () => {
     if (!offer) return
-    
-    const pointsCost = offer.points_cost || 0
-    const result = await redeemOffer(offer.id, pointsCost)
-    if (result?.coupon_code) {
-      setCoupon(result.coupon_code)
-      setRedeemed(true)
-      setCouponExpiry(new Date(Date.now() + OFFER_COUPON_EXPIRY_SECONDS * 1000))
-      setTimeLeft(OFFER_COUPON_EXPIRY_SECONDS)
-    } else {
-      setShowConfirm(true)
-    }
+    setShowConfirm(true)
   }
 
   const confirmRedeem = async () => {
@@ -40,7 +43,8 @@ export default function OfferDetail() {
     if (result?.coupon_code) {
       setCoupon(result.coupon_code)
       setRedeemed(true)
-      setCouponExpiry(new Date(Date.now() + OFFER_COUPON_EXPIRY_SECONDS * 1000))
+      const expiry = new Date(Date.now() + OFFER_COUPON_EXPIRY_SECONDS * 1000)
+      setCouponExpiry(expiry)
       setTimeLeft(OFFER_COUPON_EXPIRY_SECONDS)
     }
     setShowConfirm(false)

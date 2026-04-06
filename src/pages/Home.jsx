@@ -1,20 +1,77 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useQuery } from '@tanstack/react-query'
 import useUserStore from '../store/userStore'
-import { useOffers } from '../hooks/useOffers'
+import { supabase } from '../lib/supabase'
 import { useProducts } from '../hooks/useProducts'
 import PointsCard from '../components/PointsCard'
 import ProductCard from '../components/ProductCard'
-import OfferCard from '../components/OfferCard'
-import CrossPromoCard from '../components/CrossPromoCard'
+import ProductOfferCard from '../components/ProductOfferCard'
 
 export default function Home() {
   const navigate = useNavigate()
-  const { user } = useUserStore()
-  const { offers } = useOffers()
+  const { user, store } = useUserStore()
   const { products } = useProducts()
   const [scanning, setScanning] = useState(false)
+
+  const { data: offersWithProducts, isLoading: isOffersLoading } = useQuery({
+    queryKey: ['discounted-products-home', store?.id],
+    queryFn: async () => {
+      if (!store?.id) return [];
+      const { data, error } = await supabase
+        .from('offers')
+        .select(`
+          id,
+          type,
+          discount_percent,
+          offer_products (
+            products (*)
+          )
+        `)
+        .eq('store_id', store.id)
+        .eq('is_active', true);
+      
+      if (error) throw error;
+      
+      // Flatten and add offer type + calculate prices to each product
+      const productsWithTypes = (data || []).flatMap(o => 
+        (o.offer_products || []).map(op => {
+          if (!op.products) return null;
+          const product = { ...op.products };
+          
+          if (o.type === 'gift') {
+            product.original_price = product.price;
+            product.discount_percentage = 100;
+            product.price = 0;
+          } else if (o.discount_percent && o.discount_percent > 0) {
+            const discountAmount = Math.round(product.price * (o.discount_percent / 100));
+            product.original_price = product.price;
+            product.discount_percentage = o.discount_percent;
+            product.price = product.price - discountAmount;
+          }
+          
+          return {
+            ...product,
+            offer_id: o.id,
+            offer_type: o.type
+          };
+        }).filter(Boolean)
+      );
+
+      // Deduplicate by ID
+      const uniqueProducts = [];
+      const seen = new Set();
+      for (const p of productsWithTypes) {
+        if (!seen.has(p.id)) {
+          uniqueProducts.push(p);
+          seen.add(p.id);
+        }
+      }
+      return uniqueProducts.slice(0, 6); // Just top 6 for home
+    },
+    enabled: !!store?.id
+  })
 
   const handleScan = () => {
     setScanning(true)
@@ -24,8 +81,7 @@ export default function Home() {
     }, 500)
   }
 
-  const latestProducts = products?.slice(0, 4) || []
-  const personalizedOffers = offers?.slice(0, 3) || []
+  const latestProducts = products?.slice(0, 6) || []
 
   return (
     <div className="min-h-screen bg-white pb-24">
@@ -80,22 +136,24 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5">
-            {personalizedOffers.length > 0 ? personalizedOffers.map((offer) => (
-              <div key={offer.id} className="min-w-[260px]">
-                <OfferCard
-                  id={offer.id}
-                  title={offer.title}
-                  description={offer.description}
-                  points={offer.points_cost}
-                  expiresAt={offer.valid_until}
-                  category={offer.type}
-                  onClick={() => navigate(`/offers/${offer.id}`)}
-                />
-              </div>
-            )) : (
+          <div className="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide">
+            {isOffersLoading ? (
+              [1, 2].map((i) => (
+                <div key={i} className="min-w-[280px] h-32 bg-gray-100 rounded-2xl animate-pulse" />
+              ))
+            ) : offersWithProducts?.length > 0 ? (
+              offersWithProducts.map((product) => (
+                <div key={product.id} className="min-w-[280px]">
+                  <ProductOfferCard
+                    product={product}
+                    offerType={product.offer_type}
+                    onProductClick={() => navigate(`/offers/${product.offer_id}`)}
+                  />
+                </div>
+              ))
+            ) : (
               <div className="text-center py-8 text-gray-400 w-full">
-                <p>Loading offers...</p>
+                <p>No special offers today</p>
               </div>
             )}
           </div>
@@ -112,18 +170,19 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide">
             {latestProducts.length > 0 ? latestProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                name={product.name}
-                price={product.price}
-                imageUrl={product.image_url}
-                onClick={() => navigate(`/products/${product.id}`)}
-              />
+              <div key={product.id} className="min-w-[160px]">
+                <ProductCard
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  imageUrl={product.image_url}
+                  onClick={() => navigate(`/products/${product.id}`)}
+                />
+              </div>
             )) : (
-              <div className="col-span-2 text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-gray-400 w-full">
                 <p>Loading products...</p>
               </div>
             )}

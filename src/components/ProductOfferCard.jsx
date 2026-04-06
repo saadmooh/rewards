@@ -51,10 +51,6 @@ const OfferTypeBadge = ({ offerType }) => {
 };
 
 export default function ProductOfferCard({ product, onProductClick, offerType }) {
-  const hasActiveOfferDiscount = product.original_price !== null && product.original_price !== undefined &&
-                                 product.discount_percentage !== null && product.discount_percentage !== undefined &&
-                                 product.discount_percentage > 0;
-
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}

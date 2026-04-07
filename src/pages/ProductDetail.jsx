@@ -19,8 +19,8 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted mb-4">Product not found</p>
-          <button onClick={() => navigate(-1)} className="text-accent">Go back</button>
+          <p className="text-muted mb-4">المنتج غير موجود</p>
+          <button onClick={() => navigate(-1)} className="text-accent">العودة</button>
         </div>
       </div>
     )
@@ -64,7 +64,7 @@ export default function ProductDetail() {
             </span>
             {product.is_exclusive && (
               <span className="px-3 py-1 bg-accent-light text-accent-dark rounded-full text-xs font-semibold">
-                Exclusive
+                حصري
               </span>
             )}
           </div>
@@ -79,19 +79,19 @@ export default function ProductDetail() {
 
           <div className="flex items-center justify-between mb-6">
             <div>
-              <p className="text-muted text-sm">Price</p>
-              <p className="text-3xl font-bold text-accent">${product.price}</p>
+              <p className="text-muted text-sm">السعر</p>
+              <p className="text-3xl font-bold text-accent">{product.price} دج</p>
             </div>
           </div>
 
           <button
             className="w-full py-4 bg-surface border border-border rounded-2xl text-muted font-semibold"
           >
-            🏪 Find in Store
+            🏪 البحث في المتجر
           </button>
 
           <p className="text-center text-muted text-xs mt-4">
-            Available for in-store purchase only
+            متاح للشراء في المتجر فقط
           </p>
         </div>
       </motion.div>

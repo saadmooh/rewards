@@ -184,28 +184,28 @@ export default function QRGenerator() {
       {/* Header with toggle for QR modes */}
       <div className="flex justify-between items-center mb-6">
         <h2 className={`text-xl font-bold tracking-tight ${doorQrMode ? 'text-white' : 'text-[#f0f0f0]'}`}>
-          {doorQrMode ? 'Door QR System' : 'Generate Purchase QR'}
+          {doorQrMode ? 'نظام الباب QR' : 'إنشاء شراء QR'}
         </h2>
         <button
           onClick={() => setDoorQrMode(!doorQrMode)}
           className="px-4 py-2 rounded-xl font-bold text-sm transition-all transform active:scale-95"
           style={{ backgroundColor: doorQrMode ? '#D4AF37' : '#2a2a2a', color: doorQrMode ? 'black' : '#f0f0f0' }}
         >
-          {doorQrMode ? 'Switch to Purchase QR' : 'Switch to Door QR'}
+          {doorQrMode ? 'التبديل إلى شراء QR' : 'التبديل إلى باب QR'}
         </button>
       </div>
       
       {/* Door QR System View */}
       {doorQrMode && (
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-[#f0f0f0] mb-4 text-center tracking-tight">Permanent Store QR</h3>
+          <h3 className="text-lg font-bold text-[#f0f0f0] mb-4 text-center tracking-tight">متجر دائم QR</h3>
           <div className="bg-[#1e1e1e] rounded-2xl p-6 border border-[#2a2a2a] shadow-xl">
             {store?.slug && <DoorQrDisplay storeSlug={store.slug} />}
           </div>
 
           {/* Waiting Customers List */}
           <div className="mt-8">
-            <h3 className="text-lg font-bold text-[#f0f0f0] mb-4 text-center tracking-tight">Waiting Customers</h3>
+            <h3 className="text-lg font-bold text-[#f0f0f0] mb-4 text-center tracking-tight">العملاء في الانتظار</h3>
             {waitingCustomers.length > 0 ? (
               <div className="space-y-3">
                 {waitingCustomers.map(claim => (
@@ -228,7 +228,7 @@ export default function QRGenerator() {
                 ))}
               </div>
             ) : (
-              <p className="text-center text-muted text-sm">No customers are currently waiting.</p>
+              <p className="text-center text-muted text-sm">لا يوجد عملاء في الانتظار حالياً.</p>
             )}
             
             {/* Assignment Button */}
@@ -240,18 +240,18 @@ export default function QRGenerator() {
                   if (selectedClaim && amount && Number(amount) > 0) {
                     assignPointsToCustomer(selectedClaim.id, selectedClaim.user_id, selectedClaim.membership_id, Number(amount), pointsForAmount);
                   } else if (!amount || Number(amount) <= 0) {
-                    alert("Please enter a valid purchase amount.");
+                    alert("يرجى إدخال مبلغ شراء صالح.");
                   } else {
-                    alert("Please select a customer to assign points to.");
+                    alert("يرجى تحديد عميل لتعيين النقاط له.");
                   }
                 }}
                 disabled={!selectedCustomerId || !amount || Number(amount) <= 0 || assignmentStatus === 'assigning'}
               >
-                {assignmentStatus === 'assigning' ? 'Assigning...' : 'Assign Points'}
+                {assignmentStatus === 'assigning' ? 'جاري التعيين...' : 'تعيين النقاط'}
               </button>
             </div>
-            {assignmentStatus === 'success' && <p className="text-green-500 text-center mt-4">Points assigned successfully!</p>}
-            {assignmentStatus === 'error' && <p className="text-red-500 text-center mt-4">Failed to assign points.</p>}
+            {assignmentStatus === 'success' && <p className="text-green-500 text-center mt-4">تمت تعيين النقاط بنجاح!</p>}
+            {assignmentStatus === 'error' && <p className="text-red-500 text-center mt-4">فشل في تعيين النقاط.</p>}
           </div>
         </div>
       )}
@@ -260,7 +260,7 @@ export default function QRGenerator() {
       {!doorQrMode && (
         <div className="bg-[#1e1e1e] rounded-2xl p-6 border border-[#2a2a2a] shadow-xl mb-6">
           <div className="amount-wrapper flex flex-col items-center">
-            <label className="text-xs text-[#888888] uppercase tracking-widest mb-2">Purchase Amount</label>
+            <label className="text-xs text-[#888888] uppercase tracking-widest mb-2">مبلغ الشراء</label>
             <div className="relative w-full">
               <input
                 type="number"
@@ -278,7 +278,7 @@ export default function QRGenerator() {
           
           <div className="flex justify-between items-center mt-6">
             <div className="text-sm text-[#888888]">
-              Customer Points: <span className="text-[#D4AF37] font-bold">{points}</span>
+              نقاط العميل: <span className="text-[#D4AF37] font-bold">{points}</span>
             </div>
             {status === 'idle' ? (
               <button
@@ -286,14 +286,14 @@ export default function QRGenerator() {
                 onClick={generateStandardQR}
                 disabled={!amount || Number(amount) <= 0 || isGenerating}
               >
-                Generate QR
+                إنشاء QR
               </button>
             ) : (
               <button
                 className="text-[#888888] hover:text-[#f0f0f0] text-sm underline"
                 onClick={resetStandardQR}
               >
-                Reset
+إعادة تعيين
               </button>
             )}
           </div>
@@ -313,12 +313,12 @@ export default function QRGenerator() {
               {status === 'expired' && (
                 <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-3xl p-6 text-center">
                   <span className="text-5xl mb-4">⌛</span>
-                  <h3 className="text-white text-xl font-bold mb-2">Expired</h3>
+                  <h3 className="text-white text-xl font-bold mb-2">منتهي</h3>
                   <button 
                     onClick={resetStandardQR}
                     className="bg-[#D4AF37] text-black px-6 py-2 rounded-lg font-bold"
                   >
-                    Generate New
+                    إنشاء جديد
                   </button>
                 </div>
               )}
@@ -347,7 +347,7 @@ export default function QRGenerator() {
           animate={{ opacity: 1 }}
           className="mt-8"
         >
-          <h4 className="text-[#888888] text-xs font-bold uppercase mb-4 px-2 text-right">Today's Recent Activity</h4>
+          <h4 className="text-[#888888] text-xs font-bold uppercase mb-4 px-2 text-right">نشاط اليوم الأخير</h4>
           <div className="space-y-3">
             {todayTx.map((tx, i) => (
               <div key={i} className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-xl p-4 flex justify-between items-center flex-row-reverse">
@@ -359,7 +359,7 @@ export default function QRGenerator() {
                   </div>
                 </div>
                 <div className="text-left">
-                  <p className="text-[#22c55e] text-sm font-black">+{tx.points} pts</p>
+                  <p className="text-[#22c55e] text-sm font-black">+{tx.points} نقطة</p>
                   <p className="text-[#888888] text-[10px]">{(tx.amount ?? 0).toLocaleString()} دج</p>
                 </div>
               </div>

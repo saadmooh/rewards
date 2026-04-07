@@ -45,7 +45,7 @@ export default function PointsCard() {
     >
       <div className="flex justify-between items-start mb-4">
         <div>
-          <p className="text-muted text-sm">Your Points</p>
+          <p className="text-muted text-sm">نقاطك</p>
           <motion.p
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -61,7 +61,7 @@ export default function PointsCard() {
       {nextTier && nextTier.min !== undefined && (
         <div className="mb-4">
           <div className="flex justify-between text-xs text-muted mb-2">
-            <span>Progress to {nextTierKey}</span>
+            <span>التقدم إلى {nextTierKey}</span>
             <span>{points.toLocaleString()} / {nextTier.min.toLocaleString()}</span>
           </div>
           <div className="h-3 bg-surface rounded-full overflow-hidden">
@@ -74,8 +74,8 @@ export default function PointsCard() {
           </div>
           <p className="text-xs text-muted mt-2 text-center">
             {nextTier.min - points > 0
-              ? `${(nextTier.min - points).toLocaleString()} points to ${nextTierKey}`
-              : '🎉 Max tier reached!'}
+              ? `${(nextTier.min - points).toLocaleString()} نقطة حتى ${nextTierKey === 'silver' ? 'الفضي' : nextTierKey === 'gold' ? 'الذهبي' : nextTierKey === 'platinum' ? 'البلاتيني' : nextTierKey}`
+              : '🎉 reached!'}
           </p>
         </div>
       )}
@@ -85,7 +85,7 @@ export default function PointsCard() {
           <span className="text-accent text-sm">👤</span>
         </div>
         <p className="text-sm text-muted">
-          {user?.full_name || 'Member'} • <span className="text-accent">Member since {joinedDate}</span>
+          {user?.full_name || 'عضو'} • <span className="text-accent">عضو منذ {joinedDate}</span>
         </p>
       </div>
     </motion.div>

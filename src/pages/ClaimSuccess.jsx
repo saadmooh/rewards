@@ -12,7 +12,7 @@ export default function ClaimSuccess() {
   const { points, amount, storeName } = useMemo(() => ({
     points: location.state?.points || 0,
     amount: location.state?.amount || 0,
-    storeName: location.state?.storeName || 'the store',
+    storeName: location.state?.storeName || 'المتجر',
   }), [location.state])
 
   return (
@@ -47,7 +47,7 @@ export default function ClaimSuccess() {
           transition={{ delay: 0.3 }}
           className="text-2xl font-bold text-text mb-2"
         >
-          Points Earned!
+          تم اكتساب النقاط!
         </motion.h2>
 
         <motion.p
@@ -56,7 +56,7 @@ export default function ClaimSuccess() {
           transition={{ delay: 0.4 }}
           className="text-muted mb-6"
         >
-          You earned points from {storeName}
+          لقد كسبت نقاطًا من {storeName}
         </motion.p>
 
         <motion.div
@@ -65,13 +65,13 @@ export default function ClaimSuccess() {
           transition={{ delay: 0.5 }}
           className="bg-white rounded-3xl p-6 shadow-card mb-6"
         >
-          <p className="text-sm text-muted mb-2">Points earned</p>
+          <p className="text-sm text-muted mb-2">النقاط المكتسبة</p>
           <p className="text-4xl font-black text-accent mb-4">+{points}</p>
           <p className="text-sm text-muted">
-            Total: <span className="font-bold text-text">{membership?.points || 0}</span> points
+            الإجمالي: <span className="font-bold text-text">{membership?.points || 0}</span> نقطة
           </p>
           {amount > 0 && (
-            <p className="text-xs text-muted mt-2">From purchase: {amount.toLocaleString()} دج</p>
+            <p className="text-xs text-muted mt-2">من عملية الشراء: {amount.toLocaleString()} دج</p>
           )}
         </motion.div>
 
@@ -84,7 +84,7 @@ export default function ClaimSuccess() {
           onClick={() => navigate('/')}
           className="px-10 py-4 bg-accent text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all"
         >
-          Awesome!
+          رائع!
         </motion.button>
       </motion.div>
     </div>

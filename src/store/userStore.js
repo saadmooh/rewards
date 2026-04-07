@@ -244,6 +244,18 @@ const useUserStore = create((set, get) => ({
     if (!error && data) set({ membership: data })
   },
 
+  updateBirthDate: async (birthDate) => {
+    const { user } = get()
+    if (!user?.id) return
+    try {
+      await supabase.from('users').update({ birth_date: birthDate }).eq('id', user.id)
+      set({ user: { ...user, birth_date: birthDate } })
+    } catch (err) { 
+      console.error('Error updating birth date:', err)
+      set({ error: err.message }) 
+    }
+  },
+
   addPoints: async (points, note) => {
     const { user, membership, store } = get()
     if (!user?.id || !membership?.id || !store?.id) return

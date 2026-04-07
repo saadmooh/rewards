@@ -74,12 +74,12 @@ export default function ClientProducts() {
       const discountedPrice = product.price - discountAmount;
       return (
         <div className="flex items-center gap-2">
-          <span className="text-gray-400 line-through text-xs">{product.price?.toLocaleString()} د.إ</span>
-          <span className="text-gray-900 font-medium text-sm">{discountedPrice?.toLocaleString()} د.إ</span>
+          <span className="text-red-400 line-through text-xs">{product.price?.toLocaleString()} دج</span>
+          <span className="text-green-600 font-medium text-sm">{discountedPrice?.toLocaleString()} دج</span>
         </div>
       );
     } else if (product.price) {
-      return <span className="text-gray-900 font-medium text-sm">{product.price?.toLocaleString()} د.إ</span>;
+      return <span className="text-gray-900 font-medium text-sm">{product.price?.toLocaleString()} دج</span>;
     }
     return null;
   };

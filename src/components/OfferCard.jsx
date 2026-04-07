@@ -56,7 +56,7 @@ export default function OfferCard({
           <h3 className="text-text font-bold text-base line-clamp-1">{title}</h3>
           {points > 0 && (
             <span className="px-2 py-1 bg-accent-light text-accent-dark rounded-full text-xs font-bold whitespace-nowrap">
-              {points} pts
+              {points} نقطة
             </span>
           )}
         </div>
@@ -66,7 +66,7 @@ export default function OfferCard({
         {expiresAt && (
           <div className="flex items-center gap-2 text-xs text-muted">
             <span>⏰</span>
-            <span>Expires {formatDate(expiresAt)}</span>
+            <span>ينتهي {formatDate(expiresAt)}</span>
           </div>
         )}
       </div>

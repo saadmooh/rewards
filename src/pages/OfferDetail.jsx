@@ -89,8 +89,8 @@ export default function OfferDetail() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-400 mb-4">Offer not found</p>
-          <button onClick={() => navigate(-1)} className="text-gray-600 font-medium">Go back</button>
+          <p className="text-gray-400 mb-4">العرض غير موجود</p>
+          <button onClick={() => navigate(-1)} className="text-gray-600 font-medium">العودة</button>
         </div>
       </div>
     )
@@ -107,7 +107,7 @@ export default function OfferDetail() {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">✅</span>
           </div>
-          <h2 className="text-xl font-medium text-gray-900 mb-2">Offer Activated!</h2>
+          <h2 className="text-xl font-medium text-gray-900 mb-2">تم تفعيل العرض!</h2>
           <p className="text-gray-500 mb-5">{offer.title}</p>
           
           <div className="bg-gray-50 rounded-2xl p-5 mb-5">
@@ -115,8 +115,8 @@ export default function OfferDetail() {
               <QRCodeCanvas value={coupon} size={160} level="H" includeMargin={false} />
             </div>
             <p className="text-2xl font-mono font-medium text-gray-900 tracking-wider mb-2">{coupon}</p>
-            <p className="text-gray-400 text-sm">Show this to the cashier</p>
-            <p className="text-gray-400 text-xs mt-2">Expires in {formatTime(timeLeft)}</p>
+            <p className="text-gray-400 text-sm">أظهر هذا للكاشير</p>
+            <p className="text-gray-400 text-xs mt-2">ينتهي في {formatTime(timeLeft)}</p>
           </div>
 
           <motion.button
@@ -124,7 +124,7 @@ export default function OfferDetail() {
             onClick={() => navigate('/offers')}
             className="px-8 py-3 bg-gray-900 text-white font-medium rounded-xl"
           >
-            Done
+            تم
           </motion.button>
         </motion.div>
       </div>
@@ -171,13 +171,13 @@ export default function OfferDetail() {
 
             <div className="flex items-center justify-between text-sm mb-6">
               <div>
-                <p className="text-gray-400 text-xs">Points Required</p>
-                <p className="text-gray-900 font-medium">{offer.points_cost ? `${offer.points_cost} pts` : 'Free'}</p>
+                <p className="text-gray-400 text-xs">النقاط المطلوبة</p>
+                <p className="text-gray-900 font-medium">{offer.points_cost ? `${offer.points_cost} نقطة` : 'مجاني'}</p>
               </div>
               <div className="text-right">
-                <p className="text-gray-400 text-xs">Expires</p>
+                <p className="text-gray-400 text-xs">ينتهي</p>
                 <p className="text-gray-600 font-medium">
-                  {offer.valid_until ? new Date(offer.valid_until).toLocaleDateString() : 'N/A'}
+                  {offer.valid_until ? new Date(offer.valid_until).toLocaleDateString() : '—'}
                 </p>
               </div>
             </div>
@@ -194,7 +194,7 @@ export default function OfferDetail() {
               onClick={handleRedeem}
               className="w-full py-3 rounded-xl font-medium transition-all bg-gray-900 text-white"
             >
-              {offer.points_cost ? 'Redeem Now' : 'Activate Offer'}
+              {offer.points_cost ? 'استبدال الآن' : 'تفعيل العرض'}
             </motion.button>
           </div>
         </motion.div>
@@ -210,24 +210,24 @@ export default function OfferDetail() {
               animate={{ scale: 1, opacity: 1 }}
               className="bg-white rounded-2xl p-5 max-w-sm w-full"
             >
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Confirm</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">تأكيد</h3>
               <p className="text-gray-500 text-sm mb-5">
                 {offer.points_cost 
-                  ? `Use ${offer.points_cost} points from your balance?`
-                  : 'Activate this offer?'}
+                  ? `هل تريد استخدام ${offer.points_cost} نقطة من رصيدك؟`
+                  : 'هل تريد تفعيل هذا العرض؟'}
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowConfirm(false)}
                   className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium"
                 >
-                  Cancel
+                  إلغاء
                 </button>
                 <button
                   onClick={confirmRedeem}
                   className="flex-1 py-3 bg-gray-900 text-white font-medium rounded-xl"
                 >
-                  Confirm
+                  تأكيد
                 </button>
               </div>
             </motion.div>

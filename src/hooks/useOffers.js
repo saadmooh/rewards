@@ -6,11 +6,17 @@ export const useOffers = () => {
   const [offers, setOffers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const { store } = useUserStore()
+  const { store, membership, user } = useUserStore()
 
   useEffect(() => {
     const fetchOffers = async () => {
       try {
+        const today = new Date()
+        const userBirthDate = user?.birth_date ? new Date(user.birth_date) : null
+        const isBirthday = userBirthDate && 
+          userBirthDate.getMonth() === today.getMonth() && 
+          userBirthDate.getDate() === today.getDate()
+
         let query = supabase
           .from('offers')
           .select('*')
@@ -24,7 +30,33 @@ export const useOffers = () => {
         const { data, error } = await query
 
         if (error) throw error
-        setOffers(data || [])
+
+        const userPoints = membership?.points || 0
+        const userTier = membership?.tier || 'bronze'
+
+        const tierOrder = { bronze: 0, silver: 1, gold: 2, platinum: 3 }
+        const userTierLevel = tierOrder[userTier] || 0
+
+        const filteredOffers = (data || []).filter(offer => {
+          // Filter by occasion_type (birthday offers only for users on their birthday)
+          if (offer.occasion_type === 'birthday' && !isBirthday) {
+            return false
+          }
+
+          // Filter by min_tier (only show to users who meet the tier requirement)
+          const offerMinTierLevel = tierOrder[offer.min_tier] || 0
+          if (userTierLevel < offerMinTierLevel) return false
+
+          // Filter by points_cost (only show to users who have enough points)
+          // Show all offers, but filter out ones user can't afford
+          if (offer.points_cost > 0 && userPoints < offer.points_cost) {
+            return false
+          }
+
+          return true
+        })
+
+        setOffers(filteredOffers)
       } catch (err) {
         console.error('useOffers error:', err)
         setOffers([])
@@ -34,7 +66,7 @@ export const useOffers = () => {
     }
 
     fetchOffers()
-  }, [store?.id])
+  }, [store?.id, membership?.points, membership?.tier, user?.birth_date])
 
   return { offers, loading, error }
 }

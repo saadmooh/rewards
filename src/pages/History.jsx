@@ -40,7 +40,7 @@ export default function History() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <h1 className="text-2xl font-bold text-text">History</h1>
+          <h1 className="text-2xl font-bold text-text">السجل</h1>
         </motion.div>
 
         <div className="grid grid-cols-3 gap-3 mb-6">
@@ -50,7 +50,7 @@ export default function History() {
             className="bg-white rounded-2xl p-4 text-center shadow-card"
           >
             <p className="text-2xl font-bold text-text">{user?.points || 0}</p>
-            <p className="text-xs text-muted">Current</p>
+            <p className="text-xs text-muted">الحالي</p>
           </motion.div>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -59,7 +59,7 @@ export default function History() {
             className="bg-white rounded-2xl p-4 text-center shadow-card"
           >
             <p className="text-2xl font-bold text-success">+{totalEarned}</p>
-            <p className="text-xs text-muted">Earned</p>
+            <p className="text-xs text-muted">المكتسبة</p>
           </motion.div>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -68,7 +68,7 @@ export default function History() {
             className="bg-white rounded-2xl p-4 text-center shadow-card"
           >
             <p className="text-2xl font-bold text-accent">{purchaseCount}</p>
-            <p className="text-xs text-muted">Purchases</p>
+            <p className="text-xs text-muted">المشتريات</p>
           </motion.div>
         </div>
 
@@ -90,7 +90,7 @@ export default function History() {
             {Object.keys(groupedTransactions).length === 0 && (
               <div className="text-center py-12 text-muted">
                 <p className="text-4xl mb-4">📊</p>
-                <p>No transactions yet</p>
+                <p>لا توجد معاملات بعد</p>
               </div>
             )}
           </div>

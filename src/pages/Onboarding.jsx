@@ -4,10 +4,10 @@ import useUserStore from '../store/userStore'
 import TierBadge from '../components/TierBadge'
 
 const tiers = [
-  { id: 'bronze', name: 'Bronze', perks: ['Basic rewards', 'Points on every purchase'] },
-  { id: 'silver', name: 'Silver', perks: ['All Bronze perks', 'Exclusive offers', '2x points'] },
-  { id: 'gold', name: 'Gold', perks: ['All Silver perks', 'Flash offers early', 'Birthday gift'] },
-  { id: 'platinum', name: 'Platinum', perks: ['All Gold perks', 'Exclusive products', 'Priority'] },
+  { id: 'bronze', name: 'برونزي', perks: ['مكافآت أساسية', 'نقاط على كل عملية شراء'] },
+  { id: 'silver', name: 'فضي', perks: ['جميع مزايا البرونزي', 'عروض حصرية', 'نقاط مضاعفة'] },
+  { id: 'gold', name: 'ذهبي', perks: ['جميع مزايا الفضي', 'عروض سريعة مبكراً', 'هدية عيد الميلاد'] },
+  { id: 'platinum', name: 'بلاتيني', perks: ['جميع مزايا الذهبي', 'منتجات حصرية', 'أولوية'] },
 ]
 
 export default function Onboarding() {
@@ -34,8 +34,8 @@ export default function Onboarding() {
         <div className="w-20 h-20 bg-accent-light rounded-3xl flex items-center justify-center mx-auto mb-4">
           <span className="text-4xl">👕</span>
         </div>
-        <h1 className="text-3xl font-bold text-text mb-2">Welcome! 👋</h1>
-        <p className="text-muted">Complete your profile to get started</p>
+        <h1 className="text-3xl font-bold text-text mb-2">أهلاً بك! 👋</h1>
+        <p className="text-muted">أكمل ملفك الشخصي لتبدأ</p>
       </motion.div>
 
       <motion.form
@@ -46,10 +46,10 @@ export default function Onboarding() {
       >
         <div className="bg-white rounded-3xl p-6 mb-6 shadow-card">
           <label className="block text-text font-semibold mb-2">
-            🎂 Birthday (Optional)
+            🎂 عيد الميلاد (اختياري)
           </label>
           <p className="text-muted text-sm mb-4">
-            Add your birthday and get 50 bonus points + special offers!
+            أضف عيد ميلادك واحصل على 50 نقطة إضافية + عروض خاصة!
           </p>
           <input
             type="date"
@@ -65,11 +65,11 @@ export default function Onboarding() {
           type="submit"
           className="w-full py-5 bg-accent text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all mb-6"
         >
-          Get Started 🚀
+          ابدأ 🚀
         </motion.button>
 
         <div className="bg-white rounded-3xl p-6 shadow-card">
-          <h2 className="text-lg font-bold text-text mb-4">Membership Tiers</h2>
+          <h2 className="text-lg font-bold text-text mb-4">مستويات العضوية</h2>
           <div className="space-y-4">
             {tiers.map((tier, index) => (
               <motion.div

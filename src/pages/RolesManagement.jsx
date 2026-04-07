@@ -69,7 +69,7 @@ export default function RolesManagement() {
     }))
   }
 
-  if (isLoading) return <div className="p-6 text-center text-muted">Loading roles...</div>
+  if (isLoading) return <div className="p-6 text-center text-muted">جاري تحميل الأدوار...</div>
 
   return (
     <div className="p-4 lg:p-6 max-w-4xl mx-auto pb-24">

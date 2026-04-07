@@ -31,7 +31,7 @@ export default function ClaimPoints() {
         setStore(data)
       } catch (err) {
         console.error('Error fetching store:', err)
-        setErrorMessage('Store not found')
+        setErrorMessage('المتجر غير موجود')
         setClaimStatus('error')
       } finally {
         setLoading(false)
@@ -81,7 +81,7 @@ export default function ClaimPoints() {
         setClaimStatus('waiting')
       } catch (err) {
         console.error('Error creating claim:', err)
-        setErrorMessage('Failed to create claim')
+        setErrorMessage('فشل في إنشاء الطلب')
         setClaimStatus('error')
       }
     }
@@ -134,7 +134,7 @@ export default function ClaimPoints() {
       case 'loading':
         return (
           <div className="text-center">
-            <p className="text-lg text-muted mb-4">Processing your claim...</p>
+            <p className="text-lg text-muted mb-4">جاري معالجة طلبك...</p>
             <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
           </div>
         )
@@ -147,11 +147,11 @@ export default function ClaimPoints() {
             >
               <Hourglass size={64} className="text-accent mx-auto mb-4" />
             </motion.div>
-            <h2 className="text-2xl font-bold text-text mb-2">You're in line!</h2>
+            <h2 className="text-2xl font-bold text-text mb-2">أنت في طابور الانتظار!</h2>
             <p className="text-muted mb-6">
-              You've scanned {store?.name}'s door QR. Waiting for merchant to confirm your purchase...
+              لقد قمت بمسح كود الباب لـ {store?.name}. في انتظار تأكيد التاجر لعملية الشراء...
             </p>
-            <p className="text-sm text-muted mb-2">Claim expires in:</p>
+            <p className="text-sm text-muted mb-2">ينتهي الطلب في:</p>
             <p className={`text-xl font-mono font-bold mb-6 ${timeLeft < 60 ? 'text-red-500' : 'text-accent'}`}>
               {formatTime(timeLeft)}
             </p>
@@ -159,7 +159,7 @@ export default function ClaimPoints() {
               onClick={() => navigate('/')}
               className="text-sm text-muted underline"
             >
-              Go to Home
+              الذهاب للرئيسية
             </button>
           </div>
         )
@@ -167,13 +167,13 @@ export default function ClaimPoints() {
         return (
           <div className="text-center">
             <CheckCircle2 size={64} className="text-green-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-text mb-2">Points Claimed!</h2>
-            <p className="text-muted mb-6">You have successfully received your points.</p>
+            <h2 className="text-2xl font-bold text-text mb-2">تم استلام النقاط!</h2>
+            <p className="text-muted mb-6">لقد استلمت نقاطك بنجاح.</p>
             <button
               onClick={() => navigate('/profile')}
               className="mt-8 px-6 py-3 bg-accent text-white font-bold rounded-2xl shadow-lg"
             >
-              View Your Points
+              عرض نقاطك
             </button>
           </div>
         )
@@ -181,26 +181,26 @@ export default function ClaimPoints() {
         return (
           <div className="text-center">
             <XCircle size={64} className="text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-text mb-2">Claim Expired</h2>
-            <p className="text-muted mb-6">Your claim has expired. Please scan the door QR again.</p>
+            <h2 className="text-2xl font-bold text-text mb-2">انتهت صلاحية الطلب</h2>
+            <p className="text-muted mb-6">انتهت صلاحية طلبك. يرجى مسح كود الباب مرة أخرى.</p>
             <button
               onClick={() => window.location.reload()}
               className="mt-8 px-6 py-3 bg-accent text-white font-bold rounded-2xl shadow-lg"
             >
-              Try Again
+              حاول مرة أخرى
             </button>
           </div>
         )
       case 'error':
         return (
           <div className="text-center">
-            <h2 className="text-xl font-bold text-red-600 mb-4">Error</h2>
-            <p className="text-muted mb-6">{errorMessage || 'An unexpected error occurred.'}</p>
+            <h2 className="text-xl font-bold text-red-600 mb-4">خطأ</h2>
+            <p className="text-muted mb-6">{errorMessage || 'حدث خطأ غير متوقع.'}</p>
             <button
               onClick={() => navigate('/')}
               className="mt-8 px-6 py-3 bg-accent text-white font-bold rounded-2xl shadow-lg"
             >
-              Go to Home
+              الذهاب للرئيسية
             </button>
           </div>
         )
@@ -221,8 +221,8 @@ export default function ClaimPoints() {
     return (
       <div className="min-h-screen bg-surface p-5 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted mb-4">Store not found</p>
-          <button onClick={() => navigate('/')} className="text-accent">Go home</button>
+          <p className="text-muted mb-4">المتجر غير موجود</p>
+          <button onClick={() => navigate('/')} className="text-accent">الذهاب للرئيسية</button>
         </div>
       </div>
     )

@@ -44,19 +44,19 @@ export default function Scanner() {
               .single()
 
             if (txError || !tx) {
-              setError('Invalid or expired QR code')
+              setError('كود QR غير صالح أو منتهي الصلاحية')
               setPhase('error')
               return
             }
 
             if (tx.qr_used) {
-              setError('This code has already been used')
+              setError('تم استخدام هذا الكود من قبل')
               setPhase('error')
               return
             }
 
             if (new Date(tx.expires_at) < new Date()) {
-              setError('This code has expired')
+              setError('انتهت صلاحية هذا الكود')
               setPhase('error')
               return
             }
@@ -74,7 +74,7 @@ export default function Scanner() {
 
             if (updateErr) {
               console.error('Error updating transaction:', updateErr)
-              setError('Failed to process points')
+              setError('فشل في معالجة النقاط')
               setPhase('error')
               return
             }
@@ -95,12 +95,12 @@ export default function Scanner() {
             setPointsEarned(tx.points)
             setPhase('success')
           } else {
-            setError('Invalid QR code format')
+            setError('تنسيق كود QR غير صالح')
             setPhase('error')
           }
         } catch (err) {
           console.error('Scan error:', err)
-          setError('Failed to verify QR code')
+          setError('فشل في التحقق من كود QR')
           setPhase('error')
         }
       },
@@ -135,16 +135,16 @@ export default function Scanner() {
           <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
             <span className="text-5xl">✅</span>
           </div>
-          <h2 className="text-2xl font-bold text-text mb-2">Points Added!</h2>
-          <p className="text-3xl font-extrabold text-accent mb-2">+{pointsEarned} points</p>
-          <p className="text-muted mb-8">Thank you for your purchase!</p>
+          <h2 className="text-2xl font-bold text-text mb-2">تمت إضافة النقاط!</h2>
+          <p className="text-3xl font-extrabold text-accent mb-2">+{pointsEarned} نقطة</p>
+          <p className="text-muted mb-8">شكراً لشرائك!</p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/')}
             className="px-10 py-4 bg-accent text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all"
           >
-            Awesome! 🎉
+            رائع! 🎉
           </motion.button>
         </motion.div>
       </div>
@@ -162,15 +162,15 @@ export default function Scanner() {
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-4xl">❌</span>
           </div>
-          <h2 className="text-xl font-bold text-text mb-2">Scan Failed</h2>
-          <p className="text-muted mb-6">{error || 'Invalid QR code'}</p>
+          <h2 className="text-xl font-bold text-text mb-2">فشل المسح</h2>
+          <p className="text-muted mb-6">{error || 'كود QR غير صالح'}</p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleRetry}
             className="px-8 py-3 bg-accent text-white font-bold rounded-2xl"
           >
-            Try Again
+            حاول مرة أخرى
           </motion.button>
         </motion.div>
       </div>
@@ -180,12 +180,12 @@ export default function Scanner() {
   return (
     <div className="min-h-screen bg-surface p-5">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-text">Scan Receipt</h1>
+        <h1 className="text-2xl font-bold text-text">مسح الإيصال</h1>
         <button
           onClick={() => navigate('/')}
           className="px-4 py-2 bg-white rounded-xl text-muted font-medium"
         >
-          Cancel
+          إلغاء
         </button>
       </div>
 
@@ -195,13 +195,13 @@ export default function Scanner() {
         {phase === 'verifying' && (
           <div className="text-center py-8">
             <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-muted font-medium">Verifying your receipt...</p>
+            <p className="text-muted font-medium">جاري التحقق من إيصالك...</p>
           </div>
         )}
 
         {phase === 'scanning' && (
           <p className="text-center text-muted text-sm mt-4">
-            Position the QR code within the frame
+            ضع الكود QR داخل الإطار
           </p>
         )}
       </div>

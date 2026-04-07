@@ -186,9 +186,9 @@ export default function Home() {
         >
           <div className="flex justify-between items-center mb-2">
             <div>
-              <p className="text-gray-400 text-sm">Good morning</p>
+              <p className="text-gray-400 text-sm">صباح الخير</p>
               <h1 className="text-2xl font-medium text-gray-900">
-                {user?.first_name || 'there'}
+                {user?.first_name || 'أهلاً بك'}
               </h1>
             </div>
             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
@@ -213,19 +213,19 @@ export default function Home() {
             className="w-full py-4 bg-gray-900 text-white font-medium rounded-2xl flex items-center justify-center gap-3 transition-all"
           >
             <span className="text-lg">📷</span>
-            {scanning ? 'Opening...' : 'Scan Receipt'}
+            {scanning ? 'جاري الفتح...' : 'مسح الإيصال'}
           </motion.button>
         </section>
 
         {/* For You Section */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium text-gray-900">For You</h2>
+            <h2 className="text-lg font-medium text-gray-900">لك</h2>
             <button
               onClick={() => handleCardClick('/offers')}
               className="text-gray-500 font-medium text-sm"
             >
-              See All
+              عرض الكل
             </button>
           </div>
 
@@ -257,7 +257,7 @@ export default function Home() {
               ))
             ) : (
               <div className="text-center py-8 text-gray-400 w-full">
-                <p>No special offers today</p>
+                <p>لا توجد عروض خاصة اليوم</p>
               </div>
             )}
           </motion.div>
@@ -269,7 +269,7 @@ export default function Home() {
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
                 <TrendingUp size={20} className="text-accent" />
-                <h2 className="text-lg font-medium text-gray-900">Trending Now</h2>
+                <h2 className="text-lg font-medium text-gray-900">الأكثر رواجاً الآن</h2>
               </div>
             </div>
 
@@ -303,12 +303,12 @@ export default function Home() {
         {/* New Arrivals Section */}
         <section>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium text-gray-900">New Arrivals</h2>
+            <h2 className="text-lg font-medium text-gray-900">وصل حديثاً</h2>
             <button
               onClick={() => handleCardClick('/products')}
               className="text-gray-500 font-medium text-sm"
             >
-              See All
+              عرض الكل
             </button>
           </div>
 
@@ -343,7 +343,7 @@ export default function Home() {
               </motion.div>
             )) : (
               <div className="text-center py-8 text-gray-400 w-full">
-                <p>Loading products...</p>
+                <p>جاري تحميل المنتجات...</p>
               </div>
             )}
           </motion.div>

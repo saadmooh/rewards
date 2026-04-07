@@ -46,6 +46,6 @@ export const calculateProductPrice = (product, offer = null) => {
  * @returns {string}
  */
 export const formatCurrency = (amount) => {
-  if (amount === undefined || amount === null) return '0 د.إ';
-  return `${amount.toLocaleString()} د.إ`;
+  if (amount === undefined || amount === null) return '0 دج';
+  return `${amount.toLocaleString()} دج`;
 };

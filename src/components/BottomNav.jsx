@@ -2,12 +2,12 @@ import { motion } from 'framer-motion'
 import useUserStore from '../store/userStore'
 
 const navItems = [
-  { icon: '🏠', label: 'Home', path: '/' },
+  { icon: '🏠', label: 'الرئيسية', path: '/' },
   { icon: '📷', label: '', path: '/scan', isScan: true },
-  { icon: '🎁', label: 'Offers', path: '/offers' },
-  { icon: '👗', label: 'Products', path: '/products' },
+  { icon: '🎁', label: 'العروض', path: '/offers' },
+  { icon: '👗', label: 'المنتجات', path: '/products' },
   { icon: '📊', label: 'لوحة التحكم', path: '/dashboard', isDashboard: true },
-  { icon: '👤', label: 'Profile', path: '/profile' },
+  { icon: '👤', label: 'الملف الشخصي', path: '/profile' },
 ]
 
 export default function BottomNav({ activePath = '/', onNavigate }) {

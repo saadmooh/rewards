@@ -126,34 +126,60 @@ export default function CustomerDetail() {
           </div>
 
           {canManageRoles && (
-            <div className="text-right min-w-[160px]">
-              <label className="block text-[10px] font-black text-muted tracking-widest mb-2 uppercase">تعديل دور المستخدم</label>
-              <div className="relative">
+            <div className="bg-surface/50 border border-border rounded-3xl p-5 w-full sm:w-auto sm:min-w-[240px]">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
+                  <Shield size={16} />
+                </div>
+                <label className="text-[10px] font-black text-muted tracking-widest uppercase">إدارة الصلاحيات</label>
+              </div>
+              
+              <div className="relative mb-3">
                 <select
                   value={membership.role_id || ''}
                   disabled={updateRoleMutation.isPending}
                   onChange={(e) => updateRoleMutation.mutate(e.target.value)}
-                  className={`w-full bg-surface border rounded-2xl px-4 py-3 text-text font-bold text-sm focus:outline-none appearance-none transition-all ${
+                  className={`w-full bg-white border rounded-xl px-4 py-2.5 text-text font-bold text-xs focus:outline-none appearance-none transition-all shadow-sm ${
                     updateRoleMutation.isPending ? 'border-accent opacity-50' : 'border-border focus:border-accent'
                   }`}
                 >
-                  <option value="">بدون دور (Client)</option>
-                  {roles?.map(r => (
+                  <option value="">زبون عادي (Client)</option>
+                  {roles?.filter(r => r.slug !== 'owner').map(r => (
                     <option key={r.id} value={r.id}>{r.name}</option>
                   ))}
                 </select>
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                   {updateRoleMutation.isPending ? (
-                    <Loader2 size={16} className="text-accent animate-spin" />
+                    <Loader2 size={14} className="text-accent animate-spin" />
                   ) : updateRoleMutation.isSuccess ? (
-                    <CheckCircle2 size={16} className="text-green-500" />
+                    <CheckCircle2 size={14} className="text-green-500" />
                   ) : (
-                    <ChevronDown size={16} className="text-muted" />
+                    <ChevronDown size={14} className="text-muted" />
                   )}
                 </div>
               </div>
+
+              {membership.roles && (
+                <div className="space-y-1.5">
+                  <p className="text-[9px] font-black text-muted uppercase tracking-tighter mb-1">الصلاحيات الممنوحة:</p>
+                  <div className="flex flex-wrap gap-1 justify-end">
+                    {Object.entries(membership.roles.permissions || {})
+                      .filter(([_, val]) => val === true)
+                      .slice(0, 3)
+                      .map(([key]) => (
+                        <span key={key} className="bg-white px-2 py-0.5 rounded text-[8px] font-bold text-text border border-border/50">
+                          {key.replace(/_/g, ' ')}
+                        </span>
+                      ))}
+                    {Object.values(membership.roles.permissions || {}).filter(v => v === true).length > 3 && (
+                      <span className="text-[8px] font-bold text-muted px-1">+ المزيد</span>
+                    )}
+                  </div>
+                </div>
+              )}
+              
               {updateRoleMutation.isSuccess && (
-                <p className="text-[10px] text-green-600 font-bold mt-1 animate-pulse">تم تحديث الدور بنجاح</p>
+                <p className="text-[9px] text-green-600 font-bold mt-2 text-center animate-pulse">✓ تم تحديث الدور بنجاح</p>
               )}
             </div>
           )}

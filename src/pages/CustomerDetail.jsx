@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import { useDashboardStore } from '../store/dashboardStore'
 import { format, formatDistanceToNow } from 'date-fns'
 import { ar } from 'date-fns/locale'
-import { Shield, Gift, CreditCard, Tag, ChevronDown } from 'lucide-react'
+import { Shield, Gift, CreditCard, Tag, ChevronDown, Loader2, CheckCircle2 } from 'lucide-react'
 
 export default function CustomerDetail() {
   const { memberId } = useParams()
@@ -126,21 +126,35 @@ export default function CustomerDetail() {
           </div>
 
           {canManageRoles && (
-            <div className="text-right">
-              <label className="block text-xs font-black text-muted tracking-widest mb-2">الدور</label>
+            <div className="text-right min-w-[160px]">
+              <label className="block text-[10px] font-black text-muted tracking-widest mb-2 uppercase">تعديل دور المستخدم</label>
               <div className="relative">
                 <select
                   value={membership.role_id || ''}
+                  disabled={updateRoleMutation.isPending}
                   onChange={(e) => updateRoleMutation.mutate(e.target.value)}
-                  className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold text-sm focus:outline-none focus:border-accent appearance-none"
+                  className={`w-full bg-surface border rounded-2xl px-4 py-3 text-text font-bold text-sm focus:outline-none appearance-none transition-all ${
+                    updateRoleMutation.isPending ? 'border-accent opacity-50' : 'border-border focus:border-accent'
+                  }`}
                 >
-                  <option value="">اختر دوراً</option>
+                  <option value="">بدون دور (Client)</option>
                   {roles?.map(r => (
                     <option key={r.id} value={r.id}>{r.name}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none" size={16} />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                  {updateRoleMutation.isPending ? (
+                    <Loader2 size={16} className="text-accent animate-spin" />
+                  ) : updateRoleMutation.isSuccess ? (
+                    <CheckCircle2 size={16} className="text-green-500" />
+                  ) : (
+                    <ChevronDown size={16} className="text-muted" />
+                  )}
+                </div>
               </div>
+              {updateRoleMutation.isSuccess && (
+                <p className="text-[10px] text-green-600 font-bold mt-1 animate-pulse">تم تحديث الدور بنجاح</p>
+              )}
             </div>
           )}
         </div>

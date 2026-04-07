@@ -47,9 +47,9 @@ export default function Customers() {
   const isInactive = (m) => m.last_purchase && new Date(m.last_purchase) < subDays(new Date(), 60)
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
+    <div className="space-y-6 max-w-5xl mx-auto pb-24 px-4 md:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 md:pt-0">
+        <div className="text-right">
           <h1 className="text-2xl font-black text-text tracking-tight">الزبائن</h1>
           <p className="text-sm text-muted font-medium">إجمالي {data?.count ?? 0} عضو مسجل</p>
         </div>

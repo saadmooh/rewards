@@ -104,8 +104,79 @@ export default function TeamManagement() {
       </div>
 
       {/* Members List */}
-      <div className="bg-white rounded-3xl border border-border shadow-soft overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-[24px] md:rounded-3xl border border-border shadow-soft overflow-hidden">
+        {/* Mobile View (Cards) */}
+        <div className="block md:hidden divide-y divide-border">
+          {isMembersLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="p-4 animate-pulse space-y-3">
+                <div className="flex items-center gap-3 justify-end">
+                  <div className="h-4 w-24 bg-surface rounded" />
+                  <div className="h-10 w-10 bg-surface rounded-xl" />
+                </div>
+                <div className="h-8 w-full bg-surface rounded-xl" />
+              </div>
+            ))
+          ) : members?.map((m) => (
+            <div key={m.id} className="p-4 space-y-4">
+              <div className="flex items-center gap-3 justify-end">
+                <div className="text-right">
+                  <p className="text-sm font-bold text-text">{m.users?.full_name}</p>
+                  <p className="text-[10px] text-muted font-medium">@{m.users?.username ?? '—'}</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-surface border border-border overflow-hidden flex-shrink-0">
+                  {m.users?.photo_url ? (
+                    <img src={m.users.photo_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted">
+                      <User size={18} />
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex-1">
+                  {canManageRoles && m.roles?.slug !== 'owner' ? (
+                    <div className="relative group">
+                      <select
+                        value={m.role_id || ''}
+                        disabled={updateRoleMutation.isPending && updateRoleMutation.variables?.membershipId === m.id}
+                        onChange={(e) => updateRoleMutation.mutate({ membershipId: m.id, roleId: e.target.value })}
+                        className="w-full bg-surface border border-border rounded-xl px-4 py-2 text-xs font-bold text-text focus:outline-none focus:border-accent appearance-none cursor-pointer"
+                      >
+                        <option value="">بدون دور</option>
+                        {roles?.map(r => (
+                          <option key={r.id} value={r.id}>{r.name}</option>
+                        ))}
+                      </select>
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
+                        {updateRoleMutation.isPending && updateRoleMutation.variables?.membershipId === m.id ? (
+                          <Loader2 size={12} className="animate-spin" />
+                        ) : (
+                          <ChevronDown size={12} />
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border flex items-center gap-2 w-fit ${
+                      m.roles?.slug === 'owner' 
+                        ? 'bg-accent text-white border-accent' 
+                        : 'bg-surface text-text border-border'
+                    }`}>
+                      {m.roles?.slug === 'owner' ? <ShieldCheck size={12} /> : <Shield size={12} />}
+                      {m.roles?.name || 'Client'}
+                    </div>
+                  )}
+                </div>
+                <p className="text-[10px] font-medium text-muted">انضم {new Date(m.joined_at).toLocaleDateString('ar-DZ')}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop View (Table) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-right border-collapse">
             <thead>
               <tr className="bg-surface/50 border-b border-border">
@@ -115,15 +186,7 @@ export default function TeamManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {isMembersLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-10 w-40 bg-surface rounded-lg" /></td>
-                    <td className="px-6 py-4"><div className="h-6 w-24 bg-surface rounded-lg" /></td>
-                    <td className="px-6 py-4"><div className="h-10 w-32 bg-surface rounded-lg ml-auto" /></td>
-                  </tr>
-                ))
-              ) : members?.map((m) => (
+              {members?.map((m) => (
                 <tr key={m.id} className="hover:bg-surface/30 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3 justify-end">

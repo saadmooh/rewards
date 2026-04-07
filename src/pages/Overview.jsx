@@ -164,10 +164,10 @@ export default function Overview() {
   })
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto pb-24 px-4 md:px-0">
       {/* Welcome & Action Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 md:pt-0">
+        <div className="text-right">
           <h1 className="text-2xl font-black text-text tracking-tight">مرحباً، {store?.name}</h1>
           <p className="text-sm text-muted font-medium">{format(new Date(), 'EEEE، d MMMM yyyy')}</p>
         </div>

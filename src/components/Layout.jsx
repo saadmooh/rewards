@@ -113,7 +113,7 @@ export default function Layout() {
       {/* Bottom Tab Bar — mobile only */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-border z-50">
         <div className="flex justify-around items-center max-w-md mx-auto px-2 py-3">
-          {NAV.slice(0, 6).map(item => {
+          {NAV.slice(0, 7).map(item => {
             const isActive = location.pathname === item.to || (item.to === '/dashboard/overview' && location.pathname === '/dashboard')
             return (
               <NavLink

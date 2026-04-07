@@ -34,63 +34,72 @@ export default function History() {
 
   return (
     <div className="min-h-screen bg-white pb-24">
-      <div className="p-5 max-w-md mx-auto">
+      <div className="p-5 max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="mb-8"
         >
-          <h1 className="text-2xl font-bold text-text">السجل</h1>
+          <h1 className="text-2xl font-bold text-text text-right">السجل</h1>
         </motion.div>
 
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl p-4 text-center shadow-card"
+            className="bg-white rounded-3xl p-6 text-center shadow-soft border border-border hover:shadow-lg transition-shadow"
           >
-            <p className="text-2xl font-bold text-text">{user?.points || 0}</p>
-            <p className="text-xs text-muted">الحالي</p>
+            <p className="text-3xl font-black text-accent">{(user?.points || 0).toLocaleString()}</p>
+            <p className="text-xs font-bold text-muted mt-1 uppercase tracking-widest">الرصيد الحالي</p>
           </motion.div>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl p-4 text-center shadow-card"
+            className="bg-white rounded-3xl p-6 text-center shadow-soft border border-border hover:shadow-lg transition-shadow"
           >
-            <p className="text-2xl font-bold text-success">+{totalEarned}</p>
-            <p className="text-xs text-muted">المكتسبة</p>
+            <p className="text-3xl font-black text-green-600">+{totalEarned.toLocaleString()}</p>
+            <p className="text-xs font-bold text-muted mt-1 uppercase tracking-widest">إجمالي النقاط</p>
           </motion.div>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl p-4 text-center shadow-card"
+            className="bg-white rounded-3xl p-6 text-center shadow-soft border border-border hover:shadow-lg transition-shadow"
           >
-            <p className="text-2xl font-bold text-accent">{purchaseCount}</p>
-            <p className="text-xs text-muted">المشتريات</p>
+            <p className="text-3xl font-black text-text">{purchaseCount}</p>
+            <p className="text-xs font-bold text-muted mt-1 uppercase tracking-widest">عدد العمليات</p>
           </motion.div>
         </div>
 
         {loading ? (
-          <div className="text-center py-12">
-            <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="flex justify-center py-20">
+            <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-8 max-w-2xl mx-auto">
             {Object.entries(groupedTransactions).map(([date, txs]) => (
               <div key={date}>
-                <p className="text-muted text-sm font-medium mb-2">{date}</p>
-                {txs.map((tx) => (
-                  <TransactionItem key={tx.id} transaction={tx} />
-                ))}
+                <div className="flex items-center gap-4 mb-4">
+                   <div className="h-[1px] flex-1 bg-border" />
+                   <p className="text-muted text-xs font-black uppercase tracking-widest">{new Date(date).toLocaleDateString('ar-DZ', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                   <div className="h-[1px] flex-1 bg-border" />
+                </div>
+                <div className="space-y-3">
+                  {txs.map((tx) => (
+                    <TransactionItem key={tx.id} transaction={tx} />
+                  ))}
+                </div>
               </div>
             ))}
             
             {Object.keys(groupedTransactions).length === 0 && (
-              <div className="text-center py-12 text-muted">
-                <p className="text-4xl mb-4">📊</p>
-                <p>لا توجد معاملات بعد</p>
+              <div className="text-center py-24 bg-surface rounded-3xl border border-dashed border-border">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-soft">
+                   <span className="text-3xl">📊</span>
+                </div>
+                <p className="text-muted font-bold">لا توجد معاملات بعد</p>
+                <button onClick={() => window.location.href = '/'} className="mt-4 text-accent font-bold hover:underline">ابدأ التسوق الآن</button>
               </div>
             )}
           </div>

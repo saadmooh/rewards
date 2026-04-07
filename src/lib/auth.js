@@ -79,7 +79,11 @@ export async function resolveStoreAccess(userId) {
   const { stores: store, roles: role, ...membershipData } = activeMembership
   
   // Flatten membership for backward compatibility if needed, but include role
-  const membership = { ...membershipData, role: role?.slug }
+  const membership = { 
+    ...membershipData, 
+    role: role?.slug,
+    permissions: role?.permissions || {}
+  }
 
   return { 
     store, 

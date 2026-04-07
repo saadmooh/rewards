@@ -35,7 +35,7 @@ export default function BottomNav({ activePath = '/', onNavigate }) {
       transition={{ duration: 0.3 }}
       className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-border z-50"
     >
-      <div className="flex justify-around items-center max-w-md mx-auto px-2 py-3">
+      <div className="flex justify-around items-center max-w-lg mx-auto px-4 py-3">
         {visibleItems.map((item) => {
           const isActive = activePath === item.path
           const isScan = item.isScan

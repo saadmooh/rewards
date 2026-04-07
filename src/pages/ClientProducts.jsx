@@ -91,9 +91,9 @@ export default function ClientProducts() {
 
   return (
     <div className="min-h-screen bg-white pb-24">
-      <div className="p-5 max-w-md mx-auto">
+      <div className="p-5 max-w-4xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+          <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 transition-colors hover:bg-gray-200">
             ←
           </button>
           <h1 className="text-xl font-medium text-gray-900">المنتجات</h1>
@@ -103,10 +103,10 @@ export default function ClientProducts() {
           {categories.map(cat => (
             <button
               key={cat}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
                 catFilter === cat
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-50 text-gray-500'
+                  ? 'bg-gray-900 text-white shadow-lg'
+                  : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
               }`}
               onClick={() => setCatFilter(cat)}
             >
@@ -116,8 +116,8 @@ export default function ClientProducts() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-4">
-            {[1, 2, 3, 4, 5, 6].map(i => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
               <ProductCardSkeleton key={i} />
             ))}
           </div>
@@ -126,7 +126,7 @@ export default function ClientProducts() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-2 gap-4"
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
           >
             <AnimatePresence>
               {filteredProducts.map((product) => {
@@ -144,7 +144,7 @@ export default function ClientProducts() {
                     key={product.id}
                     variants={itemVariants}
                     onClick={() => handleProductClick(`/products/${product.id}`)}
-                    className="bg-white rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+                    className="bg-white rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:shadow-md border border-transparent hover:border-gray-100"
                   >
                     <div className="aspect-square bg-gray-50 relative">
                       {product.image_url ? (
@@ -160,8 +160,8 @@ export default function ClientProducts() {
                         </div>
                       )}
                       {isActiveOfferWithDiscount && (
-                        <div className="absolute top-2 right-2 px-2 py-1 bg-gray-900 rounded-md z-10 flex items-center">
-                          <span className="text-[10px] font-medium text-white">-{offerDetails.discount_percent}%</span>
+                        <div className="absolute top-2 left-2 px-2 py-1 bg-red-500 rounded-md z-10 flex items-center">
+                          <span className="text-[10px] font-bold text-white">-{offerDetails.discount_percent}%</span>
                         </div>
                       )}
                     </div>

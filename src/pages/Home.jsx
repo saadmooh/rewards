@@ -178,7 +178,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white pb-24">
-      <div className="p-5 max-w-md mx-auto">
+      <div className="p-5 max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -186,10 +186,10 @@ export default function Home() {
           className="mb-8"
         >
           <div className="flex justify-between items-center mb-2">
-            <div>
+            <div className="text-right">
               <p className="text-gray-400 text-sm">صباح الخير</p>
               <h1 className="text-2xl font-medium text-gray-900">
-                {user?.first_name || 'أهلاً بك'}
+                {user?.full_name?.split(' ')[0] || 'أهلاً بك'}
               </h1>
             </div>
             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
@@ -202,21 +202,23 @@ export default function Home() {
           </div>
         </motion.div>
 
-        <section className="mb-8">
-          <PointsCard />
-        </section>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <section>
+            <PointsCard />
+          </section>
 
-        <section className="mb-8">
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={handleScan}
-            disabled={scanning}
-            className="w-full py-4 bg-gray-900 text-white font-medium rounded-2xl flex items-center justify-center gap-3 transition-all"
-          >
-            <span className="text-lg">📷</span>
-            {scanning ? 'جاري الفتح...' : 'مسح الإيصال'}
-          </motion.button>
-        </section>
+          <section className="flex items-center">
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={handleScan}
+              disabled={scanning}
+              className="w-full py-4 bg-gray-900 text-white font-medium rounded-2xl flex items-center justify-center gap-3 transition-all h-full min-h-[60px]"
+            >
+              <span className="text-lg">📷</span>
+              {scanning ? 'جاري الفتح...' : 'مسح الإيصال وكسب النقاط'}
+            </motion.button>
+          </section>
+        </div>
 
         {/* For You Section */}
         <section className="mb-8">
@@ -234,11 +236,11 @@ export default function Home() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide"
+            className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-5 px-5 md:mx-0 md:px-0 scrollbar-hide"
           >
             {isOffersLoading ? (
-              [1, 2].map((i) => (
-                <div key={i} className="min-w-[280px]">
+              [1, 2, 3].map((i) => (
+                <div key={i} className="min-w-[280px] md:min-w-0">
                   <OfferCardSkeleton />
                 </div>
               ))
@@ -247,7 +249,7 @@ export default function Home() {
                 <motion.div 
                   key={product.id} 
                   variants={itemVariants}
-                  className="min-w-[280px]"
+                  className="min-w-[280px] md:min-w-0"
                 >
                   <ProductOfferCard
                     product={product}
@@ -257,7 +259,7 @@ export default function Home() {
                 </motion.div>
               ))
             ) : (
-              <div className="text-center py-8 text-gray-400 w-full">
+              <div className="text-center py-8 text-gray-400 w-full col-span-full">
                 <p>لا توجد عروض خاصة اليوم</p>
               </div>
             )}
@@ -279,13 +281,13 @@ export default function Home() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              className="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide"
+              className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-5 px-5 md:mx-0 md:px-0 scrollbar-hide"
             >
               {trendingProducts.map((product) => (
                 <motion.div 
                   key={product.id} 
                   variants={itemVariants}
-                  className="min-w-[160px]"
+                  className="min-w-[160px] md:min-w-0"
                 >
                   <ProductCard
                     id={product.id}
@@ -318,11 +320,11 @@ export default function Home() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="flex gap-4 overflow-x-auto pb-4 -mx-5 px-5 scrollbar-hide"
+            className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-5 px-5 md:mx-0 md:px-0 scrollbar-hide"
           >
             {isProductsLoading ? (
-              [1, 2, 3].map((i) => (
-                <div key={i} className="min-w-[160px]">
+              [1, 2, 3, 4].map((i) => (
+                <div key={i} className="min-w-[160px] md:min-w-0">
                   <ProductCardSkeleton />
                 </div>
               ))
@@ -330,7 +332,7 @@ export default function Home() {
               <motion.div 
                 key={product.id} 
                 variants={itemVariants}
-                className="min-w-[160px]"
+                className="min-w-[160px] md:min-w-0"
               >
                 <ProductCard
                   id={product.id}
@@ -343,7 +345,7 @@ export default function Home() {
                 />
               </motion.div>
             )) : (
-              <div className="text-center py-8 text-gray-400 w-full">
+              <div className="text-center py-8 text-gray-400 w-full col-span-full">
                 <p>جاري تحميل المنتجات...</p>
               </div>
             )}

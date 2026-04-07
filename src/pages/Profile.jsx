@@ -24,119 +24,145 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-24">
-      <div className="p-5 max-w-md mx-auto">
+    <div className="min-h-screen bg-white pb-24 text-right">
+      <div className="p-5 max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="mb-8"
         >
-          <h1 className="text-xl font-medium text-gray-900">الملف الشخصي</h1>
+          <h1 className="text-2xl font-bold text-gray-900">الملف الشخصي</h1>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-50 rounded-2xl p-5 mb-6"
-        >
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-xl bg-gray-200 flex items-center justify-center overflow-hidden">
-              {user?.photo_url ? (
-                <img src={user.photo_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-xl text-gray-500">👤</span>
-              )}
-            </div>
-            <div>
-              <h2 className="text-lg font-medium text-gray-900">
-                {user?.full_name || user?.first_name || 'مستخدم'}
-              </h2>
-              <TierBadge tier={membership?.tier || 'bronze'} size="medium" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
-            <div>
-              <p className="text-muted text-xs">اسم المستخدم</p>
-              <p className="text-text font-semibold">@{user?.username || 'unknown'}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-muted text-xs">عضو منذ</p>
-              <p className="text-text font-semibold">يناير 2024</p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-3xl p-6 mb-6 shadow-card"
-        >
-          <h3 className="text-lg font-bold text-text mb-2">🎁 دعوة الأصدقاء</h3>
-          <p className="text-muted text-sm mb-4">
-            شارك رمزك واكسب 200 نقطة لكل صديق ينضم!
-          </p>
-          
-          <div className="flex items-center gap-2 bg-surface rounded-2xl p-3">
-            <code className="flex-1 text-accent-dark font-bold text-lg">
-              {membership?.referral_code || 'جاري التحميل...'}
-            </code>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={copyReferral}
-              className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-                showReferral 
-                  ? 'bg-success text-white' 
-                  : 'bg-accent text-white'
-              }`}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gray-50 rounded-3xl p-6 border border-border"
             >
-              {showReferral ? 'تم النسخ!' : 'شارك'}
-            </motion.button>
-          </div>
-        </motion.div>
+              <div className="flex items-center justify-end gap-4 mb-6">
+                <div className="text-right order-2 md:order-1">
+                  <h2 className="text-xl font-black text-gray-900">
+                    {user?.full_name || user?.first_name || 'مستخدم'}
+                  </h2>
+                  <div className="flex justify-end mt-1">
+                    <TierBadge tier={membership?.tier || 'bronze'} size="medium" />
+                  </div>
+                </div>
+                <div className="w-16 h-16 rounded-2xl bg-white shadow-soft border border-border flex items-center justify-center overflow-hidden order-1 md:order-2">
+                  {user?.photo_url ? (
+                    <img src={user.photo_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl text-gray-400">👤</span>
+                  )}
+                </div>
+              </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-3xl p-6 mb-6 shadow-card"
-        >
-          <h3 className="text-lg font-bold text-text mb-4">⚙️ الإعدادات</h3>
-          
-          <div className="space-y-3">
-            <button 
-              onClick={() => {
-                setSelectedDate(user?.birth_date || '')
-                setShowDatePicker(true)
-              }}
-              className="w-full flex items-center justify-between p-4 bg-surface rounded-2xl"
+              <div className="grid grid-cols-2 gap-4 pt-6 border-t border-border/50">
+                <div className="text-right">
+                  <p className="text-muted text-[10px] font-black uppercase tracking-widest mb-1">اسم المستخدم</p>
+                  <p className="text-text font-bold">@{user?.username || 'unknown'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-muted text-[10px] font-black uppercase tracking-widest mb-1">عضو منذ</p>
+                  <p className="text-text font-bold">يناير 2024</p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white rounded-3xl p-6 shadow-soft border border-border"
             >
-              <span className="text-text font-medium">🎂 عيد الميلاد</span>
-              <span className="text-muted text-sm">
-                {user?.birth_date || 'لم يتم التعيين'}
-              </span>
-            </button>
-            
-            <button className="w-full flex items-center justify-between p-4 bg-surface rounded-2xl">
-              <span className="text-text font-medium">🌐 اللغة</span>
-              <span className="text-muted text-sm">العربية</span>
-            </button>
+              <h3 className="text-lg font-black text-text mb-2">🎁 دعوة الأصدقاء</h3>
+              <p className="text-muted text-sm mb-6">
+                شارك رابطك واكسب 200 نقطة لكل صديق ينضم!
+              </p>
+              
+              <div className="flex items-center gap-3 bg-surface rounded-2xl p-4 border border-border">
+                <code className="flex-1 text-accent font-black text-xl tracking-wider text-left">
+                  {membership?.referral_code || '---'}
+                </code>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={copyReferral}
+                  className={`px-6 py-2.5 rounded-xl font-black text-sm shadow-soft transition-all ${
+                    showReferral 
+                      ? 'bg-green-600 text-white' 
+                      : 'bg-accent text-white'
+                  }`}
+                >
+                  {showReferral ? 'تم النسخ!' : 'نسخ الرابط'}
+                </motion.button>
+              </div>
+            </motion.div>
           </div>
-        </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white rounded-3xl p-6 shadow-card"
-        >
-          <h3 className="text-lg font-bold text-text mb-4">🎟️ قسائمك</h3>
-          <div className="text-center py-8">
-            <p className="text-4xl mb-2">🎟️</p>
-            <p className="text-muted">لا توجد قسائم نشطة</p>
+          <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-3xl p-6 shadow-soft border border-border"
+            >
+              <h3 className="text-lg font-black text-text mb-6">⚙️ الإعدادات الشخصية</h3>
+              
+              <div className="space-y-4">
+                <button 
+                  onClick={() => {
+                    setSelectedDate(user?.birth_date || '')
+                    setShowDatePicker(true)
+                  }}
+                  className="w-full flex items-center justify-between p-4 bg-surface rounded-2xl border border-transparent hover:border-border transition-all group"
+                >
+                  <div className="flex items-center gap-3 text-right">
+                     <span className="text-lg">🎂</span>
+                     <div>
+                        <p className="text-text font-bold text-sm">تاريخ الميلاد</p>
+                        <p className="text-muted text-[10px] font-medium">{user?.birth_date || 'غير محدد'}</p>
+                     </div>
+                  </div>
+                  <span className="text-accent text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">تعديل</span>
+                </button>
+                
+                <button className="w-full flex items-center justify-between p-4 bg-surface rounded-2xl border border-transparent hover:border-border transition-all group">
+                   <div className="flex items-center gap-3 text-right">
+                      <span className="text-lg">🌐</span>
+                      <div>
+                         <p className="text-text font-bold text-sm">اللغة المفضلة</p>
+                         <p className="text-muted text-[10px] font-medium">العربية (الافتراضية)</p>
+                      </div>
+                   </div>
+                   <span className="text-accent text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">تغيير</span>
+                </button>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-3xl p-6 shadow-soft border border-border"
+            >
+              <h3 className="text-lg font-black text-text mb-6">🎟️ قسائمي المفعلة</h3>
+              <div className="text-center py-10 bg-surface rounded-2xl border border-dashed border-border">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-soft">
+                   <span className="text-2xl opacity-50">🎟️</span>
+                </div>
+                <p className="text-muted text-xs font-bold">لا توجد قسائم نشطة حالياً</p>
+                <button 
+                  onClick={() => window.location.href = '/rewards/offers'}
+                  className="mt-3 text-accent text-[11px] font-black uppercase tracking-widest hover:underline"
+                >
+                   استكشف العروض
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       <AnimatePresence>

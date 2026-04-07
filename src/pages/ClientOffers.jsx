@@ -81,20 +81,20 @@ export default function ClientOffers() {
 
   return (
     <div className="min-h-screen bg-white pb-24">
-      <div className="p-5 max-w-md mx-auto">
+      <div className="p-5 max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="text-right">
             <h1 className="text-2xl font-medium text-gray-900">صفقات اليوم</h1>
             <p className="text-sm text-gray-400 mt-1">أفضل الأسعار المختارة لك</p>
           </div>
-          <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+          <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 transition-colors hover:bg-gray-200">
             ←
           </button>
         </div>
 
         {isLoading ? (
-          <div className="grid gap-4">
-            {[1, 2, 3, 4].map(i => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3, 4, 5, 6].map(i => (
               <OfferCardSkeleton key={i} />
             ))}
           </div>
@@ -103,7 +103,7 @@ export default function ClientOffers() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid gap-3"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           >
             <AnimatePresence>
               {offersWithProducts.map((product) => (
@@ -126,10 +126,10 @@ export default function ClientOffers() {
               <Tag size={24} className="text-gray-300" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">لا توجد عروض حالياً</h3>
-            <p className="text-sm text-gray-400 px-10">ابقَ على اطلاع، فنحن نضيف صفقات جديدة باستمرار!</p>
+            <p className="text-sm text-gray-400 px-10 max-w-md mx-auto">ابقَ على اطلاع، فنحن نضيف صفقات جديدة باستمرار!</p>
             <button 
               onClick={() => navigate('/')}
-              className="mt-8 px-6 py-3 bg-gray-900 text-white font-medium rounded-xl"
+              className="mt-8 px-8 py-3 bg-gray-900 text-white font-medium rounded-xl transition-all active:scale-95"
             >
               العودة للرئيسية
             </button>

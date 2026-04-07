@@ -8,6 +8,7 @@ const DEFAULT_PERMISSIONS = {
   manage_products: false,
   manage_offers: false,
   manage_customers: false,
+  manage_roles: false,
   view_stats: false,
   issue_points: false,
   redeem_points: false

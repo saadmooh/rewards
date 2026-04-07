@@ -15,7 +15,7 @@ export default function CustomerDetail() {
   const [grantPts, setGrantPts] = useState('')
   const [grantNote, setGrantNote] = useState('')
 
-  const isOwner = userMembership?.role === 'owner'
+  const canManageRoles = userMembership?.permissions?.manage_roles === true || userMembership?.role === 'owner'
 
   const { data: membership, refetch } = useQuery({
     queryKey: ['membership-detail', memberId],
@@ -125,7 +125,7 @@ export default function CustomerDetail() {
             </div>
           </div>
 
-          {isOwner && (
+          {canManageRoles && (
             <div className="text-right">
               <label className="block text-xs font-black text-muted tracking-widest mb-2">الدور</label>
               <div className="relative">

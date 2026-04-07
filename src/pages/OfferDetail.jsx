@@ -102,27 +102,29 @@ export default function OfferDetail() {
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="max-w-md mx-auto text-center py-10"
+          className="max-w-2xl mx-auto text-center py-10"
         >
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-soft">
             <span className="text-3xl">✅</span>
           </div>
-          <h2 className="text-xl font-medium text-gray-900 mb-2">تم تفعيل العرض!</h2>
-          <p className="text-gray-500 mb-5">{offer.title}</p>
+          <h2 className="text-2xl font-black text-gray-900 mb-2">تم تفعيل العرض!</h2>
+          <p className="text-gray-500 mb-8 font-medium">{offer.title}</p>
           
-          <div className="bg-gray-50 rounded-2xl p-5 mb-5">
-            <div className="flex justify-center mb-4">
-              <QRCodeCanvas value={coupon} size={160} level="H" includeMargin={false} />
+          <div className="bg-gray-50 rounded-3xl p-8 mb-8 border border-border shadow-soft max-w-sm mx-auto">
+            <div className="flex justify-center mb-6 p-4 bg-white rounded-2xl shadow-inner">
+              <QRCodeCanvas value={coupon} size={200} level="H" includeMargin={false} />
             </div>
-            <p className="text-2xl font-mono font-medium text-gray-900 tracking-wider mb-2">{coupon}</p>
-            <p className="text-gray-400 text-sm">أظهر هذا للكاشير</p>
-            <p className="text-gray-400 text-xs mt-2">ينتهي في {formatTime(timeLeft)}</p>
+            <p className="text-3xl font-mono font-black text-gray-900 tracking-[0.2em] mb-2">{coupon}</p>
+            <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">أظهر هذا للكاشير</p>
+            <div className="mt-6 pt-6 border-t border-gray-200">
+               <p className="text-red-500 text-xs font-black uppercase tracking-tighter">ينتهي في {formatTime(timeLeft)}</p>
+            </div>
           </div>
 
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate('/offers')}
-            className="px-8 py-3 bg-gray-900 text-white font-medium rounded-xl"
+            className="px-12 py-4 bg-gray-900 text-white font-black rounded-2xl shadow-xl transition-all active:scale-95"
           >
             تم
           </motion.button>
@@ -133,58 +135,65 @@ export default function OfferDetail() {
 
   return (
     <div className="min-h-screen bg-white p-5">
-      <div className="max-w-md mx-auto">
+      <div className="max-w-4xl mx-auto">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 -ml-2 mb-4 text-gray-600"
+          className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 mb-6 transition-colors hover:bg-gray-200"
         >
           ←
         </button>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gray-50 rounded-2xl overflow-hidden"
-        >
-          <div className="h-32 bg-gray-100" />
-          
-          <div className="p-5">
-            <span className="px-3 py-1 bg-gray-900 text-white rounded-full text-xs font-medium">
-              {offer.type}
-            </span>
-            
-            <h1 className="text-xl font-medium text-gray-900 mt-3 mb-2">
-              {offer.title}
-            </h1>
-            
-            <p className="text-gray-500 text-sm mb-6">
-              {offer.description}
-            </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="aspect-video md:aspect-square bg-gray-100 rounded-3xl overflow-hidden shadow-soft border border-border flex items-center justify-center"
+          >
+             <span className="text-6xl opacity-20">🎁</span>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-6 text-right"
+          >
+            <div>
+              <span className="px-4 py-1.5 bg-accent text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-soft shadow-accent/20">
+                {offer.type}
+              </span>
+              
+              <h1 className="text-3xl font-black text-gray-900 mt-4 mb-3 tracking-tight">
+                {offer.title}
+              </h1>
+              
+              <p className="text-gray-500 font-medium leading-relaxed">
+                {offer.description}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+               <div className="bg-gray-50 p-4 rounded-2xl border border-border">
+                  <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">النقاط المطلوبة</p>
+                  <p className="text-accent text-xl font-black">{offer.points_cost ? `${offer.points_cost.toLocaleString()} نقطة` : 'مجاني'}</p>
+               </div>
+               <div className="bg-gray-50 p-4 rounded-2xl border border-border">
+                  <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">صلاحية العرض</p>
+                  <p className="text-gray-700 text-lg font-black">
+                    {offer.valid_until ? new Date(offer.valid_until).toLocaleDateString('ar-DZ') : 'دائم'}
+                  </p>
+               </div>
+            </div>
 
             {offer.discount_percent && (
-              <div className="bg-gray-100 rounded-xl p-3 mb-4">
-                <p className="text-gray-900 font-medium text-center">
-                  {offer.discount_percent}% خصم
-                </p>
+              <div className="bg-green-50 rounded-2xl p-5 border border-green-100 flex items-center justify-between">
+                <span className="text-green-700 font-black text-2xl">-{offer.discount_percent}%</span>
+                <p className="text-green-800 font-bold">خصم خاص مفعل</p>
               </div>
             )}
 
-            <div className="flex items-center justify-between text-sm mb-6">
-              <div>
-                <p className="text-gray-400 text-xs">النقاط المطلوبة</p>
-                <p className="text-gray-900 font-medium">{offer.points_cost ? `${offer.points_cost} نقطة` : 'مجاني'}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-gray-400 text-xs">ينتهي</p>
-                <p className="text-gray-600 font-medium">
-                  {offer.valid_until ? new Date(offer.valid_until).toLocaleDateString() : '—'}
-                </p>
-              </div>
-            </div>
-
             {products && products.length > 0 && (
-              <div className="mb-6 border-t border-gray-200 pt-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">المنتجات المشمولة</h3>
+              <div className="pt-6 border-t border-gray-100">
+                <h3 className="text-sm font-black text-gray-900 mb-4 uppercase tracking-widest">المنتجات المشمولة في العرض</h3>
                 <OfferProductList products={products} />
               </div>
             )}
@@ -192,12 +201,12 @@ export default function OfferDetail() {
             <motion.button
               whileTap={{ scale: 0.98 }}
               onClick={handleRedeem}
-              className="w-full py-3 rounded-xl font-medium transition-all bg-gray-900 text-white"
+              className="w-full py-5 rounded-2xl font-black text-lg transition-all bg-gray-900 text-white shadow-xl shadow-gray-200 active:scale-95"
             >
-              {offer.points_cost ? 'استبدال الآن' : 'تفعيل العرض'}
+              {offer.points_cost ? 'استبدال بالنقاط الآن' : 'تفعيل العرض مجاناً'}
             </motion.button>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
 
         {showConfirm && (
           <motion.div 

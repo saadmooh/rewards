@@ -1,12 +1,14 @@
 // Settings - Store configuration page
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useDashboardStore } from '../store/dashboardStore'
 import { supabase } from '../lib/supabase'
 import { motion } from 'framer-motion'
-import { Store, Palette, Coins, BarChart, Check, Save, Phone, MapPin, Info, Bot, Send, AlertCircle, ExternalLink } from 'lucide-react'
+import { Store, Palette, Coins, BarChart, Check, Save, Phone, MapPin, Info, Bot, Send, AlertCircle, ExternalLink, Users, Shield } from 'lucide-react'
 
 export default function Settings() {
   const { store, refreshStore } = useDashboardStore()
+  const navigate = useNavigate()
   const [form, setForm] = useState({
     name:           store?.name ?? '',
     description:    store?.description ?? '',
@@ -282,6 +284,32 @@ export default function Settings() {
             </div>
           </div>
         </section>
+
+        {/* Roles & Permissions */}
+        <section className="bg-white rounded-[32px] p-6 border border-border shadow-soft">
+          <div className="flex items-center justify-between gap-3 mb-6">
+            <div className="flex items-center gap-3">
+              <h3 className="text-lg font-black text-text tracking-tight">الأدوار والصلاحيات</h3>
+              <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center text-accent">
+                <Shield size={20} />
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-muted text-sm mb-4 text-right">إدارة أدوار المستخدمين وصلاحياتهم</p>
+          
+          <button 
+            onClick={() => navigate('/dashboard/roles')}
+            className="w-full py-4 bg-surface border border-border rounded-2xl text-text font-bold flex items-center justify-between px-6 hover:border-accent transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Users size={20} className="text-accent" />
+              <span>إدارة الأدوار</span>
+            </div>
+            <span className="text-muted">→</span>
+          </button>
+        </section>
+
         <button 
           onClick={handleSave}
           disabled={saved}

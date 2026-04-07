@@ -28,6 +28,7 @@ import CustomerDetail from './pages/CustomerDetail'
 import Notifications from './pages/Notifications'
 import Settings from './pages/Settings'
 import RolesManagement from './pages/RolesManagement'
+import TeamManagement from './pages/TeamManagement'
 import ClaimPoints from './pages/ClaimPoints'
 import ClaimSuccess from './pages/ClaimSuccess'
 
@@ -121,6 +122,7 @@ function AppContent() {
                 <Route path="offers" element={<Offers />} />
                 <Route path="customers" element={<CustomersPage />} />
                 <Route path="customers/:memberId" element={<CustomerDetail />} />
+                <Route path="team" element={<TeamManagement />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="roles" element={<RolesManagement />} />

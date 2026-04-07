@@ -4,7 +4,7 @@ import { useDashboardStore } from '../store/dashboardStore'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard, QrCode, Package,
-  Tag, Users, Bell, Settings, ArrowLeft, Home
+  Tag, Users, Bell, Settings, ArrowLeft, Home, ShieldCheck
 } from 'lucide-react'
 
 const NAV = [
@@ -13,6 +13,7 @@ const NAV = [
   { to: '/dashboard/products',       label: 'المنتجات',   icon: Package },
   { to: '/dashboard/offers',        label: 'العروض',      icon: Tag },
   { to: '/dashboard/customers',      label: 'الزبائن',    icon: Users },
+  { to: '/dashboard/team',           label: 'الفريق',     icon: ShieldCheck },
   { to: '/dashboard/notifications',  label: 'إشعارات',    icon: Bell },
   { to: '/dashboard/settings',       label: 'الإعدادات',  icon: Settings },
 ]

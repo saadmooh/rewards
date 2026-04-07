@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { formatCurrency } from '../lib/offers'
+import { Package } from 'lucide-react'
 
 export default function ProductCard({
   name,
@@ -18,14 +19,20 @@ export default function ProductCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -6, shadow: '0 12px 24px -4px rgb(0 0 0 / 0.15)' }}
       onClick={onClick}
-      className="bg-white rounded-2xl overflow-hidden shadow-card cursor-pointer"
+      className="bg-white rounded-2xl overflow-hidden shadow-card cursor-pointer min-w-[160px] w-[160px]"
     >
-      <div className="relative h-36">
-        <img
-          src={imageUrl}
-          alt={name}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative h-36 bg-gray-100">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <Package size={40} className="text-gray-300" />
+          </div>
+        )}
         {isExclusive && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
             <span className="text-white text-2xl">🔒</span>

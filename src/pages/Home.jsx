@@ -168,6 +168,7 @@ export default function Home() {
     
     return products
       ?.filter(p => !forYouIds.has(p.id) && !trendingIds.has(p.id))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 8)
       .map(p => {
         const offer = productToOfferMap.get(p.id);

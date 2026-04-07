@@ -9,7 +9,10 @@ export const useOfferWithProducts = (offerId) => {
   const [activeRedemption, setActiveRedemption] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { store, user } = useUserStore();
+  const { store, user, membership } = useUserStore();
+
+  const tierOrder = { bronze: 0, silver: 1, gold: 2, platinum: 3 };
+  const userTierLevel = tierOrder[membership?.tier ?? 'bronze'] ?? 0;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,6 +43,15 @@ export const useOfferWithProducts = (offerId) => {
 
         if (offerError) throw offerError;
         if (!offerData) throw new Error('Offer not found');
+        
+        const offerTierLevel = tierOrder[offerData.min_tier ?? 'bronze'] ?? 0;
+        if (userTierLevel < offerTierLevel) {
+          setOffer({ ...offerData, tier_restricted: true, required_tier: offerData.min_tier });
+          setProducts([]);
+          setLoading(false);
+          return;
+        }
+        
         setOffer(offerData);
 
         // Fetch active redemption if user exists
@@ -105,7 +117,7 @@ export const useOfferWithProducts = (offerId) => {
     };
 
     fetchData();
-  }, [offerId, store?.id, user?.id]);
+  }, [offerId, store?.id, user?.id, membership?.tier]);
 
-  return { offer, products, activeRedemption, loading, error };
+  return { offer, products, activeRedemption, loading, error, userTierLevel };
 };

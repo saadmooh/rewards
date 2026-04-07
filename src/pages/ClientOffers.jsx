@@ -26,7 +26,10 @@ const itemVariants = {
 
 export default function ClientOffers() {
   const navigate = useNavigate()
-  const { store } = useUserStore()
+  const { store, membership } = useUserStore()
+
+  const tierOrder = { bronze: 0, silver: 1, gold: 2, platinum: 3 }
+  const userTierLevel = tierOrder[membership?.tier ?? 'bronze'] ?? 0
 
   const handleProductClick = (path) => {
     hapticFeedback('light')
@@ -34,13 +37,14 @@ export default function ClientOffers() {
   }
 
   const { data: offersWithProducts, isLoading } = useQuery({
-    queryKey: ['discounted-products', store?.id],
+    queryKey: ['discounted-products', store?.id, membership?.tier],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: allOffers, error } = await supabase
         .from('offers')
         .select(`
           id,
           type,
+          min_tier,
           discount_percent,
           offer_products (
             products (*)
@@ -51,8 +55,16 @@ export default function ClientOffers() {
       
       if (error) throw error;
       
+      const tierOrder = { bronze: 0, silver: 1, gold: 2, platinum: 3 };
+      const userTierLevel = tierOrder[membership?.tier ?? 'bronze'] ?? 0;
+      
+      const filteredOffers = (allOffers || []).filter(offer => {
+        const offerTierLevel = tierOrder[offer.min_tier ?? 'bronze'] ?? 0;
+        return userTierLevel >= offerTierLevel;
+      });
+      
       // Flatten and add offer type + calculate prices to each product
-      const productsWithTypes = (data || []).flatMap(o => 
+      const productsWithTypes = filteredOffers.flatMap(o => 
         (o.offer_products || []).map(op => {
           if (!op.products) return null;
           const product = calculateProductPrice(op.products, o);

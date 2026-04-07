@@ -12,14 +12,17 @@ const OFFER_COUPON_EXPIRY_SECONDS = 86400
 export default function OfferDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { redeemOffer } = useUserStore()
-  const { offer, products, activeRedemption, loading: offerLoading, error: offerError } = useOfferWithProducts(id)
+  const { redeemOffer, membership } = useUserStore()
+  const { offer, products, activeRedemption, loading: offerLoading, error: offerError, userTierLevel } = useOfferWithProducts(id)
   const [showConfirm, setShowConfirm] = useState(false)
   const [redeemed, setRedeemed] = useState(false)
   const [coupon, setCoupon] = useState(null)
   const [couponExpiry, setCouponExpiry] = useState(null)
   const timerRef = useRef(null)
   const [timeLeft, setTimeLeft] = useState(OFFER_COUPON_EXPIRY_SECONDS)
+
+  const tierNames = { bronze: 'برونزي', silver: 'فضي', gold: ذهبي, platinum: 'بلاتيني' }
+  const isTierRestricted = offer?.tier_restricted === true
 
   // Synchronize with active redemption from hook
   useEffect(() => {
@@ -91,6 +94,39 @@ export default function OfferDetail() {
         <div className="text-center">
           <p className="text-gray-400 mb-4">العرض غير موجود</p>
           <button onClick={() => navigate(-1)} className="text-gray-600 font-medium">العودة</button>
+        </div>
+      </div>
+    )
+  }
+
+  if (isTierRestricted) {
+    return (
+      <div className="min-h-screen bg-white p-5">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 mb-6 transition-colors hover:bg-gray-200"
+        >
+          ←
+        </button>
+        <div className="max-w-md mx-auto text-center py-12">
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span className="text-4xl">🔒</span>
+          </div>
+          <h2 className="text-2xl font-black text-gray-900 mb-3">محتوى حصري</h2>
+          <p className="text-gray-500 font-medium mb-8">
+            هذا العرض متاح فقط لأعضاء فئة <span className="text-accent font-black">{tierNames[offer.required_tier] || offer.required_tier}</span> فأعلى
+          </p>
+          <div className="bg-gray-50 rounded-2xl p-6 border border-border">
+            <p className="text-gray-400 text-sm mb-4">حالياً أنت في فئة</p>
+            <p className="text-3xl font-black text-gray-700 capitalize">{membership?.tier || 'برونزي'}</p>
+          </div>
+          <p className="text-gray-400 text-xs mt-6">اجمعي المزيد من النقاط للترقية!</p>
+          <button
+            onClick={() => navigate('/')}
+            className="mt-8 w-full py-4 bg-gray-900 text-white font-black rounded-2xl"
+          >
+            العودة للرئيسية
+          </button>
         </div>
       </div>
     )

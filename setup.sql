@@ -107,11 +107,15 @@ CREATE TABLE public.stores (
   category         TEXT,
 
   -- Loyalty configuration
-  tier_config      JSONB       NOT NULL DEFAULT '{"bronze":0,"silver":10000,"gold":50000,"platinum":100000}',
-  points_rate      INTEGER     NOT NULL DEFAULT 1,
-  welcome_points   INTEGER     NOT NULL DEFAULT 100,
-  primary_color    TEXT        NOT NULL DEFAULT '#D4AF37',
-  plan             TEXT        NOT NULL DEFAULT 'basic',
+  tier_config             JSONB       NOT NULL DEFAULT '{"bronze":0,"silver":10000,"gold":50000,"platinum":100000}',
+  points_rate             INTEGER     NOT NULL DEFAULT 1,
+  welcome_points          INTEGER     NOT NULL DEFAULT 100,
+  primary_color           TEXT        NOT NULL DEFAULT '#D4AF37',
+  plan                    TEXT        NOT NULL DEFAULT 'basic',
+
+  -- Points expiry
+  points_expiry_enabled   BOOLEAN     NOT NULL DEFAULT FALSE,
+  points_expiry_months     INTEGER     NOT NULL DEFAULT 12,
 
   -- Advertising
   ad_points_balance INTEGER    NOT NULL DEFAULT 0,
@@ -193,8 +197,9 @@ CREATE TABLE public.user_store_memberships (
   role_id       UUID        REFERENCES public.roles (id) ON DELETE SET NULL,
 
   -- Loyalty state
-  points        INTEGER     NOT NULL DEFAULT 0,
-  tier          TEXT        NOT NULL DEFAULT 'bronze'
+  points            INTEGER     NOT NULL DEFAULT 0,
+  points_earned_at  TIMESTAMPTZ,                  -- tracks when current points were earned
+  tier              TEXT        NOT NULL DEFAULT 'bronze'
                             CHECK (tier IN ('bronze','silver','gold','platinum')),
   total_spent   INTEGER     NOT NULL DEFAULT 0,
   visit_count   INTEGER     NOT NULL DEFAULT 0,
@@ -381,6 +386,7 @@ CREATE INDEX idx_offer_products_product_id            ON public.offer_products  
 -- user_store_memberships
 CREATE INDEX idx_memberships_store_id                 ON public.user_store_memberships (store_id);
 CREATE INDEX idx_memberships_user_id                  ON public.user_store_memberships (user_id);
+CREATE INDEX idx_memberships_points_earned_at          ON public.user_store_memberships (points_earned_at);
 
 -- transactions
 CREATE INDEX idx_transactions_store_id                ON public.transactions           (store_id);
@@ -442,3 +448,72 @@ CREATE TRIGGER trg_update_tier
   AFTER UPDATE OF points ON public.user_store_memberships
   FOR EACH ROW
   EXECUTE FUNCTION public.update_user_tier();
+
+
+-- ─────────────────────────────────────────────
+--  Points Expiry System
+-- ─────────────────────────────────────────────
+
+-- Function to expire points based on store settings
+CREATE OR REPLACE FUNCTION public.expire_old_points()
+RETURNS void
+LANGUAGE plpgsql AS
+$$
+DECLARE
+  v_membership RECORD;
+  v_expired_count INTEGER := 0;
+BEGIN
+  FOR v_membership IN
+    SELECT m.id, m.points, m.points_earned_at, s.points_expiry_months
+    FROM public.user_store_memberships m
+    JOIN public.stores s ON m.store_id = s.id
+    WHERE s.points_expiry_enabled = true
+      AND m.points > 0
+      AND m.points_earned_at IS NOT NULL
+      AND m.points_earned_at < NOW() - (s.points_expiry_months || ' months')::interval
+  LOOP
+    -- Record the expiry as a transaction
+    INSERT INTO public.transactions (store_id, user_id, membership_id, type, points, description)
+    SELECT 
+      m.store_id,
+      m.user_id,
+      m.id,
+      'expire',
+      -m.points,
+      'انتهاء صلاحية النقاط'
+    FROM public.user_store_memberships m
+    WHERE m.id = v_membership.id;
+
+    -- Reset points to 0
+    UPDATE public.user_store_memberships
+       SET points = 0,
+           points_earned_at = NULL,
+           updated_at = NOW()
+     WHERE id = v_membership.id;
+
+    v_expired_count := v_expired_count + 1;
+  END LOOP;
+  
+  RAISE NOTICE 'Expired points for % memberships', v_expired_count;
+END;
+$$;
+
+-- Trigger to update points_earned_at when points change
+CREATE OR REPLACE FUNCTION public.update_points_earned_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql AS
+$$
+BEGIN
+  IF NEW.points > OLD.points THEN
+    NEW.points_earned_at := NOW();
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_points_earned_at ON public.user_store_memberships;
+
+CREATE TRIGGER trg_points_earned_at
+  BEFORE UPDATE OF points ON public.user_store_memberships
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_points_earned_at();

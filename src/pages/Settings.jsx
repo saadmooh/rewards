@@ -4,23 +4,25 @@ import { useNavigate } from 'react-router-dom'
 import { useDashboardStore } from '../store/dashboardStore'
 import { supabase } from '../lib/supabase'
 import { motion } from 'framer-motion'
-import { Store, Palette, Coins, BarChart, Check, Save, Phone, MapPin, Info, Bot, Send, AlertCircle, ExternalLink, Users, Shield, ShieldCheck, ChevronDown } from 'lucide-react'
+import { Store, Palette, Coins, BarChart, Check, Save, Phone, MapPin, Info, Bot, Send, AlertCircle, ExternalLink, Users, Shield, ShieldCheck, ChevronDown, Clock } from 'lucide-react'
 
 export default function Settings() {
   const { store, refreshStore } = useDashboardStore()
   const navigate = useNavigate()
   const [form, setForm] = useState({
-    name:           store?.name ?? '',
-    description:    store?.description ?? '',
-    category:       store?.category ?? '',
-    city:           store?.city ?? '',
-    phone:          store?.phone ?? '',
-    primary_color:  store?.primary_color ?? '#10b981',
-    points_rate:    store?.points_rate ?? 1,
-    welcome_points: store?.welcome_points ?? 100,
-    tier_config:    store?.tier_config ?? { bronze: 0, silver: 10000, gold: 50000, platinum: 100000 },
-    bot_token:      store?.bot_token ?? '',
-    bot_username:   store?.bot_username ?? '',
+    name:                 store?.name ?? '',
+    description:          store?.description ?? '',
+    category:             store?.category ?? '',
+    city:                 store?.city ?? '',
+    phone:                store?.phone ?? '',
+    primary_color:        store?.primary_color ?? '#10b981',
+    points_rate:          store?.points_rate ?? 1,
+    welcome_points:       store?.welcome_points ?? 100,
+    tier_config:          store?.tier_config ?? { bronze: 0, silver: 10000, gold: 50000, platinum: 100000 },
+    bot_token:            store?.bot_token ?? '',
+    bot_username:         store?.bot_username ?? '',
+    points_expiry_enabled: store?.points_expiry_enabled ?? false,
+    points_expiry_months:  store?.points_expiry_months ?? 12,
   })
   const [saved, setSaved] = useState(false)
   const [testingBot, setTestingBot] = useState(false)
@@ -220,6 +222,55 @@ export default function Settings() {
                 <span className={`text-sm font-black capitalize text-right sm:w-24 ${tier === 'silver' ? 'text-slate-400' : tier === 'gold' ? 'text-[#D4AF37]' : 'text-slate-900'}`}>{tier}</span>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Points Expiry System */}
+        <section className="bg-white rounded-[24px] md:rounded-[32px] p-5 md:p-6 border border-border shadow-soft">
+          <div className="flex items-center justify-end gap-3 mb-6">
+            <h3 className="text-lg font-black text-text tracking-tight">نظام انتهاء الصلاحية</h3>
+            <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center text-accent">
+              <Clock size={20} />
+            </div>
+          </div>
+          
+          <div className="space-y-4 text-right">
+            <div className="flex items-center justify-between p-4 bg-surface rounded-2xl border border-border">
+              <div className="flex items-center gap-3">
+                <input 
+                  type="checkbox"
+                  id="points_expiry_enabled"
+                  checked={form.points_expiry_enabled}
+                  onChange={e => setForm(f => ({...f, points_expiry_enabled: e.target.checked}))}
+                  className="w-5 h-5 rounded text-accent focus:ring-accent"
+                />
+              </div>
+              <label htmlFor="points_expiry_enabled" className="text-sm font-black text-text cursor-pointer">
+                تفعيل انتهاء صلاحية النقاط
+              </label>
+            </div>
+
+            {form.points_expiry_enabled && (
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-muted uppercase tracking-widest px-1">مدة الصلاحية</label>
+                <div className="relative">
+                  <select
+                    value={form.points_expiry_months}
+                    onChange={e => setForm(f => ({...f, points_expiry_months: Number(e.target.value)}))}
+                    className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold focus:outline-none focus:border-accent text-right appearance-none"
+                  >
+                    <option value={6}>6 أشهر</option>
+                    <option value={12}>سنة واحدة</option>
+                    <option value={18}>سنة ونصف</option>
+                    <option value={24}>سنتان</option>
+                  </select>
+                  <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none" size={16} />
+                </div>
+                <p className="text-muted text-xs font-medium">
+                  النقاط المكتسبة ستنتهي صلاحيتها بعد {form.points_expiry_months} أشهر من تاريخ اكتسابها
+                </p>
+              </div>
+            )}
           </div>
         </section>
 

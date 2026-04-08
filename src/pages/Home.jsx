@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion as Motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { TrendingUp } from 'lucide-react'
 import useUserStore from '../store/userStore'
@@ -98,7 +98,7 @@ export default function Home() {
   })
 
   // Trending Products Query
-  const { data: trendingProducts, isLoading: isTrendingLoading } = useQuery({
+  const { data: trendingProducts } = useQuery({
     queryKey: ['trending-products', store?.id],
     queryFn: async () => {
       if (!store?.id) return [];
@@ -179,7 +179,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white pb-24">
       <div className="p-5 max-w-4xl mx-auto">
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -200,7 +200,7 @@ export default function Home() {
               )}
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <section>
@@ -208,7 +208,7 @@ export default function Home() {
           </section>
 
           <section className="flex items-center">
-            <motion.button
+            <Motion.button
               whileTap={{ scale: 0.98 }}
               onClick={handleScan}
               disabled={scanning}
@@ -216,7 +216,7 @@ export default function Home() {
             >
               <span className="text-lg">📷</span>
               {scanning ? 'جاري الفتح...' : 'مسح الإيصال وكسب النقاط'}
-            </motion.button>
+            </Motion.button>
           </section>
         </div>
 
@@ -232,7 +232,7 @@ export default function Home() {
             </button>
           </div>
 
-          <motion.div 
+          <Motion.div 
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -246,7 +246,7 @@ export default function Home() {
               ))
             ) : offersWithProducts?.length > 0 ? (
               offersWithProducts.map((product) => (
-                <motion.div 
+                <Motion.div 
                   key={product.id} 
                   variants={itemVariants}
                   className="min-w-[280px] md:min-w-0"
@@ -256,14 +256,14 @@ export default function Home() {
                     offerType={product.offer_type}
                     onProductClick={() => handleCardClick(`/offers/${product.offer_id}`)}
                   />
-                </motion.div>
+                </Motion.div>
               ))
             ) : (
               <div className="text-center py-8 text-gray-400 w-full col-span-full">
                 <p>لا توجد عروض خاصة اليوم</p>
               </div>
             )}
-          </motion.div>
+          </Motion.div>
         </section>
 
         {/* Trending Section */}
@@ -276,15 +276,15 @@ export default function Home() {
               </div>
             </div>
 
-            <motion.div 
+            <Motion.div 
               variants={containerVariants}
               initial="hidden"
-              whileInView="visible"
+              animate="visible"
               viewport={{ once: true }}
               className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-5 px-5 md:mx-0 md:px-0 scrollbar-hide"
             >
               {trendingProducts.map((product) => (
-                <motion.div 
+                <Motion.div 
                   key={product.id} 
                   variants={itemVariants}
                   className="min-w-[160px] md:min-w-0"
@@ -297,9 +297,9 @@ export default function Home() {
                     imageUrl={product.image_url}
                     onClick={() => handleCardClick(`/products/${product.id}`)}
                   />
-                </motion.div>
+                </Motion.div>
               ))}
-            </motion.div>
+            </Motion.div>
           </section>
         )}
 
@@ -315,10 +315,10 @@ export default function Home() {
             </button>
           </div>
 
-          <motion.div 
+          <Motion.div 
             variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
+            initial="visible"
+            animate="visible"
             viewport={{ once: true }}
             className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-5 px-5 md:mx-0 md:px-0 scrollbar-hide"
           >
@@ -329,7 +329,7 @@ export default function Home() {
                 </div>
               ))
             ) : latestProducts.length > 0 ? latestProducts.map((product) => (
-              <motion.div 
+              <Motion.div 
                 key={product.id} 
                 variants={itemVariants}
                 className="min-w-[160px] md:min-w-0"
@@ -343,13 +343,13 @@ export default function Home() {
                   showOriginalPrice={false}
                   onClick={() => handleCardClick(`/products/${product.id}`)}
                 />
-              </motion.div>
+              </Motion.div>
             )) : (
               <div className="text-center py-8 text-gray-400 w-full col-span-full">
                 <p>جاري تحميل المنتجات...</p>
               </div>
             )}
-          </motion.div>
+          </Motion.div>
         </section>
       </div>
     </div>

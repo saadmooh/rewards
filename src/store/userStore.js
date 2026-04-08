@@ -301,8 +301,9 @@ const useUserStore = create((set, get) => ({
           user_id: user.id,
           store_id: store.id,
           offer_id: offerId,
+          points_spent: pointsCost, // Add mandatory field
           coupon_code: couponCode, // Store generated code
-          expires_at: expiresAt,   // Store expiry
+          coupon_code_expires_at: expiresAt, // Use correct column name
           products: productIds,    // Store linked product IDs
         })
         .select()
@@ -313,6 +314,13 @@ const useUserStore = create((set, get) => ({
         throw redemptionError;
       }
 
+      // Fetch offer title for transaction note
+      const { data: offerData } = await supabase
+        .from('offers')
+        .select('title')
+        .eq('id', offerId)
+        .single();
+
       // Create transaction record
       await supabase.from('transactions').insert({
         user_id: user.id,
@@ -321,7 +329,7 @@ const useUserStore = create((set, get) => ({
         type: 'redeem',
         points: -pointsCost,
         offer_id: offerId,
-        note: 'Used offer',
+        note: `استبدال عرض: ${offerData?.title || 'عرض'}`,
       });
 
       set({ membership: { ...membership, points: newPoints } });

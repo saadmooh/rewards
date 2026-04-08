@@ -29,7 +29,7 @@ export default function OfferDetail() {
     if (activeRedemption) {
       setCoupon(activeRedemption.coupon_code)
       setRedeemed(true)
-      const expiry = new Date(activeRedemption.expires_at)
+      const expiry = new Date(activeRedemption.coupon_code_expires_at)
       setCouponExpiry(expiry)
       const secondsLeft = Math.max(0, Math.floor((expiry.getTime() - Date.now()) / 1000))
       setTimeLeft(secondsLeft)

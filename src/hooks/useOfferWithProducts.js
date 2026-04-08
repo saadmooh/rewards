@@ -61,7 +61,7 @@ export const useOfferWithProducts = (offerId) => {
             .select('*')
             .eq('user_id', user.id)
             .eq('offer_id', offerId)
-            .gt('expires_at', new Date().toISOString())
+            .gt('coupon_code_expires_at', new Date().toISOString())
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();

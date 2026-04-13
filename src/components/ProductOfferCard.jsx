@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Package, Lock, Tag } from 'lucide-react';
 
-const DisplayPriceInfo = ({ product, offerType }) => {
+const DisplayPriceInfo = ({ product, offerType, t }) => {
   const hasDiscount = product.original_price !== null && product.original_price !== undefined &&
                       product.discount_percentage !== null && product.discount_percentage !== undefined &&
                       product.discount_percentage > 0;
@@ -9,7 +10,7 @@ const DisplayPriceInfo = ({ product, offerType }) => {
   if (offerType === 'gift') {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-gray-500">مجاناً</span>
+        <span className="text-xs font-medium text-gray-500">{t('common.free')}</span>
       </div>
     );
   }
@@ -18,26 +19,26 @@ const DisplayPriceInfo = ({ product, offerType }) => {
     return (
       <div className="flex items-center gap-2">
         <span className="text-red-400 line-through text-xs">
-          {product.original_price?.toLocaleString()} دج
+          {product.original_price?.toLocaleString()} {t('products.dzd')}
         </span>
         <span className="text-green-600 font-medium">
-          {product.price?.toLocaleString()} دج
+          {product.price?.toLocaleString()} {t('products.dzd')}
         </span>
       </div>
     );
   } else if (product.price) {
-    return <span className="text-gray-900 font-medium text-sm">{product.price?.toLocaleString()} دج</span>;
+    return <span className="text-gray-900 font-medium text-sm">{product.price?.toLocaleString()} {t('products.dzd')}</span>;
   }
   return null;
 };
 
-const OfferTypeBadge = ({ offerType }) => {
+const OfferTypeBadge = ({ offerType, t }) => {
   const badgeConfig = {
-    flash: { bg: 'bg-gray-900', text: 'Flash' },
-    gift: { bg: 'bg-gray-900', text: 'هدية' },
-    double_points: { bg: 'bg-gray-900', text: '2x نقاط' },
-    exclusive: { bg: 'bg-gray-900', text: 'حصري' },
-    discount: { bg: 'bg-gray-900', text: 'خصم' },
+    flash: { bg: 'bg-gray-900', text: 'flash' },
+    gift: { bg: 'bg-gray-900', text: 'gift' },
+    double_points: { bg: 'bg-gray-900', text: 'double_points' },
+    exclusive: { bg: 'bg-gray-900', text: 'exclusive' },
+    discount: { bg: 'bg-gray-900', text: 'discount' },
   };
 
   const config = badgeConfig[offerType];
@@ -45,12 +46,13 @@ const OfferTypeBadge = ({ offerType }) => {
 
   return (
     <span className={`${config.bg} text-white text-[9px] font-medium px-2 py-0.5 rounded`}>
-      {config.text}
+      {t(`offers.${config.text}`)}
     </span>
   );
 };
 
 export default function ProductOfferCard({ product, onProductClick, offerType }) {
+  const { t } = useTranslation()
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
@@ -79,11 +81,11 @@ export default function ProductOfferCard({ product, onProductClick, offerType })
           )}
         </div>
         
-        <DisplayPriceInfo product={product} offerType={offerType} />
+        <DisplayPriceInfo product={product} offerType={offerType} t={t} />
 
         {offerType && (
           <div className="mt-1">
-            <OfferTypeBadge offerType={offerType} />
+            <OfferTypeBadge offerType={offerType} t={t} />
           </div>
         )}
       </div>

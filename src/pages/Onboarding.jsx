@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import useUserStore from '../store/userStore'
 import TierBadge from '../components/TierBadge'
 
 const tiers = [
-  { id: 'bronze', name: 'برونزي', perks: ['مكافآت أساسية', 'نقاط على كل عملية شراء'] },
-  { id: 'silver', name: 'فضي', perks: ['جميع مزايا البرونزي', 'عروض حصرية', 'نقاط مضاعفة'] },
-  { id: 'gold', name: 'ذهبي', perks: ['جميع مزايا الفضي', 'عروض سريعة مبكراً', 'هدية عيد الميلاد'] },
-  { id: 'platinum', name: 'بلاتيني', perks: ['جميع مزايا الذهبي', 'منتجات حصرية', 'أولوية'] },
+  { id: 'bronze', name: 'bronze', perks: ['Basic rewards', 'Points on every purchase'] },
+  { id: 'silver', name: 'silver', perks: ['All bronze perks', 'Exclusive offers', 'Double points'] },
+  { id: 'gold', name: 'gold', perks: ['All silver perks', 'Early access to sales', 'Birthday gift'] },
+  { id: 'platinum', name: 'platinum', perks: ['All gold perks', 'Exclusive products', 'Priority service'] },
 ]
 
 export default function Onboarding() {
+  const { t } = useTranslation()
   const [birthDate, setBirthDate] = useState('')
   const { user, initUser } = useUserStore()
 
@@ -34,8 +36,8 @@ export default function Onboarding() {
         <div className="w-20 h-20 bg-accent-light rounded-3xl flex items-center justify-center mx-auto mb-4">
           <span className="text-4xl">👕</span>
         </div>
-        <h1 className="text-3xl font-bold text-text mb-2">أهلاً بك! 👋</h1>
-        <p className="text-muted">أكمل ملفك الشخصي لتبدأ</p>
+        <h1 className="text-3xl font-bold text-text mb-2">{t('onboarding.welcome')}</h1>
+        <p className="text-muted">{t('onboarding.join_loyalty')}</p>
       </motion.div>
 
       <motion.form
@@ -46,10 +48,10 @@ export default function Onboarding() {
       >
         <div className="bg-white rounded-3xl p-6 mb-6 shadow-card">
           <label className="block text-text font-semibold mb-2">
-            🎂 عيد الميلاد (اختياري)
+            🎂 {t('profile.birth_date')} ({t('common.optional')})
           </label>
           <p className="text-muted text-sm mb-4">
-            أضف عيد ميلادك واحصل على 50 نقطة إضافية + عروض خاصة!
+            {t('profile.birthday_bonus')}
           </p>
           <input
             type="date"
@@ -65,11 +67,11 @@ export default function Onboarding() {
           type="submit"
           className="w-full py-5 bg-accent text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all mb-6"
         >
-          ابدأ 🚀
+          {t('onboarding.get_started')} 🚀
         </motion.button>
 
         <div className="bg-white rounded-3xl p-6 shadow-card">
-          <h2 className="text-lg font-bold text-text mb-4">مستويات العضوية</h2>
+          <h2 className="text-lg font-bold text-text mb-4">{t('settings.tier_thresholds')}</h2>
           <div className="space-y-4">
             {tiers.map((tier, index) => (
               <motion.div
@@ -81,8 +83,8 @@ export default function Onboarding() {
               >
                 <TierBadge tier={tier.id} size="small" />
                 <div>
-                  <p className="text-text font-semibold">{tier.name}</p>
-                  <p className="text-muted text-xs">{tier.perks.join(' • ')}</p>
+                  <p className="text-text font-semibold">{t(`common.tiers.${tier.id}`)}</p>
+                  <p className="text-muted text-xs">{tier.perks.map(p => t(`onboarding.${p}`)).join(' • ')}</p>
                 </div>
               </motion.div>
             ))}

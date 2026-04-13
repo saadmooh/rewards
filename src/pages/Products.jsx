@@ -5,13 +5,15 @@ import { supabase } from '../lib/supabase'
 import { useDashboardStore } from '../store/dashboardStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Package, Plus, Search, Edit2, Power, Trash2, X, Image as ImageIcon, Check, ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export default function Products() {
+  const { t } = useTranslation()
   const { store } = useDashboardStore()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [catFilter, setCatFilter] = useState('الكل')
+  const [catFilter, setCatFilter] = useState(t('common.all'))
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products', store?.id, catFilter],
@@ -21,13 +23,13 @@ export default function Products() {
         .select('*')
         .eq('store_id', store.id)
         .order('created_at', { ascending: false })
-      if (catFilter !== 'الكل') q = q.eq('category', catFilter)
+      if (catFilter !== t('common.all')) q = q.eq('category', catFilter)
       return q.then(r => r.data ?? [])
     },
     enabled: !!store?.id
   })
 
-  const categories = ['الكل', 'قمصان', 'بناطيل', 'إكسسوارات', 'عبايات', 'أحذية', 'عام']
+  const categories = [t('common.all'), t('products.shirts'), t('products.pants'), t('products.accessories'), t('products.abayas'), t('products.shoes'), t('products.general')]
 
   const toggleActiveMutation = useMutation({
     mutationFn: async (product) => {
@@ -46,7 +48,7 @@ export default function Products() {
   })
 
   const handleDelete = (id) => {
-    if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+    if (confirm(t('products.delete_confirm') || t('common.confirm'))) {
       deleteMutation.mutate(id)
     }
   }
@@ -55,15 +57,15 @@ export default function Products() {
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="text-right">
-          <h1 className="text-2xl font-black text-text tracking-tight">المنتجات</h1>
-          <p className="text-sm text-muted font-medium">إدارة مخزون المتجر والمنتجات الحصرية</p>
+          <h1 className="text-2xl font-black text-text tracking-tight">{t('products.title')}</h1>
+          <p className="text-sm text-muted font-medium">{t('products.no_products_desc')}</p>
         </div>
         <button 
           onClick={() => { setEditing(null); setShowForm(true) }}
           className="flex items-center justify-center gap-2 px-6 py-3 bg-accent text-white rounded-2xl font-bold shadow-soft shadow-accent/20 hover:bg-accent-dark transition-all active:scale-95 order-first md:order-last"
         >
           <Plus size={20} />
-          <span>إضافة منتج</span>
+          <span>{t('products.add_product_btn')}</span>
         </button>
       </div>
 
@@ -107,7 +109,7 @@ export default function Products() {
                 }
                 {product.is_exclusive && (
                   <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md shadow-soft px-3 py-1 rounded-full flex items-center gap-1">
-                    <span className="text-[10px] font-black text-text tracking-tighter uppercase">حصري</span>
+                    <span className="text-[10px] font-black text-text tracking-tighter uppercase">{t('products.exclusive')}</span>
                     <span className="text-xs">🔒</span>
                   </div>
                 )}
@@ -138,10 +140,10 @@ export default function Products() {
                 <p className="text-[10px] font-black text-muted uppercase tracking-widest mb-1">{product.category}</p>
                 <h4 className="text-text font-bold text-sm truncate mb-2">{product.name}</h4>
                 <div className="flex items-center justify-between">
-                  <span className="text-accent font-black text-base">{product.price?.toLocaleString()} <span className="text-[10px]">دج</span></span>
+                  <span className="text-accent font-black text-base">{product.price?.toLocaleString()} <span className="text-[10px]">{t('products.dzd')}</span></span>
                   {product.is_exclusive && (
                     <span className="text-[10px] font-bold text-muted bg-surface px-2 py-0.5 rounded-md">
-                      فئة {product.min_tier_to_view}
+                      {t('products.tier')} {product.min_tier_to_view}
                     </span>
                   )}
                 </div>
@@ -156,12 +158,12 @@ export default function Products() {
           <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4">
             <Package size={32} className="text-muted opacity-20" />
           </div>
-          <p className="text-muted font-bold">لا توجد منتجات حالياً</p>
+          <p className="text-muted font-bold">{t('products.no_products')}</p>
           <button 
             onClick={() => setShowForm(true)}
             className="mt-4 text-accent text-sm font-black hover:underline"
           >
-            + أضف أول منتج لك
+            {t('products.add_first')}
           </button>
         </div>
       )}
@@ -186,7 +188,7 @@ function ProductForm({ product, storeId, onSave, onClose }) {
     name:             product?.name             ?? '',
     description:      product?.description      ?? '',
     price:            product?.price            ?? '',
-    category:         product?.category         ?? 'عام',
+    category:         product?.category         ?? t('products.general'),
     image_url:        product?.image_url        ?? '',
     is_exclusive:     product?.is_exclusive     ?? false,
     min_tier_to_view: product?.min_tier_to_view ?? 'bronze',
@@ -207,14 +209,14 @@ function ProductForm({ product, storeId, onSave, onClose }) {
       setForm(f => ({ ...f, image_url: urlData.publicUrl }))
     } catch (err) {
       console.error('Upload error:', err)
-      alert('فشل رفع الصورة: ' + err.message)
+      alert(t('products.upload_failed') + err.message)
     }
     setUploading(false)
   }
 
   const handleSave = async () => {
     if (!form.name || !form.price) {
-      alert('الرجاء إدخال اسم المنتج والسعر')
+      alert(t('products.enter_name_price'))
       return
     }
     
@@ -229,7 +231,7 @@ function ProductForm({ product, storeId, onSave, onClose }) {
       onSave()
     } catch (err) {
       console.error('Save error:', err)
-      alert('فشل حفظ المنتج: ' + err.message)
+      alert(t('products.save_failed') + err.message)
     }
   }
 
@@ -243,8 +245,8 @@ function ProductForm({ product, storeId, onSave, onClose }) {
       >
         <div className="p-6 border-b border-border flex justify-between items-center bg-surface/50">
           <div>
-            <h3 className="text-lg font-black text-text tracking-tight">{product ? 'تعديل منتج' : 'إضافة منتج جديد'}</h3>
-            <p className="text-xs text-muted font-medium">املأ البيانات المطلوبة أدناه</p>
+            <h3 className="text-lg font-black text-text tracking-tight">{product ? t('products.edit_product') : t('products.add_product')}</h3>
+            <p className="text-xs text-muted font-medium">{t('products.fill_details')}</p>
           </div>
           <button onClick={onClose} className="w-10 h-10 rounded-full bg-white border border-border flex items-center justify-center text-muted hover:text-text transition-colors shadow-soft">
             <X size={20} />
@@ -261,7 +263,7 @@ function ProductForm({ product, storeId, onSave, onClose }) {
               <>
                 <img src={form.image_url} alt="preview" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <span className="bg-white px-4 py-2 rounded-xl text-xs font-bold shadow-soft">تغيير الصورة</span>
+                  <span className="bg-white px-4 py-2 rounded-xl text-xs font-bold shadow-soft">{t('products.change_image')}</span>
                 </div>
               </>
             ) : (
@@ -269,7 +271,7 @@ function ProductForm({ product, storeId, onSave, onClose }) {
                 <div className={`w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-soft mb-3 ${uploading ? 'animate-bounce' : ''}`}>
                   <ImageIcon size={24} className="text-accent" />
                 </div>
-                <p className="text-sm font-bold text-text">{uploading ? 'جاري الرفع...' : 'رفع صورة المنتج'}</p>
+                <p className="text-sm font-bold text-text">{uploading ? t('products.uploading') : t('products.upload_image')}</p>
                 <p className="text-xs text-muted font-medium mt-1">PNG, JPG up to 5MB</p>
               </>
             )}
@@ -279,7 +281,7 @@ function ProductForm({ product, storeId, onSave, onClose }) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-muted tracking-widest px-1">السعر (دج)</label>
+                <label className="text-xs font-black text-muted tracking-widest px-1">{t('products.price')}</label>
                 <input 
                   type="number"
                   value={form.price} 
@@ -289,36 +291,36 @@ function ProductForm({ product, storeId, onSave, onClose }) {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-muted tracking-widest px-1">الاسم</label>
+                <label className="text-xs font-black text-muted tracking-widest px-1">{t('products.name')}</label>
                 <input 
                   value={form.name} 
                   onChange={e => setForm(f => ({...f, name: e.target.value}))}
-                  placeholder="اسم المنتج"
+                  placeholder={t('products.product_name')}
                   className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold focus:outline-none focus:border-accent transition-colors text-right"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-black text-muted tracking-widest px-1">الوصف</label>
-              <textarea 
-                value={form.description} 
-                onChange={e => setForm(f => ({...f, description: e.target.value}))}
-                placeholder="أضف وصفاً مختصراً للمنتج..."
-                rows={3}
+<label className="text-xs font-black text-muted tracking-widest px-1">{t('products.description')}</label>
+                <textarea
+                  value={form.description}
+                  onChange={e => setForm(f => ({...f, description: e.target.value}))}
+                  placeholder={t('products.add_description')}
+                  rows={3}
                 className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent transition-colors resize-none text-right"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5 relative text-right">
-                <label className="text-xs font-black text-muted tracking-widest px-1">التصنيف</label>
+                <label className="text-xs font-black text-muted tracking-widest px-1">{t('products.category')}</label>
                 <select 
                   value={form.category}
                   onChange={e => setForm(f => ({...f, category: e.target.value}))}
                   className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold focus:outline-none focus:border-accent appearance-none transition-colors text-right"
                 >
-                  {['عام','قمصان','بناطيل','إكسسوارات','عبايات','أحذية'].map(c => (
+                  {[t('products.general'),t('products.shirts'),t('products.pants'),t('products.accessories'),t('products.abayas'),t('products.shoes')].map(c => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
@@ -326,19 +328,19 @@ function ProductForm({ product, storeId, onSave, onClose }) {
               </div>
               
               <div className="space-y-1.5 text-right">
-                <label className="text-xs font-black text-muted tracking-widest px-1">حالة المنتج</label>
+                <label className="text-xs font-black text-muted tracking-widest px-1">{t('products.product_status')}</label>
                 <div className="flex gap-2">
                   <button 
                     onClick={() => setForm(f => ({...f, is_active: true}))}
                     className={`flex-1 py-3 rounded-2xl font-bold text-xs border transition-all ${form.is_active ? 'bg-green-50 border-green-200 text-green-600' : 'bg-surface border-border text-muted opacity-50'}`}
                   >
-                    نشط
-                  </button>
-                  <button 
-                    onClick={() => setForm(f => ({...f, is_active: false}))}
-                    className={`flex-1 py-3 rounded-2xl font-bold text-xs border transition-all ${!form.is_active ? 'bg-red-50 border-red-200 text-red-600' : 'bg-surface border-border text-muted opacity-50'}`}
-                  >
-                    متوقف
+{t('products.active')}
+                    </button>
+                    <button 
+                      onClick={() => setForm(f => ({...f, is_active: false}))}
+                      className={`flex-1 py-3 rounded-2xl font-bold text-xs border transition-all ${!form.is_active ? 'bg-red-50 border-red-200 text-red-600' : 'bg-surface border-border text-muted opacity-50'}`}
+                    >
+                      {t('products.inactive')}
                   </button>
                 </div>
               </div>
@@ -351,8 +353,8 @@ function ProductForm({ product, storeId, onSave, onClose }) {
                     {form.is_exclusive ? <Check size={20} /> : <div className="w-2 h-2 rounded-full bg-muted/20" />}
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-black text-text block">منتج حصري</span>
-                    <span className="text-[10px] text-muted font-bold">يظهر لفئات محددة فقط من الزبائن</span>
+                    <span className="text-sm font-black text-text block">{t('products.exclusive_product')}</span>
+                    <span className="text-[10px] text-muted font-bold">{t('products.exclusive_desc')}</span>
                   </div>
                 </div>
                 <input 
@@ -370,15 +372,15 @@ function ProductForm({ product, storeId, onSave, onClose }) {
                 animate={{ opacity: 1, height: 'auto' }}
                 className="space-y-1.5 relative pt-2 text-right"
               >
-                <label className="text-xs font-black text-muted tracking-widest px-1">الفئة المستهدفة</label>
+                <label className="text-xs font-black text-muted tracking-widest px-1">{t('products.target_tier')}</label>
                 <select 
                   value={form.min_tier_to_view}
                   onChange={e => setForm(f => ({...f, min_tier_to_view: e.target.value}))}
                   className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold focus:outline-none focus:border-accent appearance-none text-right"
                 >
-                  <option value="silver">Silver فما فوق</option>
-                  <option value="gold">Gold فما فوق</option>
-                  <option value="platinum">Platinum فقط</option>
+<option value="silver">{t('offers.silver_plus')}</option>
+                    <option value="gold">{t('offers.gold_plus')}</option>
+                    <option value="platinum">{t('offers.platinum_only')}</option>
                 </select>
                 <ChevronDown className="absolute left-4 bottom-4 text-muted pointer-events-none" size={16} />
               </motion.div>
@@ -391,13 +393,13 @@ function ProductForm({ product, storeId, onSave, onClose }) {
             onClick={onClose}
             className="flex-1 px-6 py-4 rounded-2xl text-muted font-black text-sm hover:bg-white transition-all active:scale-95"
           >
-            إلغاء
-          </button>
-          <button 
-            onClick={handleSave}
-            className="flex-[2] bg-accent text-white py-4 rounded-2xl font-black text-sm shadow-soft shadow-accent/20 hover:bg-accent-dark transition-all active:scale-95"
-          >
-            {product ? 'حفظ التغييرات' : 'إضافة للمتجر'}
+{t('common.cancel')}
+            </button>
+            <button
+              onClick={handleSave}
+              className="flex-[2] bg-accent text-white py-4 rounded-2xl font-black text-sm shadow-soft shadow-accent/20 hover:bg-accent-dark transition-all active:scale-95"
+            >
+              {product ? t('products.save_product') : t('products.add_to_store')}
           </button>
         </div>
       </motion.div>

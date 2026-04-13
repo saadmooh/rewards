@@ -6,8 +6,11 @@ import { useDashboardStore } from '../store/dashboardStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Tag, Plus, Edit2, Power, Trash2, X, Check, ChevronDown, Clock, Users, Gift, Zap } from 'lucide-react'
 import { format } from 'date-fns'
+import { calculateProductPrice, formatCurrency } from '../lib/offers'
+import { useTranslation } from 'react-i18next'
 
 export default function Offers() {
+  const { t, i18n } = useTranslation()
   const { store } = useDashboardStore()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
@@ -41,33 +44,33 @@ export default function Offers() {
   })
 
   const handleDelete = (id) => {
-    if (confirm('هل أنت متأكد من حذف هذا العرض؟')) {
+    if (confirm(t('offers.delete_confirm'))) {
       deleteMutation.mutate(id)
     }
   }
 
   const OCCASION_LABELS = {
-    always: 'دائم', fixed: 'تاريخ محدد', birthday: 'عيد ميلاد',
-    anniversary: 'ذكرى سنوية', win_back: 'إعادة زبون', flash: 'فلاش'
+    always: t('offers.always'), fixed: t('offers.fixed_date'), birthday: t('offers.customer_birthday'),
+    anniversary: t('offers.customer_anniversary'), win_back: t('offers.win_back'), flash: t('offers.flash')
   }
   const TYPE_LABELS = {
-    discount: 'تخفيض', gift: 'هدية', double_points: 'نقاط×2',
-    flash: 'فلاش', exclusive: 'حصري'
+    discount: t('offers.discount'), gift: t('offers.gift'), double_points: t('offers.double_points'),
+    flash: t('offers.flash'), exclusive: t('offers.exclusive')
   }
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 text-right">
         <div>
-          <h1 className="text-2xl font-black text-text tracking-tight">العروض</h1>
-          <p className="text-sm text-muted font-medium">أنشئ عروضاً مخصصة لزيادة ولاء الزبائن</p>
+          <h1 className="text-2xl font-black text-text tracking-tight">{t('offers.title')}</h1>
+          <p className="text-sm text-muted font-medium">{t('offers.no_offers_desc')}</p>
         </div>
         <button 
           onClick={() => { setEditing(null); setShowForm(true) }}
           className="flex items-center justify-center gap-2 px-6 py-3 bg-accent text-white rounded-2xl font-bold shadow-soft shadow-accent/20 hover:bg-accent-dark transition-all active:scale-95 order-first md:order-last"
         >
           <Plus size={20} />
-          <span>إضافة عرض</span>
+          <span>{t('offers.add_offer_btn')}</span>
         </button>
       </div>
 
@@ -89,7 +92,7 @@ export default function Offers() {
                 {offer.type === 'flash' && <Zap size={14} className="text-orange-500 fill-orange-500" />}
                 <h4 className="text-text font-black text-lg">{offer.title}</h4>
               </div>
-              <p className="text-muted text-sm font-medium mb-4 line-clamp-2">{offer.description || 'لا يوجد وصف للعرض'}</p>
+              <p className="text-muted text-sm font-medium mb-4 line-clamp-2">{offer.description || t('common.no_description')}</p>
 
               <div className="flex flex-wrap gap-2 justify-end">
                 <span className="bg-surface text-text text-[10px] font-black px-3 py-1.5 rounded-xl border border-border uppercase">
@@ -99,24 +102,24 @@ export default function Offers() {
                   {OCCASION_LABELS[offer.occasion_type] || offer.occasion_type}
                 </span>
                 <span className="bg-accent/10 text-accent text-[10px] font-black px-3 py-1.5 rounded-xl border border-accent/20 uppercase tracking-tighter">
-                  فئة {offer.min_tier}
+                  {t('offers.tier')} {offer.min_tier}
                 </span>
                 {offer.points_cost > 0 && (
                   <span className="bg-orange-50 text-orange-600 text-[10px] font-black px-3 py-1.5 rounded-xl border border-orange-100">
-                    {offer.points_cost} نقطة
+                    {offer.points_cost} {t('common.points')}
                   </span>
                 )}
                 {offer.discount_percent && (
                   <span className="bg-green-50 text-green-600 text-[10px] font-black px-3 py-1.5 rounded-xl border border-green-100">
-                    {offer.discount_percent}% تخفيض
+                    {offer.discount_percent}% {t('offers.discount')}
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="flex md:flex-col justify-between items-center md:items-end border-t md:border-t-0 md:border-r border-border pt-4 md:pt-0 md:pr-6 gap-4 min-w-[140px]">
+              <div className="flex md:flex-col justify-between items-center md:items-end border-t md:border-t-0 md:border-r border-border pt-4 md:pt-0 md:pr-6 gap-4 min-w-[140px]">
               <div className="text-right">
-                <p className="text-muted text-[10px] font-black uppercase tracking-widest mb-0.5">الاستخدام</p>
+                <p className="text-muted text-[10px] font-black uppercase tracking-widest mb-0.5">{t('offers.usage')}</p>
                 <p className="text-text font-black text-xl">{offer.redemptions?.length ?? 0}</p>
               </div>
 
@@ -154,12 +157,12 @@ export default function Offers() {
           <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4">
             <Tag size={32} className="text-muted opacity-20" />
           </div>
-          <p className="text-muted font-bold">لم تضف أي عروض بعد</p>
+          <p className="text-muted font-bold">{t('offers.no_offers')}</p>
           <button 
             onClick={() => setShowForm(true)}
             className="mt-4 text-accent text-sm font-black hover:underline"
           >
-            + أنشئ أول عرض لزبائنك
+            {t('offers.create_first')}
           </button>
         </div>
       )}
@@ -180,6 +183,7 @@ export default function Offers() {
 }
 
 function OfferForm({ offer, storeId, onSave, onClose }) {
+  const { t, i18n } = useTranslation()
   const { store } = useDashboardStore()
   const [form, setForm] = useState({
     title:            offer?.title            ?? '',
@@ -214,6 +218,8 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
     if (offerProducts?.length) setSelectedProducts(offerProducts)
   }, [offerProducts])
 
+  const [sendNotification, setSendNotification] = useState(true)
+
   const handleSave = async () => {
     if (!form.title) return
     const payload = {
@@ -225,6 +231,7 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
       valid_until:      form.valid_until      || null,
     }
     let offerId = offer?.id
+    let isNew = !offerId
     if (offerId) {
       await supabase.from('offers').update({ ...payload, updated_at: new Date() }).eq('id', offerId)
     } else {
@@ -237,6 +244,39 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
       const inserts = selectedProducts.map(productId => ({ offer_id: offerId, product_id: productId }))
       await supabase.from('offer_products').insert(inserts)
     }
+
+    // Send notification if it's a new offer and the option is enabled
+    if (isNew && sendNotification) {
+      try {
+        let msg = `🎁 *عرض جديد: ${form.title}*\n\n${form.description || ''}`
+        if (form.type === 'discount' && form.discount_percent) {
+          msg += `\n\n🔥 خصم ${form.discount_percent}% لفترة محدودة!`
+        }
+        
+        const { data: prods } = await supabase.from('products').select('*').in('id', selectedProducts)
+        if (prods?.length) {
+          msg += `\n\nالمنتجات المشمولة:\n`
+          prods.forEach(p => {
+            const discounted = calculateProductPrice(p, form)
+            msg += `- ${p.name}: ${formatCurrency(discounted.price)}${form.type === 'discount' ? ` (بدلاً من ${formatCurrency(p.price)})` : ''}\n`
+          })
+        }
+
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            store_id: storeId,
+            message: msg,
+            target: 'tier',
+            target_tier: form.min_tier,
+            cta_url: `${window.location.origin}/offers/${offerId}`,
+            image_url: prods?.[0]?.image_url || ''
+          }
+        })
+      } catch (err) {
+        console.error('Failed to send auto-notification:', err)
+      }
+    }
+
     onSave()
   }
 
@@ -250,8 +290,8 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
       >
         <div className="p-6 border-b border-border flex justify-between items-center bg-surface/50">
           <div className="text-right flex-1">
-            <h3 className="text-lg font-black text-text tracking-tight">{offer ? 'تعديل العرض' : 'إضافة عرض جديد'}</h3>
-            <p className="text-xs text-muted font-medium">حدد نوع العرض والشروط</p>
+            <h3 className="text-lg font-black text-text tracking-tight">{offer ? t('offers.edit_offer') : t('offers.new_offer')}</h3>
+            <p className="text-xs text-muted font-medium">{t('offers.offer_details')}</p>
           </div>
           <button onClick={onClose} className="w-10 h-10 rounded-full bg-white border border-border flex items-center justify-center text-muted hover:text-text transition-colors shadow-soft">
             <X size={20} />
@@ -259,23 +299,37 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6 text-right">
+          {!offer && (
+            <label className="flex items-center justify-end gap-3 p-4 bg-accent/5 border border-accent/20 rounded-2xl cursor-pointer">
+              <div className="text-right">
+                <p className="text-sm font-black text-accent">{t('offers.send_notification')}</p>
+                <p className="text-[10px] text-accent/60 font-bold">{t('offers.send_notification_desc')}</p>
+              </div>
+              <input 
+                type="checkbox" 
+                checked={sendNotification}
+                onChange={e => setSendNotification(e.target.checked)}
+                className="w-5 h-5 accent-accent"
+              />
+            </label>
+          )}
           <div className="space-y-4">
             <div className="space-y-1.5 text-right">
-              <label className="text-xs font-black text-muted tracking-widest px-1">عنوان العرض</label>
+              <label className="text-xs font-black text-muted tracking-widest px-1">{t('offers.offer_title')}</label>
               <input 
                 value={form.title} 
                 onChange={e => setForm(f => ({...f, title: e.target.value}))}
-                placeholder="مثال: خصم 20% للزبائن المميزين"
+                placeholder={t('offers.offer_title')}
                 className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold focus:outline-none focus:border-accent transition-colors text-right"
               />
             </div>
 
             <div className="space-y-1.5 text-right">
-              <label className="text-xs font-black text-muted tracking-widest px-1">الوصف</label>
+              <label className="text-xs font-black text-muted tracking-widest px-1">{t('offers.description')}</label>
               <textarea 
                 value={form.description} 
                 onChange={e => setForm(f => ({...f, description: e.target.value}))}
-                placeholder="تفاصيل العرض وكيفية الاستفادة منه..."
+                placeholder={t('offers.description')}
                 rows={2}
                 className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent transition-colors resize-none text-right"
               />
@@ -283,30 +337,30 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5 relative text-right">
-                <label className="text-xs font-black text-muted tracking-widest px-1 text-right">نوع العرض</label>
+                <label className="text-xs font-black text-muted tracking-widest px-1 text-right">{t('offers.offer_type')}</label>
                 <select 
                   value={form.type}
                   onChange={e => setForm(f => ({...f, type: e.target.value}))}
                   className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold focus:outline-none focus:border-accent appearance-none transition-colors text-right"
                 >
-                  <option value="discount">تخفيض بنسبة</option>
-                  <option value="gift">هدية مجانية</option>
-                  <option value="double_points">نقاط مضاعفة</option>
-                  <option value="flash">عرض فلاش</option>
-                  <option value="exclusive">حصري</option>
+                  <option value="discount">{t('offers.discount')}</option>
+                  <option value="gift">{t('offers.gift')}</option>
+                  <option value="double_points">{t('offers.double_points')}</option>
+                  <option value="flash">{t('offers.flash')}</option>
+                  <option value="exclusive">{t('offers.exclusive')}</option>
                 </select>
                 <ChevronDown className="absolute left-4 bottom-4 text-muted pointer-events-none" size={16} />
               </div>
 
               <div className="space-y-1.5 relative text-right">
-                <label className="text-xs font-black text-muted tracking-widest px-1">تطبيق على</label>
+                <label className="text-xs font-black text-muted tracking-widest px-1">{t('offers.apply_to')}</label>
                 <select 
                   value={form.target_type}
                   onChange={e => setForm(f => ({...f, target_type: e.target.value}))}
                   className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold focus:outline-none focus:border-accent appearance-none transition-colors text-right"
                 >
-                  <option value="all">كل المنتجات</option>
-                  <option value="products">منتجات محددة</option>
+                  <option value="all">{t('offers.all_products')}</option>
+                  <option value="products">{t('offers.specific_products')}</option>
                 </select>
                 <ChevronDown className="absolute left-4 bottom-4 text-muted pointer-events-none" size={16} />
               </div>
@@ -318,7 +372,7 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
                 animate={{ opacity: 1, height: 'auto' }}
                 className="space-y-2 text-right"
               >
-                <label className="text-xs font-black text-muted tracking-widest px-1">اختر المنتجات</label>
+                <label className="text-xs font-black text-muted tracking-widest px-1">{t('offers.select_products')}</label>
                 <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 bg-surface rounded-2xl border border-border">
                   {(products || []).map(p => (
                     <label key={p.id} className="flex items-center gap-2 p-2 bg-white rounded-xl cursor-pointer hover:bg-accent/5">
@@ -344,7 +398,7 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
             <div>
               {form.type === 'discount' ? (
                 <div className="space-y-1.5 text-right">
-                  <label className="text-xs font-black text-muted tracking-widest px-1">نسبة التخفيض %</label>
+                  <label className="text-xs font-black text-muted tracking-widest px-1">{t('offers.discount_percent')}</label>
                   <input 
                     type="number"
                     value={form.discount_percent}
@@ -357,15 +411,15 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
                 </div>
               ) : (
                 <div className="space-y-1.5 opacity-50 pointer-events-none text-right">
-                  <label className="text-xs font-black text-muted tracking-widest px-1">القيمة</label>
-                  <div className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-muted font-bold text-right">لا يوجد</div>
+                  <label className="text-xs font-black text-muted tracking-widest px-1">{t('offers.points_cost')}</label>
+                  <div className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-muted font-bold text-right">{t('common.free')}</div>
                 </div>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5 text-right">
-                <label className="text-xs font-black text-muted tracking-widest px-1">تكلفة النقاط</label>
+                <label className="text-xs font-black text-muted tracking-widest px-1">{t('offers.points_cost')}</label>
                 <input 
                   type="number"
                   value={form.points_cost}
@@ -375,34 +429,34 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
                 />
               </div>
               <div className="space-y-1.5 relative text-right">
-                <label className="text-xs font-black text-muted tracking-widest px-1">الفئة المؤهلة</label>
+                <label className="text-xs font-black text-muted tracking-widest px-1">{t('offers.eligible_tier')}</label>
                 <select 
                   value={form.min_tier}
                   onChange={e => setForm(f => ({...f, min_tier: e.target.value}))}
                   className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold focus:outline-none focus:border-accent appearance-none transition-colors text-right"
                 >
-                  <option value="bronze">الكل</option>
-                  <option value="silver">Silver فما فوق</option>
-                  <option value="gold">Gold فما فوق</option>
-                  <option value="platinum">Platinum فقط</option>
+                  <option value="bronze">{t('offers.all_tiers')}</option>
+                  <option value="silver">{t('offers.silver_plus')}</option>
+                  <option value="gold">{t('offers.gold_plus')}</option>
+                  <option value="platinum">{t('offers.platinum_only')}</option>
                 </select>
                 <ChevronDown className="absolute left-4 bottom-4 text-muted pointer-events-none" size={16} />
               </div>
             </div>
 
             <div className="space-y-1.5 relative text-right">
-              <label className="text-xs font-black text-muted tracking-widest px-1">المناسبة / التوقيت</label>
+              <label className="text-xs font-black text-muted tracking-widest px-1">{t('offers.occasion')}</label>
               <select 
                 value={form.occasion_type}
                 onChange={e => setForm(f => ({...f, occasion_type: e.target.value}))}
                 className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold focus:outline-none focus:border-accent appearance-none transition-colors text-right"
               >
-                <option value="always">دائم (متاح دائماً)</option>
-                <option value="fixed">تاريخ محدد</option>
-                <option value="birthday">عيد ميلاد الزبون</option>
-                <option value="anniversary">ذكرى انضمام الزبون</option>
-                <option value="win_back">إعادة زبون غائب</option>
-                <option value="flash">عرض فلاش (وقت محدود)</option>
+                <option value="always">{t('offers.always')}</option>
+                <option value="fixed">{t('offers.fixed_date')}</option>
+                <option value="birthday">{t('offers.customer_birthday')}</option>
+                <option value="anniversary">{t('offers.customer_anniversary')}</option>
+                <option value="win_back">{t('offers.win_back')}</option>
+                <option value="flash">{t('offers.flash_sale')}</option>
               </select>
               <ChevronDown className="absolute left-4 bottom-4 text-muted pointer-events-none" size={16} />
             </div>
@@ -414,7 +468,7 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
                 className="grid grid-cols-2 gap-4 text-right"
               >
                 <div className="space-y-1.5 text-right">
-                  <label className="text-xs font-black text-muted tracking-widest px-1">ينتهي في</label>
+                  <label className="text-xs font-black text-muted tracking-widest px-1">{t('offers.valid_until')}</label>
                   <input 
                     type="datetime-local"
                     value={form.valid_until}
@@ -423,7 +477,7 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
                   />
                 </div>
                 <div className="space-y-1.5 text-right">
-                  <label className="text-xs font-black text-muted tracking-widest px-1 text-right">يبدأ في</label>
+                  <label className="text-xs font-black text-muted tracking-widest px-1 text-right">{t('offers.valid_from')}</label>
                   <input 
                     type="datetime-local"
                     value={form.valid_from}
@@ -441,13 +495,13 @@ function OfferForm({ offer, storeId, onSave, onClose }) {
             onClick={onClose}
             className="flex-1 px-6 py-4 rounded-2xl text-muted font-black text-sm hover:bg-white transition-all active:scale-95"
           >
-            إلغاء
+            {t('common.cancel')}
           </button>
           <button 
             onClick={handleSave}
             className="flex-[2] bg-accent text-white py-4 rounded-2xl font-black text-sm shadow-soft shadow-accent/20 hover:bg-accent-dark transition-all active:scale-95"
           >
-            {offer ? 'حفظ التغييرات' : 'إضافة العرض'}
+            {offer ? t('offers.save_changes') : t('offers.add_offer')}
           </button>
         </div>
       </motion.div>

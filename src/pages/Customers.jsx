@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useDashboardStore } from '../store/dashboardStore'
 import { subDays, format } from 'date-fns'
@@ -10,6 +11,7 @@ import { motion } from 'framer-motion'
 const PAGE_SIZE = 20
 
 export default function Customers() {
+  const { t } = useTranslation()
   const { store } = useDashboardStore()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
@@ -50,8 +52,8 @@ export default function Customers() {
     <div className="space-y-6 max-w-5xl mx-auto pb-24 px-4 md:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 md:pt-0">
         <div className="text-right">
-          <h1 className="text-2xl font-black text-text tracking-tight">الزبائن</h1>
-          <p className="text-sm text-muted font-medium">إجمالي {data?.count ?? 0} عضو مسجل</p>
+          <h1 className="text-2xl font-black text-text tracking-tight">{t('customers.title')}</h1>
+          <p className="text-sm text-muted font-medium">{data?.count ?? 0} {t('customers.total_members')}</p>
         </div>
       </div>
 
@@ -62,23 +64,23 @@ export default function Customers() {
           <input 
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(0) }}
-            placeholder="البحث عن زبون بالاسم..."
+            placeholder={t('customers.search_customer')}
             className="w-full bg-surface border border-border rounded-2xl pr-12 pl-4 py-3 text-text font-medium placeholder-muted focus:outline-none focus:border-accent transition-colors"
           />
         </div>
         
         <div className="flex flex-wrap gap-2 justify-end">
-          {['all','bronze','silver','gold','platinum'].map(t => (
+          {['all','bronze','silver','gold','platinum'].map(tier => (
             <button
-              key={t}
-              onClick={() => { setTierFilter(t); setPage(0) }}
+              key={tier}
+              onClick={() => { setTierFilter(tier); setPage(0) }}
               className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
-                tierFilter === t
+                tierFilter === tier
                   ? 'bg-accent text-white shadow-soft shadow-accent/20'
                   : 'bg-surface text-muted hover:bg-white border border-border'
               }`}
             >
-              {t === 'all' ? 'الكل' : t.toUpperCase()}
+              {tier === 'all' ? t('common.all') : t(`common.tiers.${tier}`)}
             </button>
           ))}
         </div>
@@ -119,19 +121,19 @@ export default function Customers() {
               <div className="flex-1 min-w-0 text-right">
                 <div className="flex items-center justify-end gap-2">
                   {isInactive(m) && (
-                    <span className="bg-orange-50 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full">خامل</span>
+                    <span className="bg-orange-50 text-orange-600 text-[10px] font-black px-2 py-0.5 rounded-full">{t('customers.inactive')}</span>
                   )}
                   <h4 className="text-text font-bold truncate group-hover:text-accent transition-colors">{m.users?.full_name}</h4>
                 </div>
                 <p className="text-muted text-xs font-medium">
-                  @{m.users?.username ?? '—'} • انضم {format(new Date(m.joined_at), 'MM/yyyy')}
+                  @{m.users?.username ?? '—'} • {t('customers.joined')} {format(new Date(m.joined_at), 'MM/yyyy')}
                 </p>
               </div>
 
               <div className="text-left flex-shrink-0 flex items-center gap-4">
                 <div className="hidden sm:block">
-                  <p className="text-accent text-sm font-black">{(m.points ?? 0).toLocaleString()} <span className="text-[10px]">نقطة</span></p>
-                  <p className="text-muted text-[10px] font-bold">{(m.total_spent ?? 0).toLocaleString()} دج</p>
+                  <p className="text-accent text-sm font-black">{(m.points ?? 0).toLocaleString()} <span className="text-[10px]">{t('common.points')}</span></p>
+                  <p className="text-muted text-[10px] font-bold">{(m.total_spent ?? 0).toLocaleString()} {t('products.dzd')}</p>
                 </div>
                 <ChevronRight className="text-muted group-hover:text-accent transition-colors" size={20} />
               </div>
@@ -145,7 +147,7 @@ export default function Customers() {
           <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4">
             <User size={32} className="text-muted opacity-20" />
           </div>
-          <p className="text-muted font-bold">لم يتم العثور على زبائن</p>
+          <p className="text-muted font-bold">{t('customers.no_customers')}</p>
         </div>
       )}
 
@@ -157,15 +159,15 @@ export default function Customers() {
             onClick={() => setPage(p => p - 1)}
             className="px-6 py-2 bg-white border border-border text-text font-bold rounded-xl disabled:opacity-30 transition-all hover:bg-surface"
           >
-            السابق
+            {t('common.previous')}
           </button>
-          <span className="text-muted font-black text-sm uppercase tracking-widest">صفحة {page + 1}</span>
+          <span className="text-muted font-black text-sm uppercase tracking-widest">{t('customers.page')} {page + 1}</span>
           <button
             disabled={(data?.count ?? 0) <= (page + 1) * PAGE_SIZE}
             onClick={() => setPage(p => p + 1)}
             className="px-6 py-2 bg-white border border-border text-text font-bold rounded-xl disabled:opacity-30 transition-all hover:bg-surface"
           >
-            التالي
+            {t('common.next')}
           </button>
         </div>
       )}

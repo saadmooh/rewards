@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useDashboardStore } from '../store/dashboardStore'
 import { subDays, format, startOfDay } from 'date-fns'
@@ -10,6 +11,7 @@ import StatCard from '../components/StatCard'
 import { Shield, AlertTriangle, ArrowRight } from 'lucide-react'
 
 export default function Overview() {
+  const { t } = useTranslation()
   const { store, membership } = useDashboardStore()
   const navigate = useNavigate()
   const isOwner = membership?.role === 'owner'
@@ -51,7 +53,7 @@ export default function Overview() {
           .lt('last_purchase', subDays(new Date(), 60).toISOString()),
       ])
 
-      const monthTotal = (monthTx.data ?? []).reduce((s, t) => s + (t.amount ?? 0), 0)
+      const monthTotal = (monthTx.data ?? []).reduce((sum, tx) => sum + (tx.amount ?? 0), 0)
 
       return {
         totalMembers: totalMembers.count ?? 0,
@@ -168,7 +170,7 @@ export default function Overview() {
       {/* Welcome & Action Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 md:pt-0">
         <div className="text-right">
-          <h1 className="text-2xl font-black text-text tracking-tight">مرحباً، {store?.name}</h1>
+          <h1 className="text-2xl font-black text-text tracking-tight">{t('overview.welcome')} {store?.name}</h1>
           <p className="text-sm text-muted font-medium">{format(new Date(), 'EEEE، d MMMM yyyy')}</p>
         </div>
         
@@ -178,26 +180,26 @@ export default function Overview() {
             className="flex items-center gap-2 px-5 py-2.5 bg-white border border-border rounded-2xl text-sm font-bold text-text shadow-soft hover:bg-surface transition-all active:scale-95"
           >
             <Shield size={18} className="text-accent" />
-            إدارة الصلاحيات
+            {t('overview.manage_roles')}
           </button>
         )}
       </div>
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="إجمالي الأعضاء" value={stats?.totalMembers?.toLocaleString() ?? '—'} icon="👥" />
-        <StatCard label="عمليات اليوم"   value={stats?.todayCount ?? '—'} icon="📊" />
-        <StatCard label="مبيعات الشهر"   value={`${(stats?.monthTotal ?? 0).toLocaleString()} دج`} icon="💰" />
-        <StatCard label="عروض مستخدمة"  value={stats?.activeOffers ?? '—'} icon="🎁" />
+        <StatCard label={t('overview.total_members')} value={stats?.totalMembers?.toLocaleString() ?? '—'} icon="👥" />
+        <StatCard label={t('overview.today_transactions')}   value={stats?.todayCount ?? '—'} icon="📊" />
+        <StatCard label={t('overview.monthly_sales')}   value={`${(stats?.monthTotal ?? 0).toLocaleString()} ${t('products.dzd')}`} icon="💰" />
+        <StatCard label={t('overview.offers_used')}  value={stats?.activeOffers ?? '—'} icon="🎁" />
       </div>
 
       {/* Chart Section */}
       <div className="bg-white rounded-3xl p-6 border border-border shadow-soft">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-black text-text tracking-tight">المعاملات — آخر 14 يوم</h3>
+          <h3 className="text-lg font-black text-text tracking-tight">{t('overview.transactions_14d')}</h3>
           <div className="flex items-center gap-2 text-xs font-bold text-muted bg-surface px-3 py-1 rounded-full">
             <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            تحديث تلقائي
+            {t('overview.auto_update')}
           </div>
         </div>
         
@@ -232,7 +234,7 @@ export default function Overview() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Tier distribution */}
         <div className="bg-white rounded-3xl p-6 border border-border shadow-soft lg:col-span-1 text-center">
-          <h3 className="text-lg font-black text-text tracking-tight mb-6 text-right">توزيع الفئات</h3>
+          <h3 className="text-lg font-black text-text tracking-tight mb-6 text-right">{t('overview.tier_distribution')}</h3>
           <div className="flex justify-center">
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
@@ -254,13 +256,13 @@ export default function Overview() {
             </ResponsiveContainer>
           </div>
           <div className="space-y-2 mt-4">
-            {tierData?.map(t => (
-              <div key={t.name} className="flex items-center justify-between text-xs font-bold text-muted">
+            {tierData?.map(item => (
+              <div key={item.name} className="flex items-center justify-between text-xs font-bold text-muted">
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: t.color }} />
-                  {t.name}
+                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                  {item.name}
                 </div>
-                <span className="text-text">{t.value} عضو</span>
+                <span className="text-text">{item.value} {t('common.members')}</span>
               </div>
             ))}
           </div>
@@ -269,9 +271,9 @@ export default function Overview() {
         {/* Recent transactions */}
         <div className="bg-white rounded-3xl p-6 border border-border shadow-soft lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-black text-text tracking-tight">آخر العمليات</h3>
+            <h3 className="text-lg font-black text-text tracking-tight">{t('overview.recent_transactions')}</h3>
             <button onClick={() => navigate('/dashboard/customers')} className="text-accent text-xs font-bold flex items-center gap-1 hover:underline">
-              عرض الكل <ArrowRight size={14} />
+              {t('common.view_all')} <ArrowRight size={14} />
             </button>
           </div>
           
@@ -289,8 +291,8 @@ export default function Overview() {
                     <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full" />
                   </div>
                   <div className="text-right">
-                    <p className="text-text text-sm font-bold">{tx.users?.full_name ?? 'زبون جديد'}</p>
-                    <p className="text-muted text-[10px] font-medium">{format(new Date(tx.created_at), 'HH:mm')} • {tx.amount} دج</p>
+                    <p className="text-text text-sm font-bold">{tx.users?.full_name ?? t('overview.new_customer')}</p>
+                    <p className="text-muted text-[10px] font-medium">{format(new Date(tx.created_at), 'HH:mm')} • {tx.amount} {t('products.dzd')}</p>
                   </div>
                 </div>
                 <div className="text-left bg-green-50 text-green-600 px-3 py-1 rounded-full text-sm font-black">
@@ -300,7 +302,7 @@ export default function Overview() {
             ))}
             {!recentTx?.length && (
               <div className="text-center py-10">
-                <p className="text-muted text-sm font-medium">لا توجد عمليات بعد</p>
+                <p className="text-muted text-sm font-medium">{t('overview.no_transactions')}</p>
               </div>
             )}
           </div>
@@ -319,9 +321,9 @@ export default function Overview() {
               <AlertTriangle size={24} />
             </div>
             <div className="text-right">
-              <p className="text-orange-900 font-bold">فرصة لإعادة التفاعل</p>
-              <p className="text-orange-700 text-sm font-medium">
-                {stats.inactiveCount} زبون لم يشتروا منذ أكثر من 60 يوماً. أرسل لهم عرضاً مخصصاً الآن!
+              <p className="text-orange-900 font-bold">{t('overview.inactive_warning')}</p>
+<p className="text-orange-700 text-sm font-medium">
+                {t('overview.inactive_warning_desc', { count: stats.inactiveCount })}
               </p>
             </div>
           </div>
@@ -329,20 +331,20 @@ export default function Overview() {
             onClick={() => navigate('/dashboard/notifications')}
             className="bg-orange-600 text-white px-6 py-3 rounded-2xl text-sm font-black shadow-soft hover:bg-orange-700 transition-all active:scale-95 whitespace-nowrap"
           >
-            إرسال تنبيه
+            {t('overview.send_alert')}
           </button>
         </motion.div>
       )}
 
       {/* Offer Performance */}
       <div className="bg-white rounded-3xl p-6 border border-border shadow-soft">
-        <h3 className="text-lg font-black text-text tracking-tight mb-6">أداء العروض</h3>
+        <h3 className="text-lg font-black text-text tracking-tight mb-6">{t('overview.offer_performance')}</h3>
         <div className="space-y-4">
           {offerPerformance?.map(o => (
             <div key={o.title} className="space-y-1">
               <div className="flex justify-between text-sm font-bold">
                 <span className="text-text">{o.title}</span>
-                <span className="text-muted">{o.redemptions} استخدام</span>
+                <span className="text-muted">{o.redemptions} {t('overview.use')}</span>
               </div>
               <div className="h-2 bg-surface rounded-full overflow-hidden">
                 <motion.div 
@@ -354,7 +356,7 @@ export default function Overview() {
             </div>
           ))}
           {!offerPerformance?.length && (
-            <p className="text-center text-muted py-4 font-medium">لا توجد بيانات للعروض بعد</p>
+            <p className="text-center text-muted py-4 font-medium">{t('overview.no_data')}</p>
           )}
         </div>
       </div>

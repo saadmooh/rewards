@@ -1,8 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { useProduct } from '../hooks/useProducts'
 
 export default function ProductDetail() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const { product, loading } = useProduct(id)
@@ -19,8 +21,8 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted mb-4">المنتج غير موجود</p>
-          <button onClick={() => navigate(-1)} className="text-accent">العودة</button>
+          <p className="text-muted mb-4">{t('product_detail.not_found')}</p>
+          <button onClick={() => navigate(-1)} className="text-accent">{t('product_detail.return')}</button>
         </div>
       </div>
     )
@@ -61,11 +63,11 @@ export default function ProductDetail() {
               <div className="flex items-center justify-end gap-3 mb-6">
                 {product.is_exclusive && (
                   <span className="px-4 py-1.5 bg-accent text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-soft shadow-accent/20">
-                    حصري للأعضاء
+                    {t('product_detail.exclusive')}
                   </span>
                 )}
                 <span className="px-4 py-1.5 bg-surface rounded-xl text-[10px] font-black text-muted uppercase tracking-widest border border-border">
-                  {product.category || 'عام'}
+                  {product.category || t('products.general')}
                 </span>
               </div>
 
@@ -74,13 +76,13 @@ export default function ProductDetail() {
               </h1>
 
               <p className="text-muted text-lg font-medium leading-relaxed mb-8">
-                {product.description || 'لا يوجد وصف متاح لهذا المنتج حالياً. يرجى التواصل مع المتجر لمزيد من المعلومات.'}
+                {product.description || t('product_detail.no_description')}
               </p>
 
               <div className="flex items-center justify-between p-6 bg-surface rounded-2xl border border-border mb-8">
                 <div className="text-left">
-                  <p className="text-muted text-[10px] font-black uppercase tracking-widest mb-1">السعر الحالي</p>
-                  <p className="text-4xl font-black text-accent">{product.price?.toLocaleString()} <span className="text-sm">دج</span></p>
+                  <p className="text-muted text-[10px] font-black uppercase tracking-widest mb-1">{t('product_detail.current_price')}</p>
+                  <p className="text-4xl font-black text-accent">{product.price?.toLocaleString()} <span className="text-sm">{t('products.dzd')}</span></p>
                 </div>
                 <div className="text-right">
                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-soft">
@@ -93,12 +95,12 @@ export default function ProductDetail() {
                 <button
                   className="w-full py-5 bg-gray-900 text-white rounded-2xl font-black text-lg shadow-xl shadow-gray-200 transition-all hover:bg-black active:scale-[0.98]"
                 >
-                  🏪 متوفر في المتجر
+                  🏪 {t('product_detail.available_in_store')}
                 </button>
 
                 <div className="flex items-center justify-center gap-2 text-muted">
                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                   <p className="text-xs font-bold uppercase tracking-widest">تأكد من توفر المقاس في الفرع</p>
+                   <p className="text-xs font-bold uppercase tracking-widest">{t('product_detail.ensure_availability')}</p>
                 </div>
               </div>
             </div>
@@ -106,8 +108,8 @@ export default function ProductDetail() {
             <div className="bg-accent/5 rounded-3xl p-6 border border-accent/10">
                <div className="flex items-center justify-end gap-3">
                   <div className="text-right">
-                     <p className="text-accent-dark font-black text-sm">اكسب نقاط مع كل شراء</p>
-                     <p className="text-accent-dark/60 text-xs font-medium">احصل على 10 نقاط مقابل كل 1000 دج تنفقها</p>
+<p className="text-accent-dark font-black text-sm">{t('product_detail.earn_points')}</p>
+                      <p className="text-accent-dark/60 text-xs font-medium">{t('product_detail.points_detail')}</p>
                   </div>
                   <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center text-white shadow-soft">
                      <span className="text-xl">✨</span>

@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useDashboardStore } from '../store/dashboardStore'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Users, Shield, ShieldCheck, User, ChevronDown, Check, Loader2 } from 'lucide-react'
 
 export default function TeamManagement() {
+  const { t } = useTranslation()
   const { store, membership: currentUserMembership } = useDashboardStore()
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
@@ -69,8 +71,8 @@ export default function TeamManagement() {
     <div className="space-y-6 max-w-5xl mx-auto pb-24">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="text-right">
-          <h1 className="text-2xl font-black text-text tracking-tight">إدارة فريق العمل</h1>
-          <p className="text-sm text-muted font-medium">تعديل أدوار المستخدمين ومنح الصلاحيات</p>
+          <h1 className="text-2xl font-black text-text tracking-tight">{t('team.title')}</h1>
+          <p className="text-sm text-muted font-medium">{t('team.subtitle')}</p>
         </div>
       </div>
 
@@ -81,7 +83,7 @@ export default function TeamManagement() {
           <input 
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="البحث بالاسم أو اسم المستخدم..."
+            placeholder={t('team.search_name')}
             className="w-full bg-surface border border-border rounded-2xl pr-12 pl-4 py-3 text-text font-medium placeholder-muted focus:outline-none focus:border-accent transition-colors text-right"
           />
         </div>
@@ -97,7 +99,7 @@ export default function TeamManagement() {
                   : 'bg-surface text-muted border border-border hover:bg-white'
               }`}
             >
-              {r === 'all' ? 'الكل' : r.toUpperCase()}
+              {r === 'all' ? t('common.all') : r.toUpperCase()}
             </button>
           ))}
         </div>
@@ -145,7 +147,7 @@ export default function TeamManagement() {
                         onChange={(e) => updateRoleMutation.mutate({ membershipId: m.id, roleId: e.target.value })}
                         className="w-full bg-surface border border-border rounded-xl px-4 py-2 text-xs font-bold text-text focus:outline-none focus:border-accent appearance-none cursor-pointer"
                       >
-                        <option value="">بدون دور</option>
+                        <option value="">{t('team.no_role')}</option>
                         {roles?.map(r => (
                           <option key={r.id} value={r.id}>{r.name}</option>
                         ))}
@@ -169,7 +171,7 @@ export default function TeamManagement() {
                     </div>
                   )}
                 </div>
-                <p className="text-[10px] font-medium text-muted">انضم {new Date(m.joined_at).toLocaleDateString('ar-DZ')}</p>
+                <p className="text-[10px] font-medium text-muted">{t('team.join_date')} {new Date(m.joined_at).toLocaleDateString('ar-DZ')}</p>
               </div>
             </div>
           ))}
@@ -180,9 +182,9 @@ export default function TeamManagement() {
           <table className="w-full text-right border-collapse">
             <thead>
               <tr className="bg-surface/50 border-b border-border">
-                <th className="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest">المستخدم</th>
-                <th className="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest">تاريخ الانضمام</th>
-                <th className="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest text-left">الدور الحالي</th>
+                <th className="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest">{t('profile.username')}</th>
+                <th className="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest">{t('team.join_date')}</th>
+                <th className="px-6 py-4 text-[10px] font-black text-muted uppercase tracking-widest text-left">{t('team.current_role')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -218,7 +220,7 @@ export default function TeamManagement() {
                             onChange={(e) => updateRoleMutation.mutate({ membershipId: m.id, roleId: e.target.value })}
                             className="w-full bg-surface border border-border rounded-xl px-4 py-2 text-xs font-bold text-text focus:outline-none focus:border-accent appearance-none cursor-pointer disabled:opacity-50"
                           >
-                            <option value="">بدون دور</option>
+                            <option value="">{t('team.no_role')}</option>
                             {roles?.map(r => (
                               <option key={r.id} value={r.id}>{r.name}</option>
                             ))}
@@ -252,7 +254,7 @@ export default function TeamManagement() {
         {!isMembersLoading && !members?.length && (
           <div className="text-center py-20">
             <Users size={48} className="text-muted opacity-20 mx-auto mb-4" />
-            <p className="text-muted font-bold">لم يتم العثور على مستخدمين</p>
+            <p className="text-muted font-bold">{t('team.no_users')}</p>
           </div>
         )}
       </div>
@@ -260,10 +262,9 @@ export default function TeamManagement() {
       <div className="bg-accent/5 border border-accent/10 rounded-3xl p-6">
         <div className="flex items-start gap-4 justify-end text-right">
           <div>
-            <h4 className="text-accent-dark font-black text-sm mb-1">تنبيه الصلاحيات</h4>
+            <h4 className="text-accent-dark font-black text-sm mb-1">{t('team.permissions_alert')}</h4>
             <p className="text-accent-dark/70 text-xs font-medium leading-relaxed">
-              تغيير دور المستخدم سيؤثر فوراً على قدرته على الوصول إلى لوحة التحكم واستخدام المميزات الإدارية. 
-              تأكد من مراجعة صلاحيات كل دور في صفحة "إدارة الأدوار".
+              {t('team.permissions_alert_desc')}
             </p>
           </div>
           <div className="w-10 h-10 bg-accent rounded-2xl flex items-center justify-center text-white flex-shrink-0 shadow-soft">

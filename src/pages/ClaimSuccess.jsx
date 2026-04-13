@@ -2,9 +2,11 @@ import { useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Gift } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import useUserStore from '../store/userStore'
 
 export default function ClaimSuccess() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const { membership } = useUserStore()
@@ -12,8 +14,10 @@ export default function ClaimSuccess() {
   const { points, amount, storeName } = useMemo(() => ({
     points: location.state?.points || 0,
     amount: location.state?.amount || 0,
-    storeName: location.state?.storeName || 'المتجر',
+    storeName: location.state?.storeName || '',
   }), [location.state])
+
+  const storeLabel = t('claim_success.from_store', { store: storeName })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-accent-light to-white p-5">
@@ -47,7 +51,7 @@ export default function ClaimSuccess() {
           transition={{ delay: 0.3 }}
           className="text-2xl font-bold text-text mb-2"
         >
-          تم اكتساب النقاط!
+          {t('claim_success.title')}
         </motion.h2>
 
         <motion.p
@@ -56,7 +60,7 @@ export default function ClaimSuccess() {
           transition={{ delay: 0.4 }}
           className="text-muted mb-6"
         >
-          لقد كسبت نقاطًا من {storeName}
+          {storeLabel}
         </motion.p>
 
         <motion.div
@@ -65,13 +69,13 @@ export default function ClaimSuccess() {
           transition={{ delay: 0.5 }}
           className="bg-white rounded-3xl p-6 shadow-card mb-6"
         >
-          <p className="text-sm text-muted mb-2">النقاط المكتسبة</p>
+          <p className="text-sm text-muted mb-2">{t('claim_success.earned_points')}</p>
           <p className="text-4xl font-black text-accent mb-4">+{points}</p>
           <p className="text-sm text-muted">
-            الإجمالي: <span className="font-bold text-text">{membership?.points || 0}</span> نقطة
+            {t('claim_success.total')}: <span className="font-bold text-text">{membership?.points || 0}</span> {t('common.points')}
           </p>
           {amount > 0 && (
-            <p className="text-xs text-muted mt-2">من عملية الشراء: {amount.toLocaleString()} دج</p>
+            <p className="text-xs text-muted mt-2">{t('claim_success.purchase_amount', { amount: amount.toLocaleString() })}</p>
           )}
         </motion.div>
 
@@ -84,7 +88,7 @@ export default function ClaimSuccess() {
           onClick={() => navigate('/')}
           className="px-10 py-4 bg-accent text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all"
         >
-          رائع!
+          {t('claim_success.awesome')}
         </motion.button>
       </motion.div>
     </div>

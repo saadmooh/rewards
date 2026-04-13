@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { Tag } from 'lucide-react'
 import useUserStore from '../store/userStore'
 import { supabase } from '../lib/supabase'
@@ -25,6 +26,7 @@ const itemVariants = {
 }
 
 export default function ClientOffers() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { store, membership } = useUserStore()
 
@@ -96,11 +98,11 @@ export default function ClientOffers() {
       <div className="p-5 max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="text-right">
-            <h1 className="text-2xl font-medium text-gray-900">صفقات اليوم</h1>
-            <p className="text-sm text-gray-400 mt-1">أفضل الأسعار المختارة لك</p>
+            <h1 className="text-2xl font-medium text-gray-900">{t('client_offers.daily_deals')}</h1>
+            <p className="text-sm text-gray-400 mt-1">{t('client_offers.best_prices')}</p>
           </div>
           <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 transition-colors hover:bg-gray-200">
-            ←
+            {t('common.back')}
           </button>
         </div>
 
@@ -137,13 +139,13 @@ export default function ClientOffers() {
             <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Tag size={24} className="text-gray-300" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">لا توجد عروض حالياً</h3>
-            <p className="text-sm text-gray-400 px-10 max-w-md mx-auto">ابقَ على اطلاع، فنحن نضيف صفقات جديدة باستمرار!</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('client_offers.no_offers')}</h3>
+            <p className="text-sm text-gray-400 px-10 max-w-md mx-auto">{t('client_offers.check_back')}</p>
             <button 
               onClick={() => navigate('/')}
               className="mt-8 px-8 py-3 bg-gray-900 text-white font-medium rounded-xl transition-all active:scale-95"
             >
-              العودة للرئيسية
+              {t('common.home')}
             </button>
           </div>
         )}

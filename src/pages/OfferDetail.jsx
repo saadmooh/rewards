@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { QRCodeCanvas } from 'qrcode.react'
+import { useTranslation } from 'react-i18next'
 import useUserStore from '../store/userStore'
 import { useOfferWithProducts } from '../hooks/useOfferWithProducts'
 import OfferProductList from '../components/OfferProductList'
@@ -10,9 +11,10 @@ import { formatCurrency } from '../lib/offers'
 const OFFER_COUPON_EXPIRY_SECONDS = 86400
 
 export default function OfferDetail() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
-  const { redeemOffer, membership } = useUserStore()
+  const { user, membership, redeemOffer } = useUserStore()
   const { offer, products, activeRedemption, loading: offerLoading, error: offerError, userTierLevel } = useOfferWithProducts(id)
   const [showConfirm, setShowConfirm] = useState(false)
   const [redeemed, setRedeemed] = useState(false)
@@ -21,7 +23,7 @@ export default function OfferDetail() {
   const timerRef = useRef(null)
   const [timeLeft, setTimeLeft] = useState(OFFER_COUPON_EXPIRY_SECONDS)
 
-  const tierNames = { bronze: 'برونزي', silver: 'فضي', gold: ذهبي, platinum: 'بلاتيني' }
+  const tierNames = { bronze: t('common.tiers.bronze'), silver: t('common.tiers.silver'), gold: t('common.tiers.gold'), platinum: t('common.tiers.platinum') }
   const isTierRestricted = offer?.tier_restricted === true
 
   // Synchronize with active redemption from hook
@@ -92,8 +94,8 @@ export default function OfferDetail() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-400 mb-4">العرض غير موجود</p>
-          <button onClick={() => navigate(-1)} className="text-gray-600 font-medium">العودة</button>
+          <p className="text-gray-400 mb-4">{t('offer_detail.not_found')}</p>
+          <button onClick={() => navigate(-1)} className="text-gray-600 font-medium">{t('offer_detail.return')}</button>
         </div>
       </div>
     )
@@ -112,20 +114,20 @@ export default function OfferDetail() {
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-4xl">🔒</span>
           </div>
-          <h2 className="text-2xl font-black text-gray-900 mb-3">محتوى حصري</h2>
+          <h2 className="text-2xl font-black text-gray-900 mb-3">{t('offer_detail.exclusive_content')}</h2>
           <p className="text-gray-500 font-medium mb-8">
-            هذا العرض متاح فقط لأعضاء فئة <span className="text-accent font-black">{tierNames[offer.required_tier] || offer.required_tier}</span> فأعلى
+            {t('offer_detail.exclusive_desc', { tier: tierNames[offer.required_tier] || offer.required_tier })}
           </p>
           <div className="bg-gray-50 rounded-2xl p-6 border border-border">
-            <p className="text-gray-400 text-sm mb-4">حالياً أنت في فئة</p>
-            <p className="text-3xl font-black text-gray-700 capitalize">{membership?.tier || 'برونزي'}</p>
+            <p className="text-gray-400 text-sm mb-4">{t('offer_detail.your_tier')}</p>
+            <p className="text-3xl font-black text-gray-700 capitalize">{membership?.tier || t('common.tiers.bronze')}</p>
           </div>
-          <p className="text-gray-400 text-xs mt-6">اجمعي المزيد من النقاط للترقية!</p>
+          <p className="text-gray-400 text-xs mt-6">{t('offer_detail.collect_more')}</p>
           <button
             onClick={() => navigate('/')}
             className="mt-8 w-full py-4 bg-gray-900 text-white font-black rounded-2xl"
           >
-            العودة للرئيسية
+            {t('offer_detail.return')}
           </button>
         </div>
       </div>
@@ -143,7 +145,7 @@ export default function OfferDetail() {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-soft">
             <span className="text-3xl">✅</span>
           </div>
-          <h2 className="text-2xl font-black text-gray-900 mb-2">تم تفعيل العرض!</h2>
+          <h2 className="text-2xl font-black text-gray-900 mb-2">{t('offer_detail.offer_activated')}</h2>
           <p className="text-gray-500 mb-8 font-medium">{offer.title}</p>
           
           <div className="bg-gray-50 rounded-3xl p-8 mb-8 border border-border shadow-soft max-w-sm mx-auto">
@@ -151,9 +153,9 @@ export default function OfferDetail() {
               <QRCodeCanvas value={coupon} size={200} level="H" includeMargin={false} />
             </div>
             <p className="text-3xl font-mono font-black text-gray-900 tracking-[0.2em] mb-2">{coupon}</p>
-            <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">أظهر هذا للكاشير</p>
+            <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">{t('offer_detail.show_to_cashier')}</p>
             <div className="mt-6 pt-6 border-t border-gray-200">
-               <p className="text-red-500 text-xs font-black uppercase tracking-tighter">ينتهي في {formatTime(timeLeft)}</p>
+               <p className="text-red-500 text-xs font-black uppercase tracking-tighter">{t('offer_detail.expires_in_time', { time: formatTime(timeLeft) })}</p>
             </div>
           </div>
 
@@ -162,7 +164,7 @@ export default function OfferDetail() {
             onClick={() => navigate('/offers')}
             className="px-12 py-4 bg-gray-900 text-white font-black rounded-2xl shadow-xl transition-all active:scale-95"
           >
-            تم
+            {t('common.done')}
           </motion.button>
         </motion.div>
       </div>
@@ -209,27 +211,27 @@ export default function OfferDetail() {
 
             <div className="grid grid-cols-2 gap-4">
                <div className="bg-gray-50 p-4 rounded-2xl border border-border">
-                  <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">النقاط المطلوبة</p>
-                  <p className="text-accent text-xl font-black">{offer.points_cost ? `${offer.points_cost.toLocaleString()} نقطة` : 'مجاني'}</p>
-               </div>
-               <div className="bg-gray-50 p-4 rounded-2xl border border-border">
-                  <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">صلاحية العرض</p>
-                  <p className="text-gray-700 text-lg font-black">
-                    {offer.valid_until ? new Date(offer.valid_until).toLocaleDateString('ar-DZ') : 'دائم'}
-                  </p>
-               </div>
+<p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">{t('offer_detail.points_required')}</p>
+                   <p className="text-accent text-xl font-black">{offer.points_cost ? `${offer.points_cost.toLocaleString()} ${t('common.points')}` : t('common.free')}</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-2xl border border-border">
+                   <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">{t('offer_detail.offer_validity')}</p>
+                   <p className="text-gray-700 text-lg font-black">
+                     {offer.valid_until ? new Date(offer.valid_until).toLocaleDateString('ar-DZ') : t('common.all')}
+                   </p>
+                </div>
             </div>
 
             {offer.discount_percent && (
               <div className="bg-green-50 rounded-2xl p-5 border border-green-100 flex items-center justify-between">
                 <span className="text-green-700 font-black text-2xl">-{offer.discount_percent}%</span>
-                <p className="text-green-800 font-bold">خصم خاص مفعل</p>
+                <p className="text-green-800 font-bold">{t('offer_detail.special_discount')}</p>
               </div>
             )}
 
             {products && products.length > 0 && (
               <div className="pt-6 border-t border-gray-100">
-                <h3 className="text-sm font-black text-gray-900 mb-4 uppercase tracking-widest">المنتجات المشمولة في العرض</h3>
+                <h3 className="text-sm font-black text-gray-900 mb-4 uppercase tracking-widest">{t('offer_detail.products_included')}</h3>
                 <OfferProductList products={products} />
               </div>
             )}
@@ -239,7 +241,7 @@ export default function OfferDetail() {
               onClick={handleRedeem}
               className="w-full py-5 rounded-2xl font-black text-lg transition-all bg-gray-900 text-white shadow-xl shadow-gray-200 active:scale-95"
             >
-              {offer.points_cost ? 'استبدال بالنقاط الآن' : 'تفعيل العرض مجاناً'}
+              {offer.points_cost ? t('offer_detail.redeem_with_points') : t('offer_detail.activate_free')}
             </motion.button>
           </motion.div>
         </div>
@@ -255,24 +257,24 @@ export default function OfferDetail() {
               animate={{ scale: 1, opacity: 1 }}
               className="bg-white rounded-2xl p-5 max-w-sm w-full"
             >
-              <h3 className="text-lg font-medium text-gray-900 mb-2">تأكيد</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{t('offer_detail.confirm')}</h3>
               <p className="text-gray-500 text-sm mb-5">
                 {offer.points_cost 
-                  ? `هل تريد استخدام ${offer.points_cost} نقطة من رصيدك؟`
-                  : 'هل تريد تفعيل هذا العرض؟'}
+                  ? t('offer_detail.points_will_be_deducted', { points: offer.points_cost })
+                  : t('offer_detail.confirm_claim')}
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowConfirm(false)}
                   className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium"
                 >
-                  إلغاء
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={confirmRedeem}
                   className="flex-1 py-3 bg-gray-900 text-white font-medium rounded-xl"
                 >
-                  تأكيد
+                  {t('common.confirm')}
                 </button>
               </div>
             </motion.div>

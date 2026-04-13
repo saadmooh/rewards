@@ -1,17 +1,19 @@
 import { motion } from 'framer-motion'
 import useUserStore from '../store/userStore'
-
-const navItems = [
-  { icon: '🏠', label: 'الرئيسية', path: '/' },
-  { icon: '📷', label: '', path: '/scan', isScan: true },
-  { icon: '🎁', label: 'العروض', path: '/offers' },
-  { icon: '👗', label: 'المنتجات', path: '/products' },
-  { icon: '📊', label: 'لوحة التحكم', path: '/dashboard', isDashboard: true },
-  { icon: '👤', label: 'الملف الشخصي', path: '/profile' },
-]
+import { useTranslation } from 'react-i18next'
 
 export default function BottomNav({ activePath = '/', onNavigate }) {
   const { membership } = useUserStore()
+  const { t } = useTranslation()
+
+  const navItems = [
+    { icon: '🏠', label: t('common.home'), path: '/', labelKey: 'common.home' },
+    { icon: '📷', label: '', path: '/scan', isScan: true, labelKey: 'nav.scan' },
+    { icon: '🎁', label: t('common.offers'), path: '/offers', labelKey: 'common.offers' },
+    { icon: '👗', label: t('common.products'), path: '/products', labelKey: 'common.products' },
+    { icon: '📊', label: t('common.dashboard'), path: '/dashboard', isDashboard: true, labelKey: 'common.dashboard' },
+    { icon: '👤', label: t('common.profile'), path: '/profile', labelKey: 'common.profile' },
+  ]
 
   const handleNav = (path) => {
     if (path && onNavigate) {

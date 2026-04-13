@@ -2,26 +2,28 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useDashboardStore } from '../store/dashboardStore'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, QrCode, Package,
   Tag, Users, Bell, Settings, ArrowLeft, Home, ShieldCheck
 } from 'lucide-react'
 
-const NAV = [
-  { to: '/dashboard/overview',       label: 'الرئيسية',  icon: LayoutDashboard },
-  { to: '/dashboard/qr',             label: 'توليد QR',   icon: QrCode },
-  { to: '/dashboard/products',       label: 'المنتجات',   icon: Package },
-  { to: '/dashboard/offers',        label: 'العروض',      icon: Tag },
-  { to: '/dashboard/customers',      label: 'الزبائن',    icon: Users },
-  { to: '/dashboard/team',           label: 'الفريق',     icon: ShieldCheck },
-  { to: '/dashboard/notifications',  label: 'إشعارات',    icon: Bell },
-  { to: '/dashboard/settings',       label: 'الإعدادات',  icon: Settings },
-]
-
 export default function Layout() {
+  const { t } = useTranslation()
   const { store, user } = useDashboardStore()
   const navigate = useNavigate()
   const location = useLocation()
+
+  const NAV = [
+    { to: '/dashboard/overview',       label: t('dashboard.home'),  icon: LayoutDashboard },
+    { to: '/dashboard/qr',             label: t('dashboard.qr'),    icon: QrCode },
+    { to: '/dashboard/products',       label: t('dashboard.products'),  icon: Package },
+    { to: '/dashboard/offers',        label: t('dashboard.offers'),     icon: Tag },
+    { to: '/dashboard/customers',      label: t('dashboard.customers'),   icon: Users },
+    { to: '/dashboard/team',           label: t('dashboard.team'),      icon: ShieldCheck },
+    { to: '/dashboard/notifications',  label: t('dashboard.notifications'), icon: Bell },
+    { to: '/dashboard/settings',       label: t('dashboard.settings'),  icon: Settings },
+  ]
 
   return (
     <div className="layout min-h-screen bg-surface font-display text-text">
@@ -36,7 +38,7 @@ export default function Layout() {
           }
           <div className="overflow-hidden">
             <h1 className="text-text font-bold text-sm truncate">{store?.name}</h1>
-            <p className="text-xs text-muted">لوحة التحكم</p>
+            <p className="text-xs text-muted">{t('common.dashboard')}</p>
           </div>
         </div>
 
@@ -65,7 +67,7 @@ export default function Layout() {
             className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-muted hover:bg-surface hover:text-text transition-all text-left"
           >
             <Home size={18} />
-            <span>العودة للتطبيق</span>
+            <span>{t('dashboard.return_to_app')}</span>
           </button>
           
           <div className="flex items-center gap-3 p-2 bg-surface rounded-xl">
@@ -95,7 +97,7 @@ export default function Layout() {
           </button>
           <div className="text-center overflow-hidden flex-1 px-4">
             <h2 className="text-sm font-black text-text truncate uppercase tracking-tight">
-              {NAV.find(n => n.to === location.pathname)?.label || 'لوحة التحكم'}
+              {NAV.find(n => n.to === location.pathname)?.label || t('common.dashboard')}
             </h2>
           </div>
           <button

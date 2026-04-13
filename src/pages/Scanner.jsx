@@ -2,10 +2,12 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Html5QrcodeScanner } from 'html5-qrcode'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import useUserStore from '../store/userStore'
 import { supabase } from '../lib/supabase'
 
 export default function Scanner() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { user, membership, store, addPoints } = useUserStore()
   const [phase, setPhase] = useState('scanning')
@@ -44,19 +46,19 @@ export default function Scanner() {
               .single()
 
             if (txError || !tx) {
-              setError('كود QR غير صالح أو منتهي الصلاحية')
+              setError(t('scanner.invalid_qr'))
               setPhase('error')
               return
             }
 
             if (tx.qr_used) {
-              setError('تم استخدام هذا الكود من قبل')
+              setError(t('scanner.qr_used'))
               setPhase('error')
               return
             }
 
             if (new Date(tx.expires_at) < new Date()) {
-              setError('انتهت صلاحية هذا الكود')
+              setError(t('scanner.qr_expired'))
               setPhase('error')
               return
             }
@@ -74,7 +76,7 @@ export default function Scanner() {
 
             if (updateErr) {
               console.error('Error updating transaction:', updateErr)
-              setError('فشل في معالجة النقاط')
+              setError(t('scanner.processing_failed'))
               setPhase('error')
               return
             }
@@ -95,12 +97,12 @@ export default function Scanner() {
             setPointsEarned(tx.points)
             setPhase('success')
           } else {
-            setError('تنسيق كود QR غير صالح')
+            setError(t('scanner.invalid_format'))
             setPhase('error')
           }
         } catch (err) {
           console.error('Scan error:', err)
-          setError('فشل في التحقق من كود QR')
+          setError(t('scanner.verification_failed'))
           setPhase('error')
         }
       },
@@ -135,16 +137,16 @@ export default function Scanner() {
           <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
             <span className="text-5xl">✅</span>
           </div>
-          <h2 className="text-2xl font-bold text-text mb-2">تمت إضافة النقاط!</h2>
-          <p className="text-3xl font-extrabold text-accent mb-2">+{pointsEarned} نقطة</p>
-          <p className="text-muted mb-8">شكراً لشرائك!</p>
+          <h2 className="text-2xl font-bold text-text mb-2">{t('scanner.points_added')}</h2>
+          <p className="text-3xl font-extrabold text-accent mb-2">+{pointsEarned} {t('common.points')}</p>
+          <p className="text-muted mb-8">{t('scanner.thanks_purchase')}</p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/')}
             className="px-10 py-4 bg-accent text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all"
           >
-            رائع! 🎉
+            {t('scanner.awesome')}
           </motion.button>
         </motion.div>
       </div>
@@ -162,15 +164,15 @@ export default function Scanner() {
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-4xl">❌</span>
           </div>
-          <h2 className="text-xl font-bold text-text mb-2">فشل المسح</h2>
-          <p className="text-muted mb-6">{error || 'كود QR غير صالح'}</p>
+          <h2 className="text-xl font-bold text-text mb-2">{t('scanner.scan_failed')}</h2>
+          <p className="text-muted mb-6">{error || t('scanner.invalid_qr')}</p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleRetry}
             className="px-8 py-3 bg-accent text-white font-bold rounded-2xl"
           >
-            حاول مرة أخرى
+            {t('scanner.try_again_btn')}
           </motion.button>
         </motion.div>
       </div>
@@ -180,12 +182,12 @@ export default function Scanner() {
   return (
     <div className="min-h-screen bg-surface p-5">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-text">مسح الإيصال</h1>
+        <h1 className="text-2xl font-bold text-text">{t('scanner.title')}</h1>
         <button
           onClick={() => navigate('/')}
           className="px-4 py-2 bg-white rounded-xl text-muted font-medium"
         >
-          إلغاء
+          {t('scanner.cancel')}
         </button>
       </div>
 
@@ -195,13 +197,13 @@ export default function Scanner() {
         {phase === 'verifying' && (
           <div className="text-center py-8">
             <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-muted font-medium">جاري التحقق من إيصالك...</p>
+            <p className="text-muted font-medium">{t('scanner.verifying')}</p>
           </div>
         )}
 
         {phase === 'scanning' && (
           <p className="text-center text-muted text-sm mt-4">
-            ضع الكود QR داخل الإطار
+            {t('scanner.place_qr_inside')}
           </p>
         )}
       </div>

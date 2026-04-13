@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion as Motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { TrendingUp } from 'lucide-react'
+import { TrendingUp, Languages } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import useUserStore from '../store/userStore'
 import { supabase } from '../lib/supabase'
 import { useProducts } from '../hooks/useProducts'
@@ -29,10 +30,24 @@ const itemVariants = {
 }
 
 export default function Home() {
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { user, store, membership } = useUserStore()
   const { products, isLoading: isProductsLoading } = useProducts()
   const [scanning, setScanning] = useState(false)
+  const [showLangMenu, setShowLangMenu] = useState(false)
+
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng)
+    setShowLangMenu(false)
+    hapticFeedback('light')
+  }
+
+  const languages = [
+    { code: 'en', label: 'EN', flag: '🇺🇸' },
+    { code: 'fr', label: 'FR', flag: '🇫🇷' },
+    { code: 'ar', label: 'AR', flag: '🇩🇿' }
+  ]
 
   const { data: offersWithProducts, isLoading: isOffersLoading } = useQuery({
     queryKey: ['discounted-products-home', store?.id, user?.id, membership?.points],
@@ -186,18 +201,51 @@ export default function Home() {
           className="mb-8"
         >
           <div className="flex justify-between items-center mb-2">
-            <div className="text-right">
-              <p className="text-gray-400 text-sm">صباح الخير</p>
-              <h1 className="text-2xl font-medium text-gray-900">
-                {user?.full_name?.split(' ')[0] || 'أهلاً بك'}
-              </h1>
+            <div className={`flex items-center gap-3 ${i18n.language === 'ar' ? 'flex-row' : 'flex-row-reverse'}`}>
+              <div className="relative">
+                <button
+                  onClick={() => setShowLangMenu(!showLangMenu)}
+                  className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-700 border border-gray-200"
+                >
+                  {languages.find(l => l.code === i18n.language)?.label || 'EN'}
+                </button>
+                
+                {showLangMenu && (
+                  <Motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    className="absolute top-12 left-0 z-50 bg-white border border-gray-100 rounded-2xl shadow-xl p-2 min-w-[120px]"
+                  >
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => changeLanguage(lang.code)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                          i18n.language === lang.code ? 'bg-gray-50 text-accent' : 'text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="text-base">{lang.flag}</span>
+                        <span>{lang.code.toUpperCase()}</span>
+                      </button>
+                    ))}
+                  </Motion.div>
+                )}
+              </div>
+
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
+                {user?.photo_url ? (
+                  <img src={user.photo_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-gray-400">👤</span>
+                )}
+              </div>
             </div>
-            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-              {user?.photo_url ? (
-                <img src={user.photo_url} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-gray-400">👤</span>
-              )}
+
+            <div className={i18n.language === 'ar' ? 'text-right' : 'text-left'}>
+              <p className="text-gray-400 text-sm">{t('home.welcome')}</p>
+              <h1 className="text-2xl font-medium text-gray-900">
+                {user?.full_name?.split(' ')[0] || t('home.greeting')}
+              </h1>
             </div>
           </div>
         </Motion.div>
@@ -215,20 +263,20 @@ export default function Home() {
               className="w-full py-4 bg-gray-900 text-white font-medium rounded-2xl flex items-center justify-center gap-3 transition-all h-full min-h-[60px]"
             >
               <span className="text-lg">📷</span>
-              {scanning ? 'جاري الفتح...' : 'مسح الإيصال وكسب النقاط'}
+              {scanning ? t('common.loading') : t('home.scan_receipt')}
             </Motion.button>
           </section>
         </div>
 
         {/* For You Section */}
         <section className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium text-gray-900">لك</h2>
+          <div className={`flex justify-between items-center mb-4 ${i18n.language === 'ar' ? 'flex-row' : 'flex-row-reverse'}`}>
+            <h2 className="text-lg font-medium text-gray-900">{t('home.for_you')}</h2>
             <button
               onClick={() => handleCardClick('/offers')}
               className="text-gray-500 font-medium text-sm"
             >
-              عرض الكل
+              {t('common.view_all')}
             </button>
           </div>
 
@@ -260,7 +308,7 @@ export default function Home() {
               ))
             ) : (
               <div className="text-center py-8 text-gray-400 w-full col-span-full">
-                <p>لا توجد عروض خاصة اليوم</p>
+                <p>{t('offers.no_offers')}</p>
               </div>
             )}
           </Motion.div>
@@ -272,7 +320,7 @@ export default function Home() {
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
                 <TrendingUp size={20} className="text-accent" />
-                <h2 className="text-lg font-medium text-gray-900">الأكثر رواجاً الآن</h2>
+                <h2 className="text-lg font-medium text-gray-900">{t('home.popular_now')}</h2>
               </div>
             </div>
 
@@ -306,12 +354,12 @@ export default function Home() {
         {/* New Arrivals Section */}
         <section>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium text-gray-900">وصل حديثاً</h2>
+            <h2 className="text-lg font-medium text-gray-900">{t('home.new_arrivals')}</h2>
             <button
               onClick={() => handleCardClick('/products')}
               className="text-gray-500 font-medium text-sm"
             >
-              عرض الكل
+              {t('common.view_all')}
             </button>
           </div>
 
@@ -346,7 +394,7 @@ export default function Home() {
               </Motion.div>
             )) : (
               <div className="text-center py-8 text-gray-400 w-full col-span-full">
-                <p>جاري تحميل المنتجات...</p>
+                <p>{t('common.loading')}</p>
               </div>
             )}
           </Motion.div>

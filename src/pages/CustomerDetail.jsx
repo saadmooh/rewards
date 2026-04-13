@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useDashboardStore } from '../store/dashboardStore'
 import { format, formatDistanceToNow } from 'date-fns'
@@ -9,6 +10,7 @@ import { ar } from 'date-fns/locale'
 import { Shield, Gift, CreditCard, Tag, ChevronDown, Loader2, CheckCircle2 } from 'lucide-react'
 
 export default function CustomerDetail() {
+  const { t } = useTranslation()
   const { memberId } = useParams()
   const { store, membership: userMembership } = useDashboardStore()
   const queryClient = useQueryClient()
@@ -80,7 +82,7 @@ export default function CustomerDetail() {
       store_id:    store.id,
       type:        'adjust',
       points:      pts,
-      description: grantNote || 'نقاط يدوية من التاجر',
+      description: grantNote || t('customer_detail.manual_points_desc'),
     })
 
     await supabase.from('user_store_memberships')
@@ -93,7 +95,7 @@ export default function CustomerDetail() {
   }
 
   if (!membership) return (
-    <div className="p-4 text-center text-muted">جاري التحميل...</div>
+    <div className="p-4 text-center text-muted">{t('common.loading')}</div>
   )
 
   const u = membership.users
@@ -131,7 +133,7 @@ export default function CustomerDetail() {
                 <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
                   <Shield size={16} />
                 </div>
-                <label className="text-[10px] font-black text-muted tracking-widest uppercase">إدارة الصلاحيات</label>
+                <label className="text-[10px] font-black text-muted tracking-widest uppercase">{t('customer_detail.role_management')}</label>
               </div>
               
               <div className="relative mb-3">
@@ -143,7 +145,7 @@ export default function CustomerDetail() {
                     updateRoleMutation.isPending ? 'border-accent opacity-50' : 'border-border focus:border-accent'
                   }`}
                 >
-                  <option value="">زبون عادي (Client)</option>
+                  <option value="">{t('customer_detail.normal_client')}</option>
                   {roles?.filter(r => r.slug !== 'owner').map(r => (
                     <option key={r.id} value={r.id}>{r.name}</option>
                   ))}
@@ -161,7 +163,7 @@ export default function CustomerDetail() {
 
               {membership.roles && (
                 <div className="space-y-1.5">
-                  <p className="text-[9px] font-black text-muted uppercase tracking-tighter mb-1">الصلاحيات الممنوحة:</p>
+                  <p className="text-[9px] font-black text-muted uppercase tracking-tighter mb-1">{t('customer_detail.permissions')}</p>
                   <div className="flex flex-wrap gap-1 justify-end">
                     {Object.entries(membership.roles.permissions || {})
                       .filter(([_, val]) => val === true)
@@ -172,14 +174,14 @@ export default function CustomerDetail() {
                         </span>
                       ))}
                     {Object.values(membership.roles.permissions || {}).filter(v => v === true).length > 3 && (
-                      <span className="text-[8px] font-bold text-muted px-1">+ المزيد</span>
+                      <span className="text-[8px] font-bold text-muted px-1">+ {t('customer_detail.more')}</span>
                     )}
                   </div>
                 </div>
               )}
               
               {updateRoleMutation.isSuccess && (
-                <p className="text-[9px] text-green-600 font-bold mt-2 text-center animate-pulse">✓ تم تحديث الدور بنجاح</p>
+                <p className="text-[9px] text-green-600 font-bold mt-2 text-center animate-pulse">✓ {t('customer_detail.role_updated')}</p>
               )}
             </div>
           )}
@@ -189,14 +191,14 @@ export default function CustomerDetail() {
           <div className="bg-surface rounded-2xl p-4 border border-border">
             <div className="flex items-center gap-2 mb-1">
               <Gift size={16} className="text-accent" />
-              <p className="text-muted text-[10px] font-black uppercase tracking-widest">النقاط</p>
+              <p className="text-muted text-[10px] font-black uppercase tracking-widest">{t('customer_detail.points')}</p>
             </div>
             <p className="text-2xl font-black text-accent">{(membership?.points ?? 0).toLocaleString()}</p>
           </div>
           <div className="bg-surface rounded-2xl p-4 border border-border">
             <div className="flex items-center gap-2 mb-1">
               <CreditCard size={16} className="text-muted" />
-              <p className="text-muted text-[10px] font-black uppercase tracking-widest">الإنفاق</p>
+              <p className="text-muted text-[10px] font-black uppercase tracking-widest">{t('customer_detail.spent')}</p>
             </div>
             <p className="text-2xl font-black text-text">{(membership?.total_spent ?? 0).toLocaleString()}</p>
             <p className="text-[10px] text-muted font-bold">دج</p>
@@ -204,14 +206,14 @@ export default function CustomerDetail() {
           <div className="bg-surface rounded-2xl p-4 border border-border">
             <div className="flex items-center gap-2 mb-1">
               <Tag size={16} className="text-muted" />
-              <p className="text-muted text-[10px] font-black uppercase tracking-widest">الزيارات</p>
+              <p className="text-muted text-[10px] font-black uppercase tracking-widest">{t('customer_detail.visits')}</p>
             </div>
             <p className="text-2xl font-black text-text">{membership.visit_count ?? 0}</p>
           </div>
           <div className="bg-surface rounded-2xl p-4 border border-border">
             <div className="flex items-center gap-2 mb-1">
               <Shield size={16} className="text-muted" />
-              <p className="text-muted text-[10px] font-black uppercase tracking-widest">آخر شراء</p>
+              <p className="text-muted text-[10px] font-black uppercase tracking-widest">{t('customer_detail.last_purchase')}</p>
             </div>
             <p className="text-lg font-black text-text">
               {membership.last_purchase 
@@ -228,20 +230,20 @@ export default function CustomerDetail() {
 
       {/* Grant points */}
       <div className="bg-white rounded-3xl p-6 border border-border shadow-soft">
-        <h3 className="text-lg font-black text-text tracking-tight mb-4 text-right">منح نقاط يدوياً</h3>
+        <h3 className="text-lg font-black text-text tracking-tight mb-4 text-right">{t('customer_detail.grant_points')}</h3>
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 space-y-2">
             <input 
               type="number"
               value={grantPts}
               onChange={e => setGrantPts(e.target.value)}
-              placeholder="عدد النقاط"
+              placeholder={t('customer_detail.points_amount')}
               className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold focus:outline-none focus:border-accent text-right"
             />
             <input 
               value={grantNote}
               onChange={e => setGrantNote(e.target.value)}
-              placeholder="السبب (اختياري)"
+              placeholder={t('customer_detail.reason')}
               className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent text-right"
             />
           </div>
@@ -250,14 +252,14 @@ export default function CustomerDetail() {
             disabled={!grantPts || Number(grantPts) <= 0}
             className="bg-accent text-white px-8 py-3 rounded-2xl font-black text-sm shadow-soft shadow-accent/20 hover:bg-accent-dark transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            منح النقاط
+            t('customer_detail.grant')
           </button>
         </div>
       </div>
 
       {/* Transaction history */}
       <div className="bg-white rounded-3xl p-6 border border-border shadow-soft">
-        <h3 className="text-lg font-black text-text tracking-tight mb-4 text-right">سجل المعاملات</h3>
+        <h3 className="text-lg font-black text-text tracking-tight mb-4 text-right">{t('customer_detail.transaction_history')}</h3>
         <div className="space-y-3">
           {txHistory?.map(tx => (
             <div key={tx.id} className="flex justify-between items-center p-3 rounded-2xl bg-surface border border-border">
@@ -275,7 +277,7 @@ export default function CustomerDetail() {
           {!txHistory?.length && (
             <div className="text-center py-8">
               <CreditCard size={32} className="text-muted opacity-20 mx-auto mb-2" />
-              <p className="text-muted text-sm font-medium">لا توجد معاملات</p>
+              <p className="text-muted text-sm font-medium">{t('customer_detail.no_transactions')}</p>
             </div>
           )}
         </div>
@@ -283,7 +285,7 @@ export default function CustomerDetail() {
 
       {/* Coupons */}
       <div className="bg-white rounded-3xl p-6 border border-border shadow-soft">
-        <h3 className="text-lg font-black text-text tracking-tight mb-4 text-right">الكوبونات المستخدمة</h3>
+        <h3 className="text-lg font-black text-text tracking-tight mb-4 text-right">{t('customer_detail.used_coupons')}</h3>
         <div className="space-y-3">
           {couponHistory?.map(r => (
             <div key={r.id} className="flex justify-between items-center p-3 rounded-2xl bg-surface border border-border">
@@ -293,13 +295,13 @@ export default function CustomerDetail() {
                   {format(new Date(r.created_at), 'dd/MM/yyyy')}
                 </p>
               </div>
-              <p className="text-accent text-sm font-black">{r.points_spent} نقطة</p>
+              <p className="text-accent text-sm font-black">{r.points_spent} {t('common.point')}</p>
             </div>
           ))}
           {!couponHistory?.length && (
             <div className="text-center py-8">
               <Tag size={32} className="text-muted opacity-20 mx-auto mb-2" />
-              <p className="text-muted text-sm font-medium">لا توجد كوبونات</p>
+              <p className="text-muted text-sm font-medium">{t('customer_detail.no_coupons')}</p>
             </div>
           )}
         </div>

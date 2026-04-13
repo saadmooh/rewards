@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import useUserStore from '../store/userStore'
 import { useTransactions } from '../hooks/useTransactions'
 
 export default function History() {
+  const { t } = useTranslation()
   const { user } = useUserStore()
   const { transactions, loading } = useTransactions()
 
@@ -40,7 +42,7 @@ export default function History() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-2xl font-bold text-text text-right">السجل</h1>
+          <h1 className="text-2xl font-bold text-text text-right">{t('history.title')}</h1>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -50,7 +52,7 @@ export default function History() {
             className="bg-white rounded-3xl p-6 text-center shadow-soft border border-border hover:shadow-lg transition-shadow"
           >
             <p className="text-3xl font-black text-accent">{(user?.points || 0).toLocaleString()}</p>
-            <p className="text-xs font-bold text-muted mt-1 uppercase tracking-widest">الرصيد الحالي</p>
+            <p className="text-xs font-bold text-muted mt-1 uppercase tracking-widest">{t('history.current_balance')}</p>
           </motion.div>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -59,7 +61,7 @@ export default function History() {
             className="bg-white rounded-3xl p-6 text-center shadow-soft border border-border hover:shadow-lg transition-shadow"
           >
             <p className="text-3xl font-black text-green-600">+{totalEarned.toLocaleString()}</p>
-            <p className="text-xs font-bold text-muted mt-1 uppercase tracking-widest">إجمالي النقاط</p>
+            <p className="text-xs font-bold text-muted mt-1 uppercase tracking-widest">{t('history.total_earned')}</p>
           </motion.div>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -68,7 +70,7 @@ export default function History() {
             className="bg-white rounded-3xl p-6 text-center shadow-soft border border-border hover:shadow-lg transition-shadow"
           >
             <p className="text-3xl font-black text-text">{purchaseCount}</p>
-            <p className="text-xs font-bold text-muted mt-1 uppercase tracking-widest">عدد العمليات</p>
+            <p className="text-xs font-bold text-muted mt-1 uppercase tracking-widest">{t('history.transaction_count')}</p>
           </motion.div>
         </div>
 
@@ -98,8 +100,8 @@ export default function History() {
                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-soft">
                    <span className="text-3xl">📊</span>
                 </div>
-                <p className="text-muted font-bold">لا توجد معاملات بعد</p>
-                <button onClick={() => window.location.href = '/'} className="mt-4 text-accent font-bold hover:underline">ابدأ التسوق الآن</button>
+                <p className="text-muted font-bold">{t('history.no_transactions')}</p>
+                <button onClick={() => window.location.href = '/'} className="mt-4 text-accent font-bold hover:underline">{t('history.start_shopping')}</button>
               </div>
             )}
           </div>

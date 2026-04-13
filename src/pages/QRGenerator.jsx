@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { QRCodeCanvas } from 'qrcode.react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useDashboardStore } from '../store/dashboardStore'
 import { startOfDay } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Hourglass, CheckCircle2, XCircle, Copy, Save, RefreshCcw, Lock, Crown, Tag } from 'lucide-react' // Added relevant icons
-import DoorQrDisplay from '../components/DoorQrDisplay' // Import the new Door QR component
+import { Hourglass, CheckCircle2, XCircle, Copy, Save, RefreshCcw, Lock, Crown, Tag } from 'lucide-react'
+import DoorQrDisplay from '../components/DoorQrDisplay'
 
 const EXPIRY_SECONDS = 300 // 5 minutes for temporary QR codes
 
 export default function QRGenerator() {
+  const { t } = useTranslation()
   const { store } = useDashboardStore()
   const [amount, setAmount] = useState('')
   const [qrToken, setQrToken] = useState(null)
@@ -184,28 +186,28 @@ export default function QRGenerator() {
       {/* Header with toggle for QR modes */}
       <div className="flex justify-between items-center mb-6">
         <h2 className={`text-xl font-bold tracking-tight ${doorQrMode ? 'text-white' : 'text-[#f0f0f0]'}`}>
-          {doorQrMode ? 'نظام الباب QR' : 'إنشاء شراء QR'}
+          {doorQrMode ? t('qr_generator.door_system') : t('qr_generator.title')}
         </h2>
         <button
           onClick={() => setDoorQrMode(!doorQrMode)}
           className="px-4 py-2 rounded-xl font-bold text-sm transition-all transform active:scale-95"
           style={{ backgroundColor: doorQrMode ? '#D4AF37' : '#2a2a2a', color: doorQrMode ? 'black' : '#f0f0f0' }}
         >
-          {doorQrMode ? 'التبديل إلى شراء QR' : 'التبديل إلى باب QR'}
+          {doorQrMode ? t('qr_generator.switch_to_purchase') : t('qr_generator.switch_to_door')}
         </button>
       </div>
       
       {/* Door QR System View */}
       {doorQrMode && (
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-[#f0f0f0] mb-4 text-center tracking-tight">متجر دائم QR</h3>
+          <h3 className="text-lg font-bold text-[#f0f0f0] mb-4 text-center tracking-tight">{t('qr_generator.door_system')}</h3>
           <div className="bg-[#1e1e1e] rounded-2xl p-6 border border-[#2a2a2a] shadow-xl">
             {store?.slug && <DoorQrDisplay storeSlug={store.slug} />}
           </div>
 
           {/* Waiting Customers List */}
           <div className="mt-8">
-            <h3 className="text-lg font-bold text-[#f0f0f0] mb-4 text-center tracking-tight">العملاء في الانتظار</h3>
+            <h3 className="text-lg font-bold text-[#f0f0f0] mb-4 text-center tracking-tight">{t('qr_generator.waiting_customers')}</h3>
             {waitingCustomers.length > 0 ? (
               <div className="space-y-3">
                 {waitingCustomers.map(claim => (
@@ -260,7 +262,7 @@ export default function QRGenerator() {
       {!doorQrMode && (
         <div className="bg-[#1e1e1e] rounded-2xl p-6 border border-[#2a2a2a] shadow-xl mb-6">
           <div className="amount-wrapper flex flex-col items-center">
-            <label className="text-xs text-[#888888] uppercase tracking-widest mb-2">مبلغ الشراء</label>
+            <label className="text-xs text-[#888888] uppercase tracking-widest mb-2">{t('qr_generator.purchase_amount')}</label>
             <div className="relative w-full">
               <input
                 type="number"
@@ -272,13 +274,13 @@ export default function QRGenerator() {
                 className="text-5xl font-black text-center bg-transparent border-b-2 border-[#2a2a2a] text-[#f0f0f0] pb-4 w-full focus:outline-none focus:border-[#D4AF37] transition-colors disabled:opacity-50 text-right"
                 autoFocus
               />
-              <span className="absolute left-0 bottom-4 text-[#888888] font-bold">دج</span>
+              <span className="absolute left-0 bottom-4 text-[#888888] font-bold">{t('products.dzd')}</span>
             </div>
           </div>
           
           <div className="flex justify-between items-center mt-6">
             <div className="text-sm text-[#888888]">
-              نقاط العميل: <span className="text-[#D4AF37] font-bold">{points}</span>
+              {t('qr_generator.customer_points')}: <span className="text-[#D4AF37] font-bold">{points}</span>
             </div>
             {status === 'idle' ? (
               <button
@@ -286,14 +288,14 @@ export default function QRGenerator() {
                 onClick={generateStandardQR}
                 disabled={!amount || Number(amount) <= 0 || isGenerating}
               >
-                إنشاء QR
+{t('qr_generator.generate')}
               </button>
             ) : (
               <button
                 className="text-[#888888] hover:text-[#f0f0f0] text-sm underline"
                 onClick={resetStandardQR}
               >
-إعادة تعيين
+                {t('qr_generator.reset')}
               </button>
             )}
           </div>
@@ -313,12 +315,12 @@ export default function QRGenerator() {
               {status === 'expired' && (
                 <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-3xl p-6 text-center">
                   <span className="text-5xl mb-4">⌛</span>
-                  <h3 className="text-white text-xl font-bold mb-2">منتهي</h3>
+                  <h3 className="text-white text-xl font-bold mb-2">{t('qr_generator.expired')}</h3>
                   <button 
                     onClick={resetStandardQR}
                     className="bg-[#D4AF37] text-black px-6 py-2 rounded-lg font-bold"
                   >
-                    إنشاء جديد
+                    {t('qr_generator.regenerate')}
                   </button>
                 </div>
               )}

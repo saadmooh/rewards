@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import useUserStore from '../store/userStore'
 import TierBadge from './TierBadge'
 
 export default function PointsCard() {
+  const { t, i18n } = useTranslation()
   const { membership, store, user } = useUserStore()
 
   const points = membership?.points || 0
@@ -45,7 +47,7 @@ export default function PointsCard() {
     >
       <div className="flex justify-between items-start mb-4">
         <div>
-          <p className="text-muted text-sm">نقاطك</p>
+          <p className="text-muted text-sm">{t('home.your_points')}</p>
           <motion.p
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -61,7 +63,7 @@ export default function PointsCard() {
       {nextTier && nextTier.min !== undefined && (
         <div className="mb-4">
           <div className="flex justify-between text-xs text-muted mb-2">
-            <span>التقدم إلى {nextTierKey}</span>
+            <span>{t('home.progress_to')} {nextTierKey}</span>
             <span>{points.toLocaleString()} / {nextTier.min.toLocaleString()}</span>
           </div>
           <div className="h-3 bg-surface rounded-full overflow-hidden">
@@ -74,7 +76,7 @@ export default function PointsCard() {
           </div>
           <p className="text-xs text-muted mt-2 text-center">
             {nextTier.min - points > 0
-              ? `${(nextTier.min - points).toLocaleString()} نقطة حتى ${nextTierKey === 'silver' ? 'الفضي' : nextTierKey === 'gold' ? 'الذهبي' : nextTierKey === 'platinum' ? 'البلاتيني' : nextTierKey}`
+              ? t('home.points_until', { points: (nextTier.min - points).toLocaleString(), tier: t(`common.tiers.${nextTierKey}`) })
               : '🎉 reached!'}
           </p>
         </div>
@@ -85,7 +87,7 @@ export default function PointsCard() {
           <span className="text-accent text-sm">👤</span>
         </div>
         <p className="text-sm text-muted">
-          {user?.full_name || 'عضو'} • <span className="text-accent">عضو منذ {joinedDate}</span>
+          {user?.full_name || t('profile.user')} • <span className="text-accent">{t('home.member_since')} {joinedDate}</span>
         </p>
       </div>
     </motion.div>

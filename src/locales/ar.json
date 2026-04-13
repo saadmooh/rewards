@@ -54,6 +54,8 @@
     "return": "رجوع",
     "show_code": "إظهار الكود",
     "expires_in": "ينتهي في",
+    "expires": "ينتهي",
+    "valid_for": "صالح لـ",
     "required_tier": "الفئة المطلوبة",
     "you_are": "أنت حالياً",
     "upgrade": "ارتقِ للفتح!",
@@ -463,7 +465,8 @@
     "switch_to_purchase": "التبديل إلى شراء",
     "switch_to_door": "التبديل إلى باب",
     "waiting_customers": "العملاء في الانتظار",
-    "no_waiting_customers": "لا يوجد عملاء في الانتظار"
+    "no_waiting_customers": "لا يوجد عملاء في الانتظار",
+    "valid_for": "صالح لـ"
   },
   "offer_detail": {
     "not_found": "العرض غير موجود",

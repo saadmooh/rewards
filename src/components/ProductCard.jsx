@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { formatCurrency } from '../lib/offers'
 import { Package } from 'lucide-react'
 
@@ -11,6 +12,7 @@ export default function ProductCard({
   showOriginalPrice = true,
   onClick,
 }) {
+  const { t } = useTranslation()
   const hasDiscount = original_price && original_price > price && showOriginalPrice;
 
   return (
@@ -41,10 +43,10 @@ export default function ProductCard({
         <div className="absolute top-2 right-2 px-2 py-1 bg-white/90 rounded-lg text-xs font-bold text-gray-900 flex flex-col items-end">
           {hasDiscount && (
             <span className="text-[10px] text-gray-400 line-through leading-none mb-0.5">
-              {formatCurrency(original_price)}
+              {formatCurrency(original_price)} {t('products.dzd')}
             </span>
           )}
-          <span>{formatCurrency(price)}</span>
+          <span>{formatCurrency(price)} {t('products.dzd')}</span>
         </div>
       </div>
 

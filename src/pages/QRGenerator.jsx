@@ -334,7 +334,7 @@ export default function QRGenerator() {
                   {formatTime(timeLeft)}
                 </div>
                 <p className="text-gray-400 text-xs font-bold uppercase tracking-tighter">
-                  Valid for {formatTime(timeLeft)} • {Number(amount).toLocaleString()} دج
+                  {t('qr_generator.valid_for')} {formatTime(timeLeft)} • {Number(amount).toLocaleString()} {t('products.dzd')}
                 </p>
               </div>
             </div>
@@ -361,8 +361,8 @@ export default function QRGenerator() {
                   </div>
                 </div>
                 <div className="text-left">
-                  <p className="text-[#22c55e] text-sm font-black">+{tx.points} نقطة</p>
-                  <p className="text-[#888888] text-[10px]">{(tx.amount ?? 0).toLocaleString()} دج</p>
+                  <p className="text-[#22c55e] text-sm font-black">+{tx.points} {t('common.points')}</p>
+                  <p className="text-[#888888] text-[10px]">{(tx.amount ?? 0).toLocaleString()} {t('products.dzd')}</p>
                 </div>
               </div>
             ))}

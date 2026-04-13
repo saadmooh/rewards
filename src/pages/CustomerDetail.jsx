@@ -201,7 +201,7 @@ export default function CustomerDetail() {
               <p className="text-muted text-[10px] font-black uppercase tracking-widest">{t('customer_detail.spent')}</p>
             </div>
             <p className="text-2xl font-black text-text">{(membership?.total_spent ?? 0).toLocaleString()}</p>
-            <p className="text-[10px] text-muted font-bold">دج</p>
+            <p className="text-[10px] text-muted font-bold">{t('products.dzd')}</p>
           </div>
           <div className="bg-surface rounded-2xl p-4 border border-border">
             <div className="flex items-center gap-2 mb-1">

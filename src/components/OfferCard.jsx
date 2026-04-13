@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 const categoryColors = {
   discount: '#10b981',
@@ -16,6 +17,7 @@ export default function OfferCard({
   category,
   onClick,
 }) {
+  const { t } = useTranslation()
   const formatDate = (dateString) => {
     if (!dateString) return null
     const date = new Date(dateString)
@@ -56,7 +58,7 @@ export default function OfferCard({
           <h3 className="text-text font-bold text-base line-clamp-1">{title}</h3>
           {points > 0 && (
             <span className="px-2 py-1 bg-accent-light text-accent-dark rounded-full text-xs font-bold whitespace-nowrap">
-              {points} نقطة
+              {points} {t('common.points')}
             </span>
           )}
         </div>
@@ -66,7 +68,7 @@ export default function OfferCard({
         {expiresAt && (
           <div className="flex items-center gap-2 text-xs text-muted">
             <span>⏰</span>
-            <span>ينتهي {formatDate(expiresAt)}</span>
+            <span>{t('offers.expires')} {formatDate(expiresAt)}</span>
           </div>
         )}
       </div>

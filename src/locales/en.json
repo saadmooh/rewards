@@ -459,13 +459,10 @@
     "purchase_amount": "Purchase Amount",
     "customer_points": "Customer Points",
     "reset": "Reset",
-    "expired": "Expired",
-    "regenerate": "Generate New",
-    "door_system": "Door QR System",
-    "switch_to_purchase": "Switch to Purchase",
-    "switch_to_door": "Switch to Door",
-    "waiting_customers": "Waiting Customers",
-    "no_waiting_customers": "No customers waiting"
+"expired": "Expired",
+    "expires_in": "Expires in:",
+    "expires": "Expires",
+    "valid_for": "Valid for"
   },
   "offer_detail": {
     "not_found": "Offer not found",

@@ -41,11 +41,12 @@ export const calculateProductPrice = (product, offer = null) => {
 };
 
 /**
- * Formats a currency value to Arabic AED (D.E)
+ * Formats a currency value - returns number only (without currency symbol)
+ * Components should add currency symbol using t('products.dzd')
  * @param {number} amount 
  * @returns {string}
  */
 export const formatCurrency = (amount) => {
-  if (amount === undefined || amount === null) return '0 دج';
-  return `${amount.toLocaleString()} دج`;
+  if (amount === undefined || amount === null) return '0';
+  return amount.toLocaleString();
 };

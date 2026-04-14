@@ -102,6 +102,8 @@
     "points_system": "Système de points",
     "points_per_10": "Points pour 10 DZD",
     "welcome_points": "Points de bienvenue",
+    "referral_points": "Points de récompense de parrainage",
+    "referral_desc": "Points attribués à la fois au parrain et au nouvel ami lorsqu'ils rejoignent via un lien d'invitation.",
     "tier_thresholds": "Seuils des catégories (points)",
     "expiry_system": "Système d'expiration",
     "expiry_enabled": "Activer l'expiration des points",

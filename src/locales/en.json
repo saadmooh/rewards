@@ -107,6 +107,8 @@
     "points_system": "Points System",
     "points_per_10": "Points per 10 DZD",
     "welcome_points": "Welcome Points",
+    "referral_points": "Referral Reward Points",
+    "referral_desc": "Points awarded to both the referrer and the new friend when they join via an invite link.",
     "tier_thresholds": "Tier Thresholds (points)",
     "expiry_system": "Expiry System",
     "expiry_enabled": "Enable Points Expiry",

@@ -31,6 +31,7 @@ export default function Settings() {
     points_expiry_enabled: store?.points_expiry_enabled ?? false,
     points_expiry_months:  store?.points_expiry_months ?? 12,
     is_cod_enabled:       store?.is_cod_enabled ?? true,
+    referral_reward_points: store?.referral_reward_points ?? 200,
   })
   const [saved, setSaved] = useState(false)
   const [testingBot, setTestingBot] = useState(false)
@@ -244,6 +245,21 @@ export default function Settings() {
                 />
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted">{t('common.points')}</span>
               </div>
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <label className="text-[10px] font-black text-muted uppercase tracking-widest px-1">{t('settings.referral_points')}</label>
+              <div className="relative">
+                <input 
+                  type="number"
+                  value={form.referral_reward_points}
+                  onChange={e => setForm(f => ({...f, referral_reward_points: Number(e.target.value)}))}
+                  className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-black focus:outline-none focus:border-accent text-right"
+                />
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted">{t('common.points')}</span>
+              </div>
+              <p className="text-muted text-[10px] font-bold px-1 mt-1">
+                {t('settings.referral_desc')}
+              </p>
             </div>
           </div>
         </section>

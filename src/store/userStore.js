@@ -198,6 +198,62 @@ const useUserStore = create((set, get) => ({
         membership = created
         console.log('[initUser] Membership successfully created:', membership.id)
 
+        // Referral logic: reward referrer if startParam exists
+        if (startParam && startParam.startsWith('ref_')) {
+          const referrerCode = startParam.replace('ref_', '')
+          console.log('[initUser] Referral detected. Referrer code:', referrerCode)
+
+          const { data: referrerMembership, error: refErr } = await supabase
+            .from('user_store_memberships')
+            .select('user_id, points, id')
+            .eq('referral_code', referrerCode)
+            .eq('store_id', store.id)
+            .single()
+
+          if (!refErr && referrerMembership && referrerMembership.user_id !== user.id) {
+            const rewardPoints = store.referral_reward_points || 200
+            console.log(`[initUser] Rewarding referrer ${referrerMembership.user_id} with ${rewardPoints} points`)
+
+            // 1. Reward Referrer
+            await supabase
+              .from('user_store_memberships')
+              .update({ points: referrerMembership.points + rewardPoints })
+              .eq('id', referrerMembership.id)
+
+            await supabase.from('transactions').insert({
+              user_id: referrerMembership.user_id,
+              store_id: store.id,
+              membership_id: referrerMembership.id,
+              type: 'earn',
+              points: rewardPoints,
+              note: 'مكافأة دعوة صديق',
+            })
+
+            // 2. Reward Referee (extra points on top of welcome)
+            const refereePoints = membership.points + rewardPoints
+            await supabase
+              .from('user_store_memberships')
+              .update({ 
+                points: refereePoints,
+                referred_by_id: referrerMembership.user_id 
+              })
+              .eq('id', membership.id)
+
+            await supabase.from('transactions').insert({
+              user_id: user.id,
+              store_id: store.id,
+              membership_id: membership.id,
+              type: 'earn',
+              points: rewardPoints,
+              note: 'مكافأة التسجيل عبر دعوة',
+            })
+
+            // Update local state for membership
+            membership.points = refereePoints
+            membership.referred_by_id = referrerMembership.user_id
+          }
+        }
+
         // Seed store data IF this is the first user
         if (isFirstUser) {
           console.log('[initUser] First user join, seeding default store data...')

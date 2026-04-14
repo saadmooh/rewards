@@ -1,13 +1,29 @@
 import { useParams, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useProduct } from '../hooks/useProducts'
+import { useDeliveries } from '../hooks/useDeliveries'
+import DeliveryModal from '../components/DeliveryModal'
 
 export default function ProductDetail() {
   const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const { product, loading } = useProduct(id)
+  const { createDelivery, loading: deliveryLoading } = useDeliveries()
+  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false)
+
+  const handleDeliverySubmit = async (deliveryData) => {
+    const { data, error } = await createDelivery(deliveryData)
+    if (!error) {
+      setIsDeliveryModalOpen(false)
+      // Could show a success toast or redirect
+      alert(t('delivery.success_message'))
+    } else {
+      alert(error)
+    }
+  }
 
   if (loading) {
     return (
@@ -98,6 +114,13 @@ export default function ProductDetail() {
                   🏪 {t('product_detail.available_in_store')}
                 </button>
 
+                <button
+                  onClick={() => setIsDeliveryModalOpen(true)}
+                  className="w-full py-5 bg-accent text-white rounded-2xl font-black text-lg shadow-xl shadow-accent/20 transition-all hover:bg-accent-dark active:scale-[0.98]"
+                >
+                  🚚 {t('product_detail.request_delivery')}
+                </button>
+
                 <div className="flex items-center justify-center gap-2 text-muted">
                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                    <p className="text-xs font-bold uppercase tracking-widest">{t('product_detail.ensure_availability')}</p>
@@ -108,7 +131,7 @@ export default function ProductDetail() {
             <div className="bg-accent/5 rounded-3xl p-6 border border-accent/10">
                <div className="flex items-center justify-end gap-3">
                   <div className="text-right">
-<p className="text-accent-dark font-black text-sm">{t('product_detail.earn_points')}</p>
+                      <p className="text-accent-dark font-black text-sm">{t('product_detail.earn_points')}</p>
                       <p className="text-accent-dark/60 text-xs font-medium">{t('product_detail.points_detail')}</p>
                   </div>
                   <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center text-white shadow-soft">
@@ -119,6 +142,15 @@ export default function ProductDetail() {
           </motion.div>
         </div>
       </div>
+
+      <DeliveryModal
+        isOpen={isDeliveryModalOpen}
+        onClose={() => setIsDeliveryModalOpen(false)}
+        onSubmit={handleDeliverySubmit}
+        product={product}
+        loading={deliveryLoading}
+      />
     </div>
   )
 }
+

@@ -487,6 +487,36 @@
     "activate_free": "تفعيل العرض مجاناً",
     "confirm": "تأكيد",
     "confirm_claim": "هل أنت متأكد من الحصول على هذا العرض؟",
-    "points_will_be_deducted": "سيتم خصم {points} نقطة من رصيدك"
+    "points_will_be_deducted": "سيتم خصم {points} نقطة من رصيدك",
+    "cancel": "إلغاء"
+  },
+  "delivery": {
+    "request_delivery": "طلب توصيل",
+    "select_wilaya": "اختر الولاية",
+    "choose_wilaya": "اختر ولاية",
+    "select_municipality": "اختر البلدية",
+    "choose_municipality": "اختر بلدية",
+    "detailed_address": "العنوان بالتفصيل",
+    "address_placeholder": "اسم الشارع، رقم العمارة، الشقة...",
+    "home": "المنزل",
+    "office": "المكتب",
+    "payment_method": "طريقة الدفع",
+    "cod_description": "الدفع عند الاستلام (خلص كي يوصلك الباكي)",
+    "confirm_order": "تأكيد الطلب",
+    "processing": "جاري المعالجة...",
+    "success_message": "تم إرسال طلب التوصيل بنجاح! سنتصل بك قريباً.",
+    "error_message": "فشل إرسال طلب التوصيل. يرجى المحاولة مرة أخرى."
+  },
+  "product_detail": {
+    "not_found": "المنتج غير موجود",
+    "return": "رجوع",
+    "exclusive": "حصري",
+    "current_price": "السعر الحالي",
+    "available_in_store": "متوفر في المتجر",
+    "request_delivery": "طلب توصيل (COD)",
+    "ensure_availability": "التأكد من توفر المنتج",
+    "earn_points": "اكسب نقاط",
+    "points_detail": "احصل على نقاط مع كل عملية شراء",
+    "no_description": "لا يوجد وصف متاح"
   }
 }

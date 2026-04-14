@@ -464,6 +464,36 @@
     "activate_free": "Activer gratuitement",
     "confirm": "Confirmer",
     "confirm_claim": "Êtes-vous sûr de vouloir obtenir cette offre ?",
-    "points_will_be_deducted": "{points} points seront déduits de votre solde"
+    "points_will_be_deducted": "{points} points seront déduits de votre solde",
+    "cancel": "Annuler"
+  },
+  "delivery": {
+    "request_delivery": "Demander une livraison",
+    "select_wilaya": "Sélectionner la Wilaya (Province)",
+    "choose_wilaya": "Choisir une wilaya",
+    "select_municipality": "Sélectionner la Commune (Ville)",
+    "choose_municipality": "Choisir une commune",
+    "detailed_address": "Adresse détaillée",
+    "address_placeholder": "Nom de rue, numéro de bâtiment, appartement...",
+    "home": "Domicile",
+    "office": "Bureau",
+    "payment_method": "Méthode de paiement",
+    "cod_description": "Paiement à la livraison (Payez à la réception du colis)",
+    "confirm_order": "Confirmer la commande",
+    "processing": "Traitement...",
+    "success_message": "Demande de livraison envoyée avec succès ! Nous vous contacterons bientôt.",
+    "error_message": "Échec de l'envoi de la demande. Veuillez réessayer."
+  },
+  "product_detail": {
+    "not_found": "Produit introuvable",
+    "return": "Retour",
+    "exclusive": "Exclusif",
+    "current_price": "Prix Actuel",
+    "available_in_store": "Disponible en magasin",
+    "request_delivery": "Commander en ligne (COD)",
+    "ensure_availability": "Vérifier la disponibilité",
+    "earn_points": "Gagner des points",
+    "points_detail": "Gagnez des points sur chaque achat",
+    "no_description": "Aucune description disponible"
   }
 }

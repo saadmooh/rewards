@@ -485,5 +485,34 @@
     "confirm_claim": "Are you sure you want to claim this offer?",
     "points_will_be_deducted": "{points} points will be deducted from your balance",
     "cancel": "Cancel"
+  },
+  "delivery": {
+    "request_delivery": "Request Delivery",
+    "select_wilaya": "Select Wilaya (Province)",
+    "choose_wilaya": "Choose a wilaya",
+    "select_municipality": "Select Municipality (Town)",
+    "choose_municipality": "Choose a municipality",
+    "detailed_address": "Detailed Address",
+    "address_placeholder": "Street name, building number, apartment...",
+    "home": "Home",
+    "office": "Office",
+    "payment_method": "Payment Method",
+    "cod_description": "Cash on Delivery (Pay when you receive your package)",
+    "confirm_order": "Confirm Order",
+    "processing": "Processing...",
+    "success_message": "Delivery request sent successfully! We will contact you soon.",
+    "error_message": "Failed to send delivery request. Please try again."
+  },
+  "product_detail": {
+    "not_found": "Product not found",
+    "return": "Return",
+    "exclusive": "Exclusive",
+    "current_price": "Current Price",
+    "available_in_store": "Available in Store",
+    "request_delivery": "Order Online (COD)",
+    "ensure_availability": "Ensure product availability",
+    "earn_points": "Earn Points",
+    "points_detail": "Get points on every purchase",
+    "no_description": "No description available"
   }
 }

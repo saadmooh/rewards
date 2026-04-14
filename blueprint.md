@@ -10,7 +10,7 @@ A comprehensive loyalty and rewards platform built with React, Vite, and Supabas
 - **Product Catalog:** Manage store products with exclusive access for specific tiers.
 - **QR System:** Scan-to-claim points and offer activation.
 - **Internationalization:** Full support for English, Arabic, and French.
-- **Delivery System (New):** Cash on Delivery (COD) request feature for products.
+- **Delivery System (New):** Cash on Delivery (COD) request feature for products. Store owners can enable/disable this feature via dashboard settings.
 
 ## Technical Stack
 - **Frontend:** React (Vite), Tailwind CSS, Framer Motion, i18next.
@@ -21,6 +21,7 @@ A comprehensive loyalty and rewards platform built with React, Vite, and Supabas
 ## Recent Changes: Delivery Feature Implementation
 ### Database Schema
 - Created `public.deliveries` table to track order requests.
+- Added `is_cod_enabled` column to `public.stores` table.
 - Added Row Level Security (RLS) policies for users and store owners.
 - Indexed `user_id`, `store_id`, and `status` for performance.
 
@@ -30,7 +31,8 @@ A comprehensive loyalty and rewards platform built with React, Vite, and Supabas
 
 ### UI Components
 - **`src/components/DeliveryModal.jsx`**: Interactive modal for delivery details (wilaya, municipality, address, home/office selection).
-- **`src/pages/ProductDetail.jsx`**: Added "Order Online (COD)" button and integration with `DeliveryModal`.
+- **`src/pages/Settings.jsx`**: Added COD toggle switch to manage feature availability.
+- **`src/pages/ProductDetail.jsx`**: Added "Order Online (COD)" button, conditionally rendered based on store settings.
 
 ### Localization
 - Added `delivery` and `product_detail` translation keys in `en.json`, `ar.json`, and `fr.json`.

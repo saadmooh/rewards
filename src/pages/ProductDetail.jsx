@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useProduct } from '../hooks/useProducts'
 import { useDeliveries } from '../hooks/useDeliveries'
+import useUserStore from '../store/userStore'
 import DeliveryModal from '../components/DeliveryModal'
 
 export default function ProductDetail() {
@@ -11,6 +12,7 @@ export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { product, loading } = useProduct(id)
+  const { store } = useUserStore()
   const { createDelivery, loading: deliveryLoading } = useDeliveries()
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false)
 
@@ -114,12 +116,14 @@ export default function ProductDetail() {
                   🏪 {t('product_detail.available_in_store')}
                 </button>
 
-                <button
-                  onClick={() => setIsDeliveryModalOpen(true)}
-                  className="w-full py-5 bg-accent text-white rounded-2xl font-black text-lg shadow-xl shadow-accent/20 transition-all hover:bg-accent-dark active:scale-[0.98]"
-                >
-                  🚚 {t('product_detail.request_delivery')}
-                </button>
+                {store?.is_cod_enabled !== false && (
+                  <button
+                    onClick={() => setIsDeliveryModalOpen(true)}
+                    className="w-full py-5 bg-accent text-white rounded-2xl font-black text-lg shadow-xl shadow-accent/20 transition-all hover:bg-accent-dark active:scale-[0.98]"
+                  >
+                    🚚 {t('product_detail.request_delivery')}
+                  </button>
+                )}
 
                 <div className="flex items-center justify-center gap-2 text-muted">
                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />

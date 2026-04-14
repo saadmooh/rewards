@@ -140,7 +140,10 @@
     "kids": "Kids clothing",
     "general": "General",
     "saved_success": "Settings saved successfully",
-    "save_settings": "Save store settings"
+    "save_settings": "Save store settings",
+    "delivery_system": "Delivery System",
+    "cod_enabled": "Enable Cash on Delivery (COD)",
+    "cod_desc": "If enabled, customers can request delivery and pay upon receipt directly from the product page."
   },
   "profile": {
     "title": "Profile",

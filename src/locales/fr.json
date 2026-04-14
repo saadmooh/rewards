@@ -128,7 +128,10 @@
     "kids": "Vêtements enfants",
     "general": "Général",
     "saved_success": "Paramètres enregistrés avec succès",
-    "save_settings": "Enregistrer les paramètres"
+    "save_settings": "Enregistrer les paramètres",
+    "delivery_system": "Système de livraison",
+    "cod_enabled": "Activer le Paiement à la Livraison (COD)",
+    "cod_desc": "Si activé, les clients peuvent demander une livraison et payer à la réception directement depuis la page du produit."
   },
   "profile": {
     "title": "Profil",

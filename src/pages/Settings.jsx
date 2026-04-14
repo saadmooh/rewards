@@ -30,6 +30,7 @@ export default function Settings() {
     bot_username:         store?.bot_username ?? '',
     points_expiry_enabled: store?.points_expiry_enabled ?? false,
     points_expiry_months:  store?.points_expiry_months ?? 12,
+    is_cod_enabled:       store?.is_cod_enabled ?? true,
   })
   const [saved, setSaved] = useState(false)
   const [testingBot, setTestingBot] = useState(false)
@@ -320,6 +321,36 @@ export default function Settings() {
                 </div>
               </div>
             )}
+          </div>
+        </section>
+
+        {/* Delivery / COD System */}
+        <section className="bg-white rounded-[24px] md:rounded-[32px] p-5 md:p-6 border border-border shadow-soft">
+          <div className="flex items-center justify-end gap-3 mb-6">
+            <h3 className="text-lg font-black text-text tracking-tight">{t('settings.delivery_system')}</h3>
+            <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center text-accent">
+              <Send size={20} />
+            </div>
+          </div>
+          
+          <div className="space-y-4 text-right">
+            <div className="flex items-center justify-between p-4 bg-surface rounded-2xl border border-border">
+              <div className="flex items-center gap-3">
+                <input 
+                  type="checkbox"
+                  id="is_cod_enabled"
+                  checked={form.is_cod_enabled}
+                  onChange={e => setForm(f => ({...f, is_cod_enabled: e.target.checked}))}
+                  className="w-5 h-5 rounded text-accent focus:ring-accent"
+                />
+              </div>
+              <label htmlFor="is_cod_enabled" className="text-sm font-black text-text cursor-pointer">
+                {t('settings.cod_enabled')}
+              </label>
+            </div>
+            <p className="text-muted text-[10px] font-bold px-1">
+              {t('settings.cod_desc')}
+            </p>
           </div>
         </section>
 

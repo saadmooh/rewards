@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, QrCode, Package,
-  Tag, Users, Bell, Settings, ArrowLeft, Home, ShieldCheck
+  Tag, Users, Bell, Settings, ArrowLeft, Home, ShieldCheck, Truck
 } from 'lucide-react'
 
 export default function Layout() {
@@ -17,6 +17,7 @@ export default function Layout() {
   const NAV = [
     { to: '/dashboard/overview',       label: t('dashboard.home'),  icon: LayoutDashboard },
     { to: '/dashboard/qr',             label: t('dashboard.qr'),    icon: QrCode },
+    { to: '/dashboard/deliveries',     label: t('dashboard.deliveries'), icon: Truck },
     { to: '/dashboard/products',       label: t('dashboard.products'),  icon: Package },
     { to: '/dashboard/offers',        label: t('dashboard.offers'),     icon: Tag },
     { to: '/dashboard/customers',      label: t('dashboard.customers'),   icon: Users },

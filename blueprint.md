@@ -33,6 +33,7 @@ A comprehensive loyalty and rewards platform built with React, Vite, and Supabas
 - **`src/components/DeliveryModal.jsx`**: Interactive modal for delivery details (wilaya, municipality, address, home/office selection).
 - **`src/pages/Settings.jsx`**: Added COD toggle switch to manage feature availability.
 - **`src/pages/ProductDetail.jsx`**: Added "Order Online (COD)" button, conditionally rendered based on store settings.
+- **`src/pages/Deliveries.jsx`**: Merchant dashboard page to manage and track delivery orders with status-based filtering and updates.
 
 ### Localization
 - Added `delivery` and `product_detail` translation keys in `en.json`, `ar.json`, and `fr.json`.

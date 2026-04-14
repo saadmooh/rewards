@@ -295,6 +295,7 @@
   "dashboard": {
     "home": "Home",
     "qr": "QR",
+    "deliveries": "Orders",
     "products": "Products",
     "offers": "Offers",
     "customers": "Customers",
@@ -302,6 +303,26 @@
     "notifications": "Notifications",
     "settings": "Settings",
     "return_to_app": "Return to App"
+  },
+  "deliveries": {
+    "title": "Delivery Orders",
+    "subtitle": "Manage and track product delivery requests",
+    "empty_state": "No orders found",
+    "empty_desc": "When customers request delivery, they will appear here.",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "actions": {
+      "confirm": "Confirm Order",
+      "ship": "Mark as Shipped",
+      "complete": "Mark as Delivered",
+      "cancel": "Cancel Order"
+    },
+    "final_state": "Order Completed"
   },
   "overview": {
     "title": "Dashboard",

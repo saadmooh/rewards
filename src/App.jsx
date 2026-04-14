@@ -29,6 +29,7 @@ import Notifications from './pages/Notifications'
 import Settings from './pages/Settings'
 import RolesManagement from './pages/RolesManagement'
 import TeamManagement from './pages/TeamManagement'
+import Deliveries from './pages/Deliveries'
 import ClaimPoints from './pages/ClaimPoints'
 import ClaimSuccess from './pages/ClaimSuccess'
 
@@ -118,6 +119,7 @@ function AppContent() {
                 <Route index element={<Overview />} />
                 <Route path="overview" element={<Overview />} />
                 <Route path="qr" element={<QRGenerator />} />
+                <Route path="deliveries" element={<Deliveries />} />
                 <Route path="products" element={<Products />} />
                 <Route path="offers" element={<Offers />} />
                 <Route path="customers" element={<CustomersPage />} />

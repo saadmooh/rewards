@@ -62,5 +62,52 @@ export const useDeliveries = () => {
     }
   };
 
-  return { createDelivery, getUserDeliveries, loading, error };
+  const getStoreDeliveries = async (storeId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase
+        .from('deliveries')
+        .select(`
+          *,
+          product:products(name, image_url, price),
+          user:users(full_name, phone, username)
+        `)
+        .eq('store_id', storeId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (err) {
+      console.error('Error fetching store deliveries:', err);
+      setError(err.message);
+      return { data: null, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateDeliveryStatus = async (deliveryId, status) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase
+        .from('deliveries')
+        .update({ status, updated_at: new Date() })
+        .eq('id', deliveryId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (err) {
+      console.error('Error updating delivery status:', err);
+      setError(err.message);
+      return { data: null, error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { createDelivery, getUserDeliveries, getStoreDeliveries, updateDeliveryStatus, loading, error };
 };

@@ -295,6 +295,7 @@
   "dashboard": {
     "home": "الرئيسية",
     "qr": "توليد QR",
+    "deliveries": "الطلبات",
     "products": "المنتجات",
     "offers": "العروض",
     "customers": "الزبائن",
@@ -302,6 +303,26 @@
     "notifications": "إشعارات",
     "settings": "الإعدادات",
     "return_to_app": "العودة للتطبيق"
+  },
+  "deliveries": {
+    "title": "طلبات التوصيل",
+    "subtitle": "إدارة وتتبع طلبات التوصيل للزبائن",
+    "empty_state": "لا توجد طلبات بعد",
+    "empty_desc": "عندما يطلب الزبائن التوصيل، ستظهر الطلبات هنا.",
+    "status": {
+      "pending": "قيد الانتظار",
+      "confirmed": "تم التأكيد",
+      "shipped": "تم الشحن",
+      "delivered": "تم التسليم",
+      "cancelled": "ملغى"
+    },
+    "actions": {
+      "confirm": "تأكيد الطلب",
+      "ship": "تحديد كمشحون",
+      "complete": "تحديد كمسلم",
+      "cancel": "إلغاء الطلب"
+    },
+    "final_state": "انتهى الطلب"
   },
   "overview": {
     "title": "لوحة التحكم",

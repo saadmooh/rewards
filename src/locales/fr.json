@@ -283,6 +283,7 @@
   "dashboard": {
     "home": "Accueil",
     "qr": "QR",
+    "deliveries": "Commandes",
     "products": "Produits",
     "offers": "Offres",
     "customers": "Clients",
@@ -290,6 +291,26 @@
     "notifications": "Notifications",
     "settings": "Paramètres",
     "return_to_app": "Retour à l'app"
+  },
+  "deliveries": {
+    "title": "Commandes de Livraison",
+    "subtitle": "Gérer et suivre les demandes de livraison des produits",
+    "empty_state": "Aucune commande trouvée",
+    "empty_desc": "Lorsque les clients demandent une livraison, ils apparaîtront ici.",
+    "status": {
+      "pending": "En attente",
+      "confirmed": "Confirmée",
+      "shipped": "Expédiée",
+      "delivered": "Livrée",
+      "cancelled": "Annulée"
+    },
+    "actions": {
+      "confirm": "Confirmer la Commande",
+      "ship": "Marquer comme Expédiée",
+      "complete": "Marquer comme Livrée",
+      "cancel": "Annuler la Commande"
+    },
+    "final_state": "Commande Terminée"
   },
   "overview": {
     "title": "Tableau de bord",

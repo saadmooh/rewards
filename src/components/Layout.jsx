@@ -123,7 +123,7 @@ export default function Layout() {
       {/* Bottom Tab Bar — mobile only */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-border z-50">
         <div className="flex justify-around items-center max-w-md mx-auto px-2 py-3">
-          {NAV.filter(item => item.to !== '/dashboard/team').map(item => {
+          {NAV.filter(item => !['/dashboard/team', '/dashboard/automated-campaigns'].includes(item.to)).map(item => {
             const isActive = location.pathname === item.to || (item.to === '/dashboard/overview' && location.pathname === '/dashboard')
             const showBadge = item.to === '/dashboard/notifications'
             return (

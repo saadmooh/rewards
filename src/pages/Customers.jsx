@@ -21,20 +21,24 @@ export default function Customers() {
   const { data, isLoading } = useQuery({
     queryKey: ['customers', store?.id, search, tierFilter, page],
     queryFn: async () => {
+      console.log('[Customers] Fetching for store:', store?.id)
       let q = supabase
         .from('user_store_memberships')
         .select(`
           id, points, tier, total_spent, visit_count, last_purchase, joined_at,
-          users (id, full_name, username, photo_url, telegram_id, birth_date)
+          users!user_store_memberships_user_id_fkey (id, full_name, username, photo_url, telegram_id, birth_date)
         `, { count: 'exact' })
         .eq('store_id', store.id)
         .order('points', { ascending: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
 
-      if (tierFilter !== 'all') q = q.eq('tier', tierFilter)
-      if (search) q = q.ilike('users.full_name', `%${search}%`)
-
-      return q
+      const result = await q
+      console.log('[Customers] Result:', result.data?.length, 'count:', result.count, 'error:', result.error)
+      if (result.error) {
+        console.error('[Customers] Error:', result.error)
+        throw result.error
+      }
+      return result
     },
     enabled: !!store?.id
   })

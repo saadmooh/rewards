@@ -30,6 +30,21 @@ CREATE TABLE IF NOT EXISTS offer_products (
   UNIQUE(offer_id, product_id)
 );
 
+CREATE TABLE IF NOT EXISTS deliveries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    wilaya TEXT NOT NULL,
+    municipality TEXT NOT NULL,
+    address TEXT NOT NULL,
+    delivery_type TEXT NOT NULL CHECK (delivery_type IN ('home', 'office')),
+    payment_method TEXT NOT NULL DEFAULT 'cod',
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'shipped', 'delivered', 'cancelled')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Alterations to existing tables
 -- From 002_add_coupon_details_to_redemptions.sql and redemptions_coupon.sql
 ALTER TABLE redemptions
@@ -37,8 +52,17 @@ ADD COLUMN IF NOT EXISTS coupon_code VARCHAR(10), -- Original was VARCHAR(4), us
 ADD COLUMN IF NOT EXISTS coupon_code_expires_at TIMESTAMP WITH TIME ZONE,
 ADD COLUMN IF NOT EXISTS products JSONB;
 
+-- From 006_add_cod_toggle_to_stores.sql and 007_add_referral_tracking.sql
+ALTER TABLE stores
+ADD COLUMN IF NOT EXISTS is_cod_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+ADD COLUMN IF NOT EXISTS referral_reward_points INTEGER NOT NULL DEFAULT 200;
+
+ALTER TABLE user_store_memberships
+ADD COLUMN IF NOT EXISTS referred_by_id UUID REFERENCES users(id) ON DELETE SET NULL;
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_redemptions_coupon_code ON redemptions (coupon_code);
+CREATE INDEX IF NOT EXISTS idx_memberships_referred_by ON user_store_memberships (referred_by_id);
 
 -- Indexes for pending_point_claims
 -- From 003_create_pending_claims.sql and pending_point_claims.sql
@@ -51,11 +75,23 @@ CREATE INDEX IF NOT EXISTS idx_pending_point_claims_user_store ON pending_point_
 CREATE INDEX IF NOT EXISTS idx_pending_point_claims_expires_at ON pending_point_claims (expires_at); -- From 003_create_pending_claims.sql
 CREATE INDEX IF NOT EXISTS idx_pending_claims_created_at ON pending_point_claims(created_at DESC); -- From pending_point_claims.sql
 
+-- Indexes for deliveries
+CREATE INDEX IF NOT EXISTS idx_deliveries_user_id ON deliveries(user_id);
+CREATE INDEX IF NOT EXISTS idx_deliveries_store_id ON deliveries(store_id);
+CREATE INDEX IF NOT EXISTS idx_deliveries_status ON deliveries(status);
+
 -- Row Level Security (RLS) Enforcement
 ALTER TABLE pending_point_claims ENABLE ROW LEVEL SECURITY;
 ALTER TABLE offer_products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE deliveries ENABLE ROW LEVEL SECURITY;
 
 -- Row Level Security (RLS) Policies
+
+-- Policies for deliveries (Open policies like setup.sql)
+CREATE POLICY "deliveries_select" ON deliveries FOR SELECT USING (TRUE);
+CREATE POLICY "deliveries_insert" ON deliveries FOR INSERT WITH CHECK (TRUE);
+CREATE POLICY "deliveries_update" ON deliveries FOR UPDATE USING (TRUE);
+CREATE POLICY "deliveries_delete" ON deliveries FOR DELETE USING (TRUE);
 
 -- Policies for pending_point_claims
 -- Note: Combining policies from 003 and pending_point_claims.sql. Prioritizing the more specific/comprehensive one for insert.

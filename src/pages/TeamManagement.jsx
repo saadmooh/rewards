@@ -16,22 +16,27 @@ export default function TeamManagement() {
   const { data: members, isLoading: isMembersLoading } = useQuery({
     queryKey: ['team-members', store?.id, search, roleFilter],
     queryFn: async () => {
+      console.log('[Team] Fetching for store:', store?.id)
       let q = supabase
         .from('user_store_memberships')
         .select(`
           id,
           role_id,
           joined_at,
-          users (id, full_name, username, photo_url, telegram_id),
+          users!user_store_memberships_user_id_fkey (id, full_name, username, photo_url, telegram_id),
           roles (*)
         `)
         .eq('store_id', store.id)
         .order('joined_at', { ascending: false })
 
-      const { data, error } = await q
-      if (error) throw error
+      const result = await q
+      console.log('[Team] Result:', result.data?.length, 'error:', result.error)
+      if (result.error) {
+        console.error('[Team] Error:', result.error)
+        throw result.error
+      }
 
-      let filtered = data
+      let filtered = result.data
       if (search) {
         filtered = filtered.filter(m => 
           m.users?.full_name?.toLowerCase().includes(search.toLowerCase()) ||

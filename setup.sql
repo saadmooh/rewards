@@ -33,8 +33,8 @@ ALTER TABLE public.redemptions
   ADD COLUMN IF NOT EXISTS discount_applied       INTEGER,
   ADD COLUMN IF NOT EXISTS coupon_code            VARCHAR(10),
   ADD COLUMN IF NOT EXISTS products               JSONB;
-
--- 3b. Normalise expiry column name
+-- ============================================================
+--  3b. Normalise expiry column name
 --     Older migrations may have created "expires_at"; rename it if present.
 DO $$
 BEGIN
@@ -61,8 +61,25 @@ END $$;
 
 
 -- ============================================================
+--  3c. PROMOTIONS — Automated campaign columns (v2.0)
+-- ============================================================
+
+ALTER TABLE public.promotions
+  ADD COLUMN IF NOT EXISTS trigger_type      TEXT      DEFAULT 'manual'
+    CHECK (trigger_type IN ('manual','welcome','win_back','birthday','churn','tier_upgrade','milestone')),
+  ADD COLUMN IF NOT EXISTS trigger_condition JSONB,
+  ADD COLUMN IF NOT EXISTS status            TEXT      DEFAULT 'draft'
+    CHECK (status IN ('draft','active','paused','completed')),
+  ADD COLUMN IF NOT EXISTS message_template  JSONB,
+  ADD COLUMN IF NOT EXISTS offer_id          UUID      REFERENCES public.offers(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS last_run_at       TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS send_count        INTEGER   NOT NULL DEFAULT 0;
+
+
+-- ============================================================
 --  4. PENDING_POINT_CLAIMS — Door / QR claim table
 -- ============================================================
+
 
 CREATE TABLE IF NOT EXISTS public.pending_point_claims (
   id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -77,6 +94,42 @@ CREATE TABLE IF NOT EXISTS public.pending_point_claims (
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   expires_at     TIMESTAMPTZ,
   claimed_at     TIMESTAMPTZ
+);
+
+
+-- ============================================================
+--  4b. DELIVERIES — Order tracking table (v2.1)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.deliveries (
+    id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id        UUID        NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    store_id       UUID        NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
+    product_id     UUID        NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+    wilaya         TEXT        NOT NULL,
+    municipality   TEXT        NOT NULL,
+    address        TEXT        NOT NULL,
+    delivery_type  TEXT        NOT NULL CHECK (delivery_type IN ('home', 'office')),
+    payment_method TEXT        NOT NULL DEFAULT 'cod',
+    status         TEXT        NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'shipped', 'delivered', 'cancelled')),
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+
+-- ============================================================
+--  4c. CAMPAIGN_LOGS — Automated send tracking (v2.0)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.campaign_logs (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  store_id      UUID      NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
+  promotion_id  UUID      NOT NULL REFERENCES public.promotions(id) ON DELETE CASCADE,
+  user_id       UUID      NOT NULL REFERENCES public.users(id)  ON DELETE CASCADE,
+  status        TEXT      NOT NULL DEFAULT 'sent'
+    CHECK (status IN ('sent','skipped','failed','opted_out')),
+  error_message TEXT,
+  sent_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 
@@ -103,15 +156,29 @@ CREATE INDEX IF NOT EXISTS idx_claims_user_store
 CREATE INDEX IF NOT EXISTS idx_claims_expires_at
   ON public.pending_point_claims (expires_at);
 
+-- deliveries
+CREATE INDEX IF NOT EXISTS idx_deliveries_user_id  ON public.deliveries(user_id);
+CREATE INDEX IF NOT EXISTS idx_deliveries_store_id ON public.deliveries(store_id);
+CREATE INDEX IF NOT EXISTS idx_deliveries_status   ON public.deliveries(status);
+
+-- campaign_logs
+CREATE INDEX IF NOT EXISTS idx_campaign_logs_store_id     ON public.campaign_logs (store_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_logs_promotion_id ON public.campaign_logs (promotion_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_logs_user_id      ON public.campaign_logs (user_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_logs_sent_at      ON public.campaign_logs (sent_at);
+
 
 -- ============================================================
---  6. ROW-LEVEL SECURITY — pending_point_claims
+--  6. ROW-LEVEL SECURITY — pending_point_claims & deliveries
 --     Follows the open-policy pattern used by all other tables
 --     (app authenticates via Telegram, not Supabase auth.uid()).
 -- ============================================================
 
 ALTER TABLE public.pending_point_claims ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.deliveries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.campaign_logs ENABLE ROW LEVEL SECURITY;
 
+-- pending_point_claims
 DROP POLICY IF EXISTS "pending_point_claims_select" ON public.pending_point_claims;
 DROP POLICY IF EXISTS "pending_point_claims_insert" ON public.pending_point_claims;
 DROP POLICY IF EXISTS "pending_point_claims_update" ON public.pending_point_claims;
@@ -121,6 +188,28 @@ CREATE POLICY "pending_point_claims_select" ON public.pending_point_claims FOR S
 CREATE POLICY "pending_point_claims_insert" ON public.pending_point_claims FOR INSERT WITH CHECK (TRUE);
 CREATE POLICY "pending_point_claims_update" ON public.pending_point_claims FOR UPDATE USING      (TRUE);
 CREATE POLICY "pending_point_claims_delete" ON public.pending_point_claims FOR DELETE USING      (TRUE);
+
+-- deliveries
+DROP POLICY IF EXISTS "deliveries_select" ON public.deliveries;
+DROP POLICY IF EXISTS "deliveries_insert" ON public.deliveries;
+DROP POLICY IF EXISTS "deliveries_update" ON public.deliveries;
+DROP POLICY IF EXISTS "deliveries_delete" ON public.deliveries;
+
+CREATE POLICY "deliveries_select" ON public.deliveries FOR SELECT USING (TRUE);
+CREATE POLICY "deliveries_insert" ON public.deliveries FOR INSERT WITH CHECK (TRUE);
+CREATE POLICY "deliveries_update" ON public.deliveries FOR UPDATE USING (TRUE);
+CREATE POLICY "deliveries_delete" ON public.deliveries FOR DELETE USING (TRUE);
+
+-- campaign_logs
+DROP POLICY IF EXISTS "campaign_logs_select" ON public.campaign_logs;
+DROP POLICY IF EXISTS "campaign_logs_insert" ON public.campaign_logs;
+DROP POLICY IF EXISTS "campaign_logs_update" ON public.campaign_logs;
+DROP POLICY IF EXISTS "campaign_logs_delete" ON public.campaign_logs;
+
+CREATE POLICY "campaign_logs_select" ON public.campaign_logs FOR SELECT USING (TRUE);
+CREATE POLICY "campaign_logs_insert" ON public.campaign_logs FOR INSERT WITH CHECK (TRUE);
+CREATE POLICY "campaign_logs_update" ON public.campaign_logs FOR UPDATE USING (TRUE);
+CREATE POLICY "campaign_logs_delete" ON public.campaign_logs FOR DELETE USING (TRUE);
 
 
 -- ============================================================
@@ -255,8 +344,25 @@ CREATE TRIGGER trg_update_tier
 
 
 -- ============================================================
---  9. OPTIONAL — Scheduled expiry via pg_cron
---     Uncomment after enabling the pg_cron extension.
+--  9. CASH ON DELIVERY & REFERRAL SYSTEM (v2.1)
+-- ============================================================
+
+-- 9a. STORES — COD Toggle & Referral Reward Points
+ALTER TABLE public.stores
+  ADD COLUMN IF NOT EXISTS is_cod_enabled          BOOLEAN     NOT NULL DEFAULT TRUE,
+  ADD COLUMN IF NOT EXISTS referral_reward_points  INTEGER     NOT NULL DEFAULT 200;
+
+-- 9b. USER_STORE_MEMBERSHIPS — Referral tracking
+ALTER TABLE public.user_store_memberships
+  ADD COLUMN IF NOT EXISTS referred_by_id UUID REFERENCES public.users(id) ON DELETE SET NULL;
+
+-- 9c. INDEXES — Referral tracking
+CREATE INDEX IF NOT EXISTS idx_memberships_referred_by 
+  ON public.user_store_memberships (referred_by_id);
+
+
+-- ============================================================
+--  10. OPTIONAL — Scheduled expiry via pg_cron
 -- ============================================================
 
 -- SELECT cron.schedule(

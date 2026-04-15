@@ -1,16 +1,19 @@
 // Notifications - Send promotional notifications to customers
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useDashboardStore } from '../store/dashboardStore'
 import { subDays } from 'date-fns'
-import { Send, Image, Link as LinkIcon, Users, ChevronDown, Package, Tag, Search } from 'lucide-react'
+import { Send, Image, Link as LinkIcon, Users, ChevronDown, Package, Tag, Search, Bot } from 'lucide-react'
 import { formatCurrency } from '../lib/offers'
 
 export default function Notifications() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { store } = useDashboardStore()
+  const [tab, setTab] = useState('manual') // 'manual' or 'automated'
   const [form, setForm] = useState({
     message:     '',
     image_url:   '',
@@ -108,6 +111,35 @@ export default function Notifications() {
         <p className="text-sm text-muted font-medium">{t('notifications.subtitle')}</p>
       </div>
 
+      {/* Tab Switcher */}
+      <div className="flex bg-white p-1 rounded-2xl border border-border shadow-soft">
+        <button
+          onClick={() => setTab('manual')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 ${
+            tab === 'manual' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-text'
+          }`}
+        >
+          <Send size={14} />
+          {t('notifications.tab_manual')}
+        </button>
+        <button
+          onClick={() => navigate('/dashboard/automated-campaigns')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 ${
+            tab === 'automated' ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-text'
+          }`}
+        >
+          <Bot size={14} />
+          {t('notifications.tab_automated')}
+        </button>
+      </div>
+
+      {tab === 'automated' && (
+        <div className="text-center py-12">
+          <p className="text-muted text-sm">{t('notifications.redirecting')}</p>
+        </div>
+      )}
+
+      {tab === 'manual' && (
       <div className="grid md:grid-cols-2 gap-6">
         {/* Selection Panel */}
         <div className="bg-white rounded-3xl p-6 border border-border shadow-soft flex flex-col h-[600px]">
@@ -287,6 +319,7 @@ export default function Notifications() {
           </button>
         </div>
       </div>
+      )}
     </div>
   )
 }

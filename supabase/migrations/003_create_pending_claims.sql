@@ -28,13 +28,12 @@ ALTER TABLE pending_point_claims ENABLE ROW LEVEL SECURITY;
 -- Policies for pending_point_claims
 -- Policy for users to create claims
 CREATE POLICY "Users can create pending claims for their store" ON pending_point_claims FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM stores WHERE id = store_id AND owner_id = auth.uid()) OR -- Owner can create claims (might not be needed for customer flow)
-  (EXISTS (SELECT 1 FROM users WHERE id = user_id AND telegram_id IS NOT NULL)) -- Customer creating claim based on logged-in user
+  EXISTS (SELECT 1 FROM stores WHERE id = store_id AND owner_email = auth.jwt()->>'email') OR
+  (EXISTS (SELECT 1 FROM users WHERE id = user_id AND telegram_id IS NOT NULL))
 );
 CREATE POLICY "Users can view their own pending claims" ON pending_point_claims FOR SELECT USING (user_id = auth.uid());
--- Policy for store owners/admins to view and manage claims for their store
 CREATE POLICY "Store owners/admins can manage pending claims for their store" ON pending_point_claims FOR ALL USING (
-  EXISTS (SELECT 1 FROM stores WHERE id = store_id AND owner_id = auth.uid())
+  EXISTS (SELECT 1 FROM stores WHERE id = store_id AND owner_email = auth.jwt()->>'email')
 );
 
 -- Note: The 'generate_coupon_code' function and associated columns were handled in a previous migration (002).

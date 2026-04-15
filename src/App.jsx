@@ -32,6 +32,7 @@ import TeamManagement from './pages/TeamManagement'
 import Deliveries from './pages/Deliveries'
 import ClaimPoints from './pages/ClaimPoints'
 import ClaimSuccess from './pages/ClaimSuccess'
+import AutomatedCampaigns from './pages/AutomatedCampaigns'
 
 const queryClient = new QueryClient()
 
@@ -126,6 +127,7 @@ function AppContent() {
                 <Route path="customers/:memberId" element={<CustomerDetail />} />
                 <Route path="team" element={<TeamManagement />} />
                 <Route path="notifications" element={<Notifications />} />
+                <Route path="automated-campaigns" element={<AutomatedCampaigns />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="roles" element={<RolesManagement />} />
               </Route>

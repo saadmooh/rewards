@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import {
   LayoutDashboard, QrCode, Package,
-  Tag, Users, Bell, Settings, ArrowLeft, Home, ShieldCheck, Truck
+  Tag, Users, Bell, Settings, ArrowLeft, Home, ShieldCheck, Truck, Bot, Phone
 } from 'lucide-react'
 
 export default function Layout() {
@@ -23,6 +23,7 @@ export default function Layout() {
     { to: '/dashboard/customers',      label: t('dashboard.customers'),   icon: Users },
     { to: '/dashboard/team',           label: t('dashboard.team'),      icon: ShieldCheck },
     { to: '/dashboard/notifications',  label: t('dashboard.notifications'), icon: Bell },
+    { to: '/dashboard/automated-campaigns', label: t('dashboard.automated_campaigns'), icon: Bot },
     { to: '/dashboard/settings',       label: t('dashboard.settings'),  icon: Settings },
   ]
 
@@ -49,14 +50,19 @@ export default function Layout() {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                `relative flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   isActive
                     ? 'bg-accent text-white shadow-soft shadow-accent/20'
                     : 'text-muted hover:bg-surface hover:text-text'
                 }`
               }
             >
-              <item.icon size={18} />
+              <div className="relative">
+                <item.icon size={18} />
+                {item.to === '/dashboard/notifications' && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                )}
+              </div>
               <span>{item.label}</span>
             </NavLink>
           ))}
@@ -117,17 +123,23 @@ export default function Layout() {
       {/* Bottom Tab Bar — mobile only */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-border z-50">
         <div className="flex justify-around items-center max-w-md mx-auto px-2 py-3">
-          {NAV.slice(0, 7).map(item => {
+          {NAV.filter(item => item.to !== '/dashboard/team').map(item => {
             const isActive = location.pathname === item.to || (item.to === '/dashboard/overview' && location.pathname === '/dashboard')
+            const showBadge = item.to === '/dashboard/notifications'
             return (
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={`flex flex-col items-center gap-1 flex-1 transition-all ${
+                className={`relative flex flex-col items-center gap-1 flex-1 transition-all ${
                   isActive ? 'text-accent scale-110' : 'text-muted'
                 }`}
               >
-                <item.icon size={20} />
+                <div className="relative">
+                  <item.icon size={20} />
+                  {showBadge && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  )}
+                </div>
                 <span className="text-[10px] font-bold">{item.label}</span>
               </NavLink>
             )

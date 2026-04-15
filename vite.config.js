@@ -5,6 +5,14 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/rewards/',
+  server: {
+    host: true,
+    port: 9002,
+    strictPort: true,
+    hmr: {
+      clientPort: 443,
+    },
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

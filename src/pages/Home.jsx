@@ -10,6 +10,8 @@ import { useProducts } from '../hooks/useProducts'
 import PointsCard from '../components/PointsCard'
 import ProductCard from '../components/ProductCard'
 import ProductOfferCard from '../components/ProductOfferCard'
+import OfferPackageBox from '../components/OfferPackageBox'
+import ScratchCardBox from '../components/ScratchCardBox'
 import { calculateProductPrice } from '../lib/offers'
 import { ProductCardSkeleton, OfferCardSkeleton } from '../components/CardSkeleton'
 import { hapticFeedback } from '../lib/telegram'
@@ -253,6 +255,10 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <section>
             <PointsCard />
+            <div className="mt-4 space-y-4">
+              <OfferPackageBox />
+              <ScratchCardBox />
+            </div>
           </section>
 
           <section className="flex items-center">

@@ -33,6 +33,7 @@ import Deliveries from './pages/Deliveries'
 import ClaimPoints from './pages/ClaimPoints'
 import ClaimSuccess from './pages/ClaimSuccess'
 import AutomatedCampaigns from './pages/AutomatedCampaigns'
+import ScratchCardPage from './pages/ScratchCardPage'
 
 const queryClient = new QueryClient()
 
@@ -113,6 +114,7 @@ function AppContent() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/claim/:storeSlug" element={<ClaimPoints />} />
             <Route path="/claim-success" element={<ClaimSuccess />} />
+            <Route path="/scratch" element={<ScratchCardPage />} />
 
             {/* Merchant Dashboard Routes (Guarded) */}
             <Route path="/dashboard" element={<DashboardGuard />}>

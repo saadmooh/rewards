@@ -24,7 +24,7 @@ export default function Layout() {
     { to: '/dashboard/team',           label: t('dashboard.team'),      icon: ShieldCheck },
     { to: '/dashboard/notifications',  label: t('dashboard.notifications'), icon: Bell },
     { to: '/dashboard/automated-campaigns', label: t('dashboard.automated_campaigns'), icon: Bot },
-    { to: '/dashboard/settings',       label: t('dashboard.settings'),  icon: Settings },
+    { to: '/dashboard/settings', label: t('dashboard.settings'), icon: Settings },
   ]
 
   return (

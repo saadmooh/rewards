@@ -51,6 +51,8 @@
     "no_description": "Aucune description disponible",
     "free": "Gratuit",
     "point": "point",
+    "card": "carte",
+    "cards": "cartes",
     "return": "Retour",
     "show_code": "Afficher le code",
     "expires_in": "Expire dans",
@@ -65,7 +67,8 @@
     }
   },
   "nav": {
-    "scan": "Scanner"
+    "scan": "Scanner",
+    "scratch": "Gagner"
   },
   "home": {
     "welcome": "Bon retour !",
@@ -558,6 +561,25 @@
     "processing": "Traitement...",
     "success_message": "Demande de livraison envoyée avec succès ! Nous vous contacterons bientôt.",
     "error_message": "Échec de l'envoi de la demande. Veuillez réessayer."
+  },
+  "scratch_card": {
+    "title": "Gratter et Gagner",
+    "subtitle": "Grattez pour révéler votre récompense!",
+    "scratch_here": "Grattez ici",
+    "reveal": "Révéler",
+    "congratulations": "Félicitations!",
+    "you_won": "Vous avez gagné",
+    "points": "points",
+    "discount": "réduction",
+    "gift": "cadeau gratuit",
+    "double_points": "points doublés",
+    "redeem": "Utiliser maintenant",
+    "expires_in": "Expire dans",
+    "hours": "heures",
+    "minutes": "minutes",
+    "already_revealed": "Déjà révélé",
+    "no_cards": "Aucune carte à gratter",
+    "check_back": "Revenez plus tard pour gagner!"
   },
   "product_detail": {
     "not_found": "Produit introuvable",

@@ -35,6 +35,40 @@ export default function CustomerDetail() {
     queryFn: () => supabase.from('roles').select('*').order('name').then(r => r.data)
   })
 
+  // Fetch active scratch cards to award
+  const { data: scratchCards, isLoading: isScratchLoading } = useQuery({
+    queryKey: ['scratch-cards-active', store?.id],
+    queryFn: () => supabase
+      .from('scratch_cards')
+      .select('*')
+      .eq('store_id', store.id)
+      .eq('status', 'active')
+      .then(r => r.data ?? []),
+    enabled: !!store?.id
+  })
+
+  const awardMutation = useMutation({
+    mutationFn: async (cardId) => {
+      const { error } = await supabase
+        .from('scratch_card_claims')
+        .insert({
+          card_id: cardId,
+          user_id: membership.user_id,
+          store_id: store.id,
+        })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      // Maybe show a toast or success message
+      queryClient.invalidateQueries(['membership-detail', memberId])
+    }
+  })
+
+  const handleAwardScratch = (cardId) => {
+    if (!membership?.user_id) return
+    awardMutation.mutate(cardId)
+  }
+
   const updateRoleMutation = useMutation({
     mutationFn: async (roleId) => {
       const { error } = await supabase
@@ -166,7 +200,7 @@ export default function CustomerDetail() {
                   <p className="text-[9px] font-black text-muted uppercase tracking-tighter mb-1">{t('customer_detail.permissions')}</p>
                   <div className="flex flex-wrap gap-1 justify-end">
                     {Object.entries(membership.roles.permissions || {})
-                      .filter(([_, val]) => val === true)
+                      .filter(([permissionKey, val]) => val === true)
                       .slice(0, 3)
                       .map(([key]) => (
                         <span key={key} className="bg-white px-2 py-0.5 rounded text-[8px] font-bold text-text border border-border/50">
@@ -252,8 +286,47 @@ export default function CustomerDetail() {
             disabled={!grantPts || Number(grantPts) <= 0}
             className="bg-accent text-white px-8 py-3 rounded-2xl font-black text-sm shadow-soft shadow-accent/20 hover:bg-accent-dark transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            t('customer_detail.grant')
+            {t('customer_detail.grant')}
           </button>
+        </div>
+      </div>
+
+      {/* Award Scratch Card */}
+      <div className="bg-white rounded-3xl p-6 border border-border shadow-soft">
+        <h3 className="text-lg font-black text-text tracking-tight mb-4 text-right">🎁 {t('scratch_card.title')}</h3>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {isScratchLoading ? (
+              <div className="col-span-full py-4 text-center">
+                <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted" />
+              </div>
+            ) : scratchCards?.length > 0 ? (
+              scratchCards.map(card => (
+                <button
+                  key={card.id}
+                  onClick={() => handleAwardScratch(card.id)}
+                  disabled={awardMutation.isPending}
+                  className="flex items-center justify-between p-4 rounded-2xl bg-surface border border-border hover:border-accent transition-all text-right group"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-colors">
+                    {awardMutation.variables === card.id ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Plus size={16} />
+                    )}
+                  </div>
+                  <div className="flex-1 mr-3">
+                    <p className="text-sm font-black text-text">{card.title}</p>
+                    <p className="text-[10px] text-muted font-bold">{card.reward_type} - {card.reward_value}</p>
+                  </div>
+                </button>
+              ))
+            ) : (
+              <p className="col-span-full py-4 text-center text-muted font-medium italic">
+                {t('scratch_card.no_cards')}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

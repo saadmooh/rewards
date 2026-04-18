@@ -51,7 +51,10 @@
     "no_description": "لا يوجد وصف متاح",
     "free": "مجاني",
     "point": "نقطة",
-    "return": "رجوع",
+    "card": "بطاقة",
+    "cards": "بطاقات",
+    "return": "الرجوع",
+
     "show_code": "إظهار الكود",
     "expires_in": "ينتهي في",
     "expires": "ينتهي",
@@ -67,7 +70,8 @@
     }
   },
   "nav": {
-    "scan": "مسح"
+    "scan": "مسح",
+    "scratch": "اربح"
   },
 "home": {
     "welcome": "مرحباً بعودتك!",
@@ -581,6 +585,25 @@
     "processing": "جاري المعالجة...",
     "success_message": "تم إرسال طلب التوصيل بنجاح! سنتصل بك قريباً.",
     "error_message": "فشل إرسال طلب التوصيل. يرجى المحاولة مرة أخرى."
+  },
+  "scratch_card": {
+    "title": "اخدش واربح",
+    "subtitle": "امسح لكشف الهدية!",
+    "scratch_here": "امسح هنا",
+    "reveal": "كشف",
+    "congratulations": "تهانينا!",
+    "you_won": "فزت بـ",
+    "points": "نقاط",
+    "discount": "تخفيض",
+    "gift": "هدية مجانية",
+    "double_points": "نقاط مضاعفة",
+    "redeem": "استبدال الآن",
+    "expires_in": "ينتهي في",
+    "hours": "ساعات",
+    "minutes": "دقائق",
+    "already_revealed": "تم الكشف مسبقاً",
+    "no_cards": "لا توجد بطاقات خدش",
+    "check_back": "تحقق لاحقاً للفوز!"
   },
   "product_detail": {
     "not_found": "المنتج غير موجود",

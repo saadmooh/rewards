@@ -150,8 +150,6 @@ const useUserStore = create((set, get) => ({
         }
       }
 
-      const isNewMembership = !membership
-
       if (!membership) {
         // Check if this is the FIRST member for this specific store
         const { count: currentMemberCount, error: countErr } = await supabase
@@ -269,8 +267,28 @@ const useUserStore = create((set, get) => ({
           points: store.welcome_points || 100,
           note: 'نقاط الترحيب',
         })
+
+        // Assign 'welcome' scratch cards
+        const { data: welcomeCards } = await supabase
+          .from('scratch_cards')
+          .select('id')
+          .eq('store_id', store.id)
+          .eq('trigger_type', 'welcome')
+          .eq('status', 'active')
+
+        if (welcomeCards?.length) {
+          const claims = welcomeCards.map(card => ({
+            card_id: card.id,
+            user_id: user.id,
+            store_id: store.id,
+          }))
+          await supabase.from('scratch_card_claims').insert(claims)
+        }
       } else {
         console.log('[initUser] User is already a member of this store.')
+        
+        // Check for 'manual' scratch cards that haven't been claimed yet (as a fallback or for special campaigns)
+        // This could be restricted or expanded based on business logic
       }
 
       // Apply store accent color
@@ -351,7 +369,7 @@ const useUserStore = create((set, get) => ({
       await supabase.from('user_store_memberships').update({ points: newPoints }).eq('id', membership.id);
 
       // Insert redemption record
-      const { data: redemption, error: redemptionError } = await supabase
+      const { error: redemptionError } = await supabase
         .from('redemptions')
         .insert({
           user_id: user.id,
@@ -398,6 +416,92 @@ const useUserStore = create((set, get) => ({
   },
 
   setError: (error) => set({ error }),
+
+  getScratchCards: async () => {
+    const { user, store } = get()
+    if (!user?.id || !store?.id) return []
+    try {
+      const { data, error } = await supabase
+        .from('scratch_card_claims')
+        .select('*, scratch_cards(*)')
+        .eq('user_id', user.id)
+        .eq('store_id', store.id)
+        .eq('is_revealed', false)
+      if (error) throw error
+      return data || []
+    } catch (err) {
+      console.error('getScratchCards error:', err)
+      return []
+    }
+  },
+
+  revealScratchCard: async (claimId) => {
+    const { user, store } = get()
+    if (!user?.id || !store?.id) return null
+    try {
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      const { data, error } = await supabase
+        .from('scratch_card_claims')
+        .update({ is_revealed: true, revealed_at: new Date().toISOString(), expires_at: expiresAt })
+        .eq('id', claimId)
+        .select('*, scratch_cards(*)')
+        .single()
+      if (error) throw error
+      return data
+    } catch (err) {
+      console.error('revealScratchCard error:', err)
+      return null
+    }
+  },
+
+  redeemScratchCard: async (claimId) => {
+    const { user, membership, store } = get()
+    if (!user?.id || !membership?.id || !store?.id) return { success: false }
+    try {
+      const { data: claim, error: fetchError } = await supabase
+        .from('scratch_card_claims')
+        .select('*, scratch_cards(*)')
+        .eq('id', claimId)
+        .single()
+      if (fetchError) throw fetchError
+
+      const { reward_type, reward_value } = claim.scratch_cards
+      let pointsEarned = 0
+
+      if (reward_type === 'points') {
+        pointsEarned = reward_value
+      } else if (reward_type === 'double_points') {
+        pointsEarned = reward_value * 2
+      }
+
+      if (pointsEarned > 0) {
+        const newPoints = membership.points + pointsEarned
+        await supabase
+          .from('user_store_memberships')
+          .update({ points: newPoints })
+          .eq('id', membership.id)
+        await supabase.from('transactions').insert({
+          user_id: user.id,
+          store_id: store.id,
+          membership_id: membership.id,
+          type: 'earn',
+          points: pointsEarned,
+          note: 'مكافأة خدش بطاقة',
+        })
+        set({ membership: { ...membership, points: newPoints } })
+      }
+
+      await supabase
+        .from('scratch_card_claims')
+        .update({ is_redeemed: true })
+        .eq('id', claimId)
+
+      return { success: true, rewardType: reward_type, rewardValue: reward_value, pointsEarned }
+    } catch (err) {
+      console.error('redeemScratchCard error:', err)
+      return { success: false, error: err.message }
+    }
+  },
 }))
 
 export default useUserStore

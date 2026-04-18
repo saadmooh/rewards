@@ -78,7 +78,63 @@ Deno.serve(async (req) => {
           .eq('is_active', true)
           .limit(1)
 
-        if (offersError || !birthdayOffers || birthdayOffers.length === 0) continue
+        if (offersError || !birthdayOffers || birthdayOffers.length === 0) {
+          // If no regular birthday offer, check for birthday scratch cards
+          const { data: birthdayScratch, error: scratchError } = await supabase
+            .from('scratch_cards')
+            .select('*')
+            .eq('store_id', store.id)
+            .eq('trigger_type', 'birthday')
+            .eq('status', 'active')
+            .limit(1)
+
+          if (!scratchError && birthdayScratch?.length > 0) {
+            const card = birthdayScratch[0]
+            
+            // Create a claim for the user
+            const { data: claim, error: claimError } = await supabase
+              .from('scratch_card_claims')
+              .insert({
+                card_id: card.id,
+                user_id: user.id,
+                store_id: store.id
+              })
+              .select()
+              .single()
+
+            if (!claimError && claim) {
+              const BOT_TOKEN = store.bot_token
+              const chatId = user.telegram_id
+              totalAttempts++
+
+              let msg = `🎂 *عيد ميلاد سعيد يا ${user.full_name || 'صديقنا'}!* 🎈\n\nنحتفل معك اليوم ونقدم لك فرصة للفوز بهدية مميزة!\n\n🎁 *بطاقة اخدش واربح للحصول على جائزة فورية!*`
+              
+              const payload: Record<string, any> = {
+                chat_id: chatId,
+                parse_mode: 'Markdown',
+                text: msg,
+                reply_markup: {
+                  inline_keyboard: [[{ 
+                    text: 'اخدش واربح الآن! 🎫', 
+                    url: `${Deno.env.get('PUBLIC_SITE_URL') || ''}/scratch`
+                  }]],
+                }
+              }
+
+              try {
+                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(payload),
+                })
+                if (res.ok) successCount++
+              } catch (e) {
+                console.error(`Fetch Error for scratch card ${chatId}:`, e)
+              }
+            }
+          }
+          continue
+        }
 
         const offer = birthdayOffers[0]
         const BOT_TOKEN = store.bot_token

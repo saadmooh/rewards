@@ -53,6 +53,8 @@
     "no_description": "No description available",
     "free": "Free",
     "point": "point",
+    "card": "card",
+    "cards": "cards",
     "return": "Return",
     "show_code": "Show Code",
     "expires_in": "Expires in",
@@ -67,7 +69,8 @@
     }
   },
   "nav": {
-    "scan": "Scan"
+    "scan": "Scan",
+    "scratch": "Win"
   },
   "home": {
     "welcome": "Welcome back!",
@@ -577,6 +580,25 @@
     "processing": "Processing...",
     "success_message": "Delivery request sent successfully! We will contact you soon.",
     "error_message": "Failed to send delivery request. Please try again."
+  },
+  "scratch_card": {
+    "title": "Scratch & Win",
+    "subtitle": "Scratch to reveal your reward!",
+    "scratch_here": "Scratch here",
+    "reveal": "Reveal",
+    "congratulations": "Congratulations!",
+    "you_won": "You won",
+    "points": "points",
+    "discount": "discount",
+    "gift": "free gift",
+    "double_points": "double points",
+    "redeem": "Redeem Now",
+    "expires_in": "Expires in",
+    "hours": "hours",
+    "minutes": "minutes",
+    "already_revealed": "Already revealed",
+    "no_cards": "No scratch cards available",
+    "check_back": "Check back later for chances to win!"
   },
   "product_detail": {
     "not_found": "Product not found",

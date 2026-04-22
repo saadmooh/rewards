@@ -37,11 +37,13 @@ export function initTelegram() {
   if (tg) {
     tg.ready()
     tg.expand()
-    if (tg.setHeaderColor) {
-      tg.setHeaderColor('#0a0a0a')
+    const version = tg.version
+    const supportsColorChange = version && parseFloat(version) >= 6.1
+    if (supportsColorChange && tg.setHeaderColor) {
+      tg.setHeaderColor('#fdfcf8')
     }
-    if (tg.setBackgroundColor) {
-      tg.setBackgroundColor('#0a0a0a')
+    if (supportsColorChange && tg.setBackgroundColor) {
+      tg.setBackgroundColor('#fdfcf8')
     }
   }
 }
@@ -183,7 +185,10 @@ export function showAlert(message) {
 export function hapticFeedback(style = 'light') {
   const tg = window.Telegram?.WebApp
   if (tg?.HapticFeedback) {
-    tg.HapticFeedback.impactOccurred(style)
+    const version = tg.version
+    if (version && parseFloat(version) >= 6.1) {
+      tg.HapticFeedback.impactOccurred(style)
+    }
   }
 }
 

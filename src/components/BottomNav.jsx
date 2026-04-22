@@ -2,7 +2,7 @@ import useUserStore from '../store/userStore'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import { Home, Tag, QrCode, Sparkles, User, LayoutDashboard } from 'lucide-react'
+import { Home, Tag, QrCode, Sparkles, User, LayoutDashboard, Flower2, Calendar } from 'lucide-react'
 import { motion as Motion } from 'framer-motion'
 
 export default function BottomNav({ activePath = '/', onNavigate }) {
@@ -29,15 +29,16 @@ export default function BottomNav({ activePath = '/', onNavigate }) {
 
   const navItems = [
     { icon: Home, label: t('common.home'), path: '/' },
+    { icon: Flower2, label: t('common.products'), path: '/products' },
     { icon: Tag, label: t('common.offers'), path: '/offers' },
     { icon: QrCode, label: t('nav.scan'), path: '/scan', isScan: true },
-    { icon: Sparkles, label: t('nav.scratch'), path: '/scratch', badge: scratchCount },
+    { icon: Calendar, label: t('common.book'), path: '/my-bookings' },
     { icon: User, label: t('common.profile'), path: '/profile' },
   ]
 
   // Add Dashboard if user has access
   if (membership?.roles?.permissions?.can_access_dashboard) {
-    navItems.splice(4, 0, { icon: LayoutDashboard, label: 'Dash', path: '/dashboard' })
+    navItems.push({ icon: LayoutDashboard, label: t('common.dashboard'), path: '/dashboard' })
   }
 
   const handleNav = (path) => {

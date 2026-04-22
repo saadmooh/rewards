@@ -29,7 +29,8 @@ import Notifications from './pages/Notifications'
 import Settings from './pages/Settings'
 import RolesManagement from './pages/RolesManagement'
 import TeamManagement from './pages/TeamManagement'
-import Deliveries from './pages/Deliveries'
+import Bookings from './pages/Bookings'
+import ClientBookings from './pages/ClientBookings'
 import ClaimPoints from './pages/ClaimPoints'
 import ClaimSuccess from './pages/ClaimSuccess'
 import AutomatedCampaigns from './pages/AutomatedCampaigns'
@@ -111,6 +112,7 @@ function AppContent() {
             <Route path="/products" element={<ClientProducts />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/history" element={<History />} />
+            <Route path="/my-bookings" element={<ClientBookings />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/claim/:storeSlug" element={<ClaimPoints />} />
             <Route path="/claim-success" element={<ClaimSuccess />} />
@@ -122,7 +124,7 @@ function AppContent() {
                 <Route index element={<Overview />} />
                 <Route path="overview" element={<Overview />} />
                 <Route path="qr" element={<QRGenerator />} />
-                <Route path="deliveries" element={<Deliveries />} />
+                <Route path="bookings" element={<Bookings />} />
                 <Route path="products" element={<Products />} />
                 <Route path="offers" element={<Offers />} />
                 <Route path="customers" element={<CustomersPage />} />

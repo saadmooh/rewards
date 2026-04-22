@@ -7,19 +7,22 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#ffffff',
-        surface: '#f8fafc',
+        bg: '#FDFCFB',
+        surface: '#F5F7F5',
         card: '#ffffff',
-        border: '#e2e8f0',
-        accent: '#10b981',
-        'accent-light': '#d1fae5',
-        'accent-dark': '#059669',
-        success: '#10b981',
-        error: '#ef4444',
-        muted: '#64748b',
+        border: '#E8ECE8',
+        accent: '#D4AF37',
+        'accent-light': '#F7CAC9',
+        'accent-dark': '#8A9A8A',
+        success: '#8A9A8A',
+        error: '#E57373',
+        muted: '#7A7A7A',
+        sage: '#8A9A8A',
+        lavender: '#E6E6FA',
+        'rose-quartz': '#F7CAC9',
       },
       fontFamily: {
-        display: ['Plus Jakarta Sans', 'sans-serif'],
+        display: ['Playfair Display', 'serif'],
         body: ['Plus Jakarta Sans', 'sans-serif'],
       },
       boxShadow: {

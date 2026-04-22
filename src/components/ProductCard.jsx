@@ -10,6 +10,7 @@ export default function ProductCard({
   imageUrl,
   isExclusive = false,
   showOriginalPrice = true,
+  durationMinutes,
   onClick,
 }) {
   const { t } = useTranslation()
@@ -48,6 +49,12 @@ export default function ProductCard({
           )}
           <span>{formatCurrency(price)} {t('products.dzd')}</span>
         </div>
+        {durationMinutes && (
+          <div className="absolute bottom-2 right-2 px-2 py-1 bg-accent/90 rounded-lg text-xs font-bold text-white flex items-center gap-1">
+            <span>⏱️</span>
+            <span>{durationMinutes} min</span>
+          </div>
+        )}
       </div>
 
       <div className="p-3">

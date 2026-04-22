@@ -4,12 +4,16 @@ import { useTranslation } from 'react-i18next'
 import useUserStore from '../store/userStore'
 import TierBadge from '../components/TierBadge'
 
+const SKIN_TYPES = ['Dry', 'Oily', 'Sensitive', 'Combination', 'Normal']
+
 export default function Profile() {
   const { t, i18n } = useTranslation()
-  const { user, membership, store, updateBirthDate } = useUserStore()
+  const { user, membership, store, updateBirthDate, updateSkinType } = useUserStore()
   const [showReferral, setShowReferral] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [showSkinPicker, setShowSkinPicker] = useState(false)
   const [selectedDate, setSelectedDate] = useState(user?.birth_date || '')
+  const [selectedSkinType, setSelectedSkinType] = useState(user?.skin_type || '')
 
   const copyReferral = () => {
     const botUsername = store?.bot_username || 'YourBot'
@@ -23,6 +27,13 @@ export default function Profile() {
   const handleSaveBirthDate = async () => {
     await updateBirthDate(selectedDate)
     setShowDatePicker(false)
+  }
+
+  const handleSaveSkinType = async () => {
+    if (updateSkinType) {
+      await updateSkinType(selectedSkinType)
+    }
+    setShowSkinPicker(false)
   }
 
   return (
@@ -112,7 +123,7 @@ export default function Profile() {
             >
               <h3 className="text-lg font-black text-text mb-6">⚙️ {t('profile.personal_settings')}</h3>
               
-              <div className="space-y-4">
+<div className="space-y-4">
                 <button 
                   onClick={() => {
                     setSelectedDate(user?.birth_date || '')
@@ -123,11 +134,28 @@ export default function Profile() {
                   <div className="flex items-center gap-3 text-right">
                      <span className="text-lg">🎂</span>
                      <div>
-<p className="text-text font-bold text-sm">{t('profile.birth_date')}</p>
-                         <p className="text-muted text-[10px] font-medium">{user?.birth_date || t('profile.not_set')}</p>
+                       <p className="text-text font-bold text-sm">{t('profile.birth_date')}</p>
+                       <p className="text-muted text-[10px] font-medium">{user?.birth_date || t('profile.not_set')}</p>
                      </div>
-                  </div>
-                  <span className="text-accent text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">{t('common.edit')}</span>
+                   </div>
+                   <span className="text-accent text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">{t('common.edit')}</span>
+                </button>
+
+                <button 
+                  onClick={() => {
+                    setSelectedSkinType(user?.skin_type || '')
+                    setShowSkinPicker(true)
+                  }}
+                  className="w-full flex items-center justify-between p-4 bg-surface rounded-2xl border border-transparent hover:border-border transition-all group"
+                >
+                  <div className="flex items-center gap-3 text-right">
+                     <span className="text-lg">💆</span>
+                     <div>
+                       <p className="text-text font-bold text-sm">My Skin Profile</p>
+                       <p className="text-muted text-[10px] font-medium">{user?.skin_type || 'Not set'}</p>
+                     </div>
+                   </div>
+                   <span className="text-accent text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">{t('common.edit')}</span>
                 </button>
               </div>
             </motion.div>
@@ -156,7 +184,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <AnimatePresence>
+<AnimatePresence>
         {showDatePicker && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -177,7 +205,7 @@ export default function Profile() {
                 onChange={(e) => setSelectedDate(e.target.value)}
                 className="w-full p-4 bg-surface border border-border rounded-2xl text-text outline-none focus:border-accent mb-4"
               />
-<p className="text-muted text-sm mb-6 text-right">
+              <p className="text-muted text-sm mb-6 text-right">
                  {t('profile.birthday_bonus')}
                </p>
               <div className="flex gap-3">
@@ -189,6 +217,58 @@ export default function Profile() {
                 </button>
                 <button
                   onClick={handleSaveBirthDate}
+                  className="flex-1 py-3 bg-accent text-white font-bold rounded-2xl"
+                >
+                  {t('common.save')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSkinPicker && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 w-full max-w-sm"
+            >
+              <h3 className="text-lg font-bold text-text mb-2 text-right">💆 My Skin Profile</h3>
+              <p className="text-muted text-xs mb-6 text-right">Select your skin type for personalized treatment recommendations</p>
+              
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {SKIN_TYPES.map(type => (
+                  <button
+                    key={type}
+                    onClick={() => setSelectedSkinType(type)}
+                    className={`py-3 rounded-xl font-bold text-sm transition-all ${
+                      selectedSkinType === type
+                        ? 'bg-accent text-white'
+                        : 'bg-surface border border-border text-muted hover:border-accent'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSkinPicker(false)}
+                  className="flex-1 py-3 bg-surface text-muted font-bold rounded-2xl"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  onClick={handleSaveSkinType}
                   className="flex-1 py-3 bg-accent text-white font-bold rounded-2xl"
                 >
                   {t('common.save')}

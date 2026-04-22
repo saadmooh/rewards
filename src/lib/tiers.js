@@ -1,25 +1,25 @@
 export const TIERS = {
-  BRONZE: {
+  GLOW: {
     id: 'bronze',
-    name: 'Bronze',
+    name: 'The Glow',
     minPoints: 0,
     multiplier: 1,
   },
-  SILVER: {
+  RADIANT: {
     id: 'silver',
-    name: 'Silver',
+    name: 'The Radiant',
     minPoints: 1000,
     multiplier: 1.5,
   },
-  GOLD: {
+  ZEN: {
     id: 'gold',
-    name: 'Gold',
+    name: 'Zen Master',
     minPoints: 5000,
     multiplier: 2,
   },
-  PLATINUM: {
+  ELITE: {
     id: 'platinum',
-    name: 'Platinum',
+    name: 'Wellness Elite',
     minPoints: 15000,
     multiplier: 3,
   },
@@ -32,10 +32,10 @@ export const TIERS = {
 };
 
 export const TIER_ORDER = [
-  TIERS.BRONZE.id,
-  TIERS.SILVER.id,
-  TIERS.GOLD.id,
-  TIERS.PLATINUM.id,
+  TIERS.GLOW.id,
+  TIERS.RADIANT.id,
+  TIERS.ZEN.id,
+  TIERS.ELITE.id,
   TIERS.DIAMOND.id,
 ];
 

@@ -125,3 +125,115 @@ CREATE POLICY "Owners can manage offer_products" ON offer_products FOR ALL USING
 -- This consolidated version attempts to merge them logically, prioritizing the more detailed or recent definitions.
 -- 'redemptions_coupon.sql' applies to the existing 'redemptions' table.
 -- '002_add_coupon_details_to_redemptions.sql' also alters 'redemptions' table. I've merged columns from both.
+
+-- ============================================================
+-- NEW SCHEMA FOR BOOKING TIMES
+-- ============================================================
+
+-- Global booking settings for merchants
+CREATE TABLE IF NOT EXISTS public.merchant_booking_settings (
+  store_id            UUID      PRIMARY KEY REFERENCES public.stores (id) ON DELETE CASCADE,
+  opening_time        TIME      NULL, -- NULL means not set or always open if no other restrictions
+  closing_time        TIME      NULL,
+  default_booking_duration INTEGER NULL, -- in minutes
+  available_days      TEXT[]    NULL, -- e.g., ARRAY['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+  time_zone           VARCHAR(50) NULL -- e.g., 'America/New_York'
+);
+
+-- Enable Row Level Security for merchant_booking_settings
+ALTER TABLE public.merchant_booking_settings ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for merchant_booking_settings
+CREATE POLICY "Allow store owners to manage their booking settings" ON public.merchant_booking_settings FOR ALL USING (EXISTS (SELECT 1 FROM public.stores s WHERE s.id = store_id AND s.owner_id = auth.uid()));
+-- A more restrictive policy might be needed based on the app flow. For now, allowing general select for any logged-in user if needed.
+CREATE POLICY "Allow users to view store booking settings" ON public.merchant_booking_settings FOR SELECT USING (TRUE); 
+
+-- Add booking override fields to the products table
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS override_booking_settings BOOLEAN NOT NULL DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS specific_opening_time TIME NULL,
+ADD COLUMN IF NOT EXISTS specific_closing_time TIME NULL,
+ADD COLUMN IF NOT EXISTS specific_booking_duration INTEGER NULL; -- in minutes
+
+-- Create the bookings table
+CREATE TABLE IF NOT EXISTS public.bookings (
+  id            UUID      PRIMARY KEY DEFAULT uuid_generate_v4(),
+  store_id      UUID      NOT NULL REFERENCES public.stores (id) ON DELETE CASCADE,
+  user_id       UUID      NOT NULL REFERENCES public.users (id) ON DELETE CASCADE,
+  product_id    UUID      NULL REFERENCES public.products (id) ON DELETE SET NULL, -- NULLable if booking can be for store service, not specific product
+  start_time    TIMESTAMPTZ NOT NULL,
+  end_time      TIMESTAMPTZ NOT NULL,
+  status        VARCHAR(20) NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'completed', 'cancelled', 'no_show')),
+  notes         TEXT,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Enable Row Level Security for bookings
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for bookings
+CREATE POLICY "Allow users to view their own bookings" ON public.bookings FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Allow store owners to view all bookings for their store" ON public.bookings FOR SELECT USING (EXISTS (SELECT 1 FROM public.stores s WHERE s.id = store_id AND s.owner_id = auth.uid()));
+CREATE POLICY "Allow users to create bookings" ON public.bookings FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Allow store owners to manage bookings for their store" ON public.bookings FOR UPDATE, DELETE USING (EXISTS (SELECT 1 FROM public.stores s WHERE s.id = store_id AND s.owner_id = auth.uid()));
+
+-- ============================================================
+-- INDEXES
+-- ============================================================
+
+CREATE INDEX idx_products_store_id   ON public.products              (store_id);
+CREATE INDEX idx_offers_store_id     ON public.offers                (store_id);
+CREATE INDEX idx_offer_products_offer_id   ON public.offer_products   (offer_id);
+CREATE INDEX idx_offer_products_product_id ON public.offer_products (product_id);
+CREATE INDEX idx_memberships_store_id  ON public.user_store_memberships (store_id);
+CREATE INDEX idx_memberships_user_id    ON public.user_store_memberships (user_id);
+CREATE INDEX idx_transactions_store_id   ON public.transactions        (store_id);
+CREATE INDEX idx_transactions_user_id  ON public.transactions        (user_id);
+CREATE INDEX idx_redemptions_coupon_code ON public.redemptions      (coupon_code);
+CREATE INDEX idx_claims_store_status   ON public.pending_point_claims (store_id, status);
+CREATE INDEX idx_claims_user_store   ON public.pending_point_claims (user_id, store_id);
+CREATE INDEX idx_claims_expires_at ON public.pending_point_claims (expires_at);
+
+-- ============================================================
+-- FUNCTIONS & TRIGGERS
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.update_user_tier()
+RETURNS TRIGGER
+LANGUAGE plpgsql AS
+$$
+DECLARE
+  v_tier_config JSONB;
+  v_new_tier  TEXT;
+BEGIN
+  SELECT tier_config
+    INTO v_tier_config
+    FROM public.stores
+   WHERE id = NEW.store_id;
+
+  v_new_tier :=
+    CASE
+      WHEN NEW.points >= (v_tier_config->>'platinum')::INTEGER THEN 'platinum'
+      WHEN NEW.points >= (v_tier_config->>'gold')::INTEGER     THEN 'gold'
+      WHEN NEW.points >= (v_tier_config->>'silver')::INTEGER   THEN 'silver'
+      ELSE 'bronze'
+    END;
+
+  IF v_new_tier IS DISTINCT FROM OLD.tier THEN
+    UPDATE public.user_store_memberships
+       SET tier       = v_new_tier,
+           updated_at = NOW()
+     WHERE id = NEW.id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_update_tier ON public.user_store_memberships;
+
+CREATE TRIGGER trg_update_tier
+  AFTER UPDATE OF points ON public.user_store_memberships
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_user_tier();

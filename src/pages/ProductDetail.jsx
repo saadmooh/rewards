@@ -3,9 +3,8 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useProduct } from '../hooks/useProducts'
-import { useDeliveries } from '../hooks/useDeliveries'
 import useUserStore from '../store/userStore'
-import DeliveryModal from '../components/DeliveryModal'
+import BookingModal from '../components/BookingModal'
 
 export default function ProductDetail() {
   const { t } = useTranslation()
@@ -13,19 +12,7 @@ export default function ProductDetail() {
   const navigate = useNavigate()
   const { product, loading } = useProduct(id)
   const { store } = useUserStore()
-  const { createDelivery, loading: deliveryLoading } = useDeliveries()
-  const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false)
-
-  const handleDeliverySubmit = async (deliveryData) => {
-    const { data, error } = await createDelivery(deliveryData)
-    if (!error) {
-      setIsDeliveryModalOpen(false)
-      // Could show a success toast or redirect
-      alert(t('delivery.success_message'))
-    } else {
-      alert(error)
-    }
-  }
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
 
   if (loading) {
     return (
@@ -101,6 +88,9 @@ export default function ProductDetail() {
                 <div className="text-left">
                   <p className="text-muted text-[10px] font-black uppercase tracking-widest mb-1">{t('product_detail.current_price')}</p>
                   <p className="text-4xl font-black text-accent">{product.price?.toLocaleString()} <span className="text-sm">{t('products.dzd')}</span></p>
+                  {product.duration_minutes && (
+                    <p className="text-sm font-medium text-accent-dark mt-2">⏱️ {product.duration_minutes} minutes</p>
+                  )}
                 </div>
                 <div className="text-right">
                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-soft">
@@ -109,6 +99,44 @@ export default function ProductDetail() {
                 </div>
               </div>
 
+              {(product.benefits?.length > 0 || product.skin_type_compatibility?.length > 0) && (
+                <div className="space-y-4 mb-8">
+                  {product.benefits?.length > 0 && (
+                    <div className="bg-white rounded-2xl p-5 border border-border">
+                      <p className="text-xs font-black text-muted uppercase tracking-widest mb-3">Benefits</p>
+                      <ul className="space-y-2">
+                        {product.benefits.map((benefit, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm font-medium text-text">
+                            <span className="w-5 h-5 bg-accent-light rounded-full flex items-center justify-center text-accent text-xs">✓</span>
+                            {benefit}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {product.skin_type_compatibility?.length > 0 && (
+                    <div className="bg-white rounded-2xl p-5 border border-border">
+                      <p className="text-xs font-black text-muted uppercase tracking-widest mb-3">Suitable for</p>
+                      <div className="flex flex-wrap gap-2">
+                        {product.skin_type_compatibility.map((type, i) => (
+                          <span key={i} className="px-3 py-1.5 bg-rose-quartz/30 rounded-full text-xs font-bold text-accent-dark">
+                            {type}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {product.aftercare_tips && (
+                    <div className="bg-accent/5 rounded-2xl p-5 border border-accent/10">
+                      <p className="text-xs font-black text-accent-dark uppercase tracking-widest mb-3">Aftercare Tips</p>
+                      <p className="text-sm font-medium text-accent-dark">{product.aftercare_tips}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-4">
                 <button
                   className="w-full py-5 bg-gray-900 text-white rounded-2xl font-black text-lg shadow-xl shadow-gray-200 transition-all hover:bg-black active:scale-[0.98]"
@@ -116,14 +144,12 @@ export default function ProductDetail() {
                   🏪 {t('product_detail.available_in_store')}
                 </button>
 
-                {store?.is_cod_enabled !== false && (
-                  <button
-                    onClick={() => setIsDeliveryModalOpen(true)}
-                    className="w-full py-5 bg-accent text-white rounded-2xl font-black text-lg shadow-xl shadow-accent/20 transition-all hover:bg-accent-dark active:scale-[0.98]"
-                  >
-                    🚚 {t('product_detail.request_delivery')}
-                  </button>
-                )}
+                <button
+                  onClick={() => setIsBookingModalOpen(true)}
+                  className="w-full py-5 bg-accent text-white rounded-2xl font-black text-lg shadow-xl shadow-accent/20 transition-all hover:bg-accent-dark active:scale-[0.98]"
+                >
+                  📅 {t('product_detail.book_treatment')}
+                </button>
 
                 <div className="flex items-center justify-center gap-2 text-muted">
                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -147,12 +173,11 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      <DeliveryModal
-        isOpen={isDeliveryModalOpen}
-        onClose={() => setIsDeliveryModalOpen(false)}
-        onSubmit={handleDeliverySubmit}
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
         product={product}
-        loading={deliveryLoading}
+        store={store}
       />
     </div>
   )

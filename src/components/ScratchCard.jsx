@@ -5,7 +5,7 @@ export default function ScratchCard({
   rewardType,
   rewardValue,
   rewardMetadata,
-  surfaceColor = '#D4AF37',
+  surfaceColor = '#8A9A8A',
   onReveal,
   onClick,
   isRevealed = false,
@@ -169,10 +169,10 @@ export default function ScratchCard({
         <div className="aspect-square relative">
           {!revealed ? (
             <>
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-50 to-yellow-100">
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-rose-quartz/20 to-sage/20">
                 <div className="text-center">
-                  <div className="text-6xl mb-2">🎁</div>
-                  <p className="text-amber-800 font-semibold">{t('scratch_card.subtitle')}</p>
+                  <div className="text-6xl mb-2">✨</div>
+                  <p className="text-accent-dark font-semibold">{t('scratch_card.subtitle')}</p>
                 </div>
               </div>
               <canvas
@@ -190,16 +190,16 @@ export default function ScratchCard({
               />
             </>
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 p-6 text-center">
-              <div className="text-7xl mb-4 animate-bounce">🎉</div>
-              <p className="text-2xl font-bold text-emerald-700 mb-2">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-rose-quartz/30 to-sage/30 p-6 text-center">
+              <div className="text-7xl mb-4 animate-bounce">🌸</div>
+              <p className="text-2xl font-bold text-accent-dark mb-2">
                 {t('scratch_card.congratulations')}
               </p>
-              <p className="text-lg text-emerald-600">{t('scratch_card.you_won')}</p>
-              <p className="text-4xl font-bold text-emerald-800 mt-2 break-words max-w-full leading-tight">
+              <p className="text-lg text-accent-dark/70">{t('scratch_card.you_won')}</p>
+              <p className="text-4xl font-bold text-accent-dark mt-2 break-words max-w-full leading-tight">
                 {getRewardText()}
               </p>
-              <div className="mt-4 px-6 py-2 bg-emerald-600 text-white text-sm font-black rounded-full shadow-lg shadow-emerald-200 animate-pulse">
+              <div className="mt-4 px-6 py-2 bg-accent text-white text-sm font-black rounded-full shadow-lg shadow-accent/20 animate-pulse">
                 {t('scratch_card.redeem')}
               </div>
             </div>

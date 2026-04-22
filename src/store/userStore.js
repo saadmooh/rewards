@@ -330,6 +330,18 @@ const useUserStore = create((set, get) => ({
     }
   },
 
+  updateSkinType: async (skinType) => {
+    const { user } = get()
+    if (!user?.id) return
+    try {
+      await supabase.from('users').update({ skin_type: skinType }).eq('id', user.id)
+      set({ user: { ...user, skin_type: skinType } })
+    } catch (err) { 
+      console.error('Error updating skin type:', err)
+      set({ error: err.message }) 
+    }
+  },
+
   addPoints: async (points, note) => {
     const { user, membership, store } = get()
     if (!user?.id || !membership?.id || !store?.id) return

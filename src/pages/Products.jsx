@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useDashboardStore } from '../store/dashboardStore'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Package, Plus, Search, Edit2, Power, Trash2, X, Image as ImageIcon, Check, ChevronDown } from 'lucide-react'
+import { Package, Plus, Edit2, Power, Trash2, X, Image as ImageIcon, Check, ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 export default function Products() {
@@ -41,10 +41,14 @@ export default function Products() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      const { error } = await supabase.from('roles').delete().eq('id', id)
+      const { error } = await supabase.from('products').delete().eq('id', id)
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries(['products'])
+    onSuccess: () => queryClient.invalidateQueries(['products']),
+    onError: (err) => {
+      console.error('Delete error:', err)
+      alert(t('products.delete_failed') || 'Failed to delete product: ' + err.message)
+    }
   })
 
   const handleDelete = (id) => {
@@ -184,6 +188,7 @@ export default function Products() {
 }
 
 function ProductForm({ product, storeId, onSave, onClose }) {
+  const { t } = useTranslation()
   const [form, setForm] = useState({
     name:             product?.name             ?? '',
     description:      product?.description      ?? '',
@@ -193,6 +198,10 @@ function ProductForm({ product, storeId, onSave, onClose }) {
     is_exclusive:     product?.is_exclusive     ?? false,
     min_tier_to_view: product?.min_tier_to_view ?? 'bronze',
     is_active:        product?.is_active        ?? true,
+    duration_minutes: product?.duration_minutes ?? '',
+    benefits:         Array.isArray(product?.benefits) ? product.benefits.join(', ') : (product?.benefits ?? ''),
+    skin_type_compatibility: product?.skin_type_compatibility ?? [],
+    aftercare_tips:   product?.aftercare_tips    ?? '',
   })
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef()
@@ -203,7 +212,7 @@ function ProductForm({ product, storeId, onSave, onClose }) {
     try {
       const ext = file.name.split('.').pop()
       const path = `${storeId}/${Date.now()}.${ext}`
-      const { data, error } = await supabase.storage.from('product-images').upload(path, file, { upsert: true })
+      const { error } = await supabase.storage.from('product-images').upload(path, file, { upsert: true })
       if (error) throw error
       const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(path)
       setForm(f => ({ ...f, image_url: urlData.publicUrl }))
@@ -220,12 +229,18 @@ function ProductForm({ product, storeId, onSave, onClose }) {
       return
     }
     
+    const dataToSave = {
+      ...form,
+      benefits: typeof form.benefits === 'string' ? form.benefits.split(',').map(b => b.trim()).filter(Boolean) : (Array.isArray(form.benefits) ? form.benefits : []),
+      duration_minutes: form.duration_minutes ? parseInt(form.duration_minutes) : null,
+    }
+    
     try {
       if (product?.id) {
-        const { error } = await supabase.from('products').update({ ...form, updated_at: new Date() }).eq('id', product.id)
+        const { error } = await supabase.from('products').update({ ...dataToSave, updated_at: new Date() }).eq('id', product.id)
         if (error) throw error
       } else {
-        const { error } = await supabase.from('products').insert({ ...form, store_id: storeId })
+        const { error } = await supabase.from('products').insert({ ...dataToSave, store_id: storeId })
         if (error) throw error
       }
       onSave()
@@ -312,7 +327,7 @@ function ProductForm({ product, storeId, onSave, onClose }) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+<div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5 relative text-right">
                 <label className="text-xs font-black text-muted tracking-widest px-1">{t('products.category')}</label>
                 <select 
@@ -334,15 +349,73 @@ function ProductForm({ product, storeId, onSave, onClose }) {
                     onClick={() => setForm(f => ({...f, is_active: true}))}
                     className={`flex-1 py-3 rounded-2xl font-bold text-xs border transition-all ${form.is_active ? 'bg-green-50 border-green-200 text-green-600' : 'bg-surface border-border text-muted opacity-50'}`}
                   >
-{t('products.active')}
-                    </button>
-                    <button 
-                      onClick={() => setForm(f => ({...f, is_active: false}))}
-                      className={`flex-1 py-3 rounded-2xl font-bold text-xs border transition-all ${!form.is_active ? 'bg-red-50 border-red-200 text-red-600' : 'bg-surface border-border text-muted opacity-50'}`}
-                    >
-                      {t('products.inactive')}
+                    {t('products.active')}
+                  </button>
+                  <button 
+                    onClick={() => setForm(f => ({...f, is_active: false}))}
+                    className={`flex-1 py-3 rounded-2xl font-bold text-xs border transition-all ${!form.is_active ? 'bg-red-50 border-red-200 text-red-600' : 'bg-surface border-border text-muted opacity-50'}`}
+                  >
+                    {t('products.inactive')}
                   </button>
                 </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-muted tracking-widest px-1">Duration (minutes)</label>
+              <input 
+                type="number"
+                value={form.duration_minutes} 
+                onChange={e => setForm(f => ({...f, duration_minutes: e.target.value}))}
+                placeholder="e.g., 60"
+                className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold focus:outline-none focus:border-accent transition-colors text-right"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-muted tracking-widest px-1">Benefits (comma-separated)</label>
+              <input 
+                value={form.benefits} 
+                onChange={e => setForm(f => ({...f, benefits: e.target.value}))}
+                placeholder="e.g., Hydrating, Anti-aging, Soothing"
+                className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-bold focus:outline-none focus:border-accent transition-colors text-right"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-muted tracking-widest px-1">Aftercare Tips</label>
+              <textarea
+                value={form.aftercare_tips}
+                onChange={e => setForm(f => ({...f, aftercare_tips: e.target.value}))}
+                placeholder="e.g., Avoid sun exposure for 24 hours"
+                rows={2}
+                className="w-full bg-surface border border-border rounded-2xl px-4 py-3 text-text font-medium focus:outline-none focus:border-accent transition-colors resize-none text-right"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-muted tracking-widest px-1">Skin Type Compatibility</label>
+              <div className="flex flex-wrap gap-2">
+                {['Dry', 'Oily', 'Sensitive', 'Combination', 'Normal'].map(type => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => {
+                      const current = form.skin_type_compatibility || []
+                      const updated = current.includes(type)
+                        ? current.filter(t => t !== type)
+                        : [...current, type]
+                      setForm(f => ({...f, skin_type_compatibility: updated}))
+                    }}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      form.skin_type_compatibility?.includes(type)
+                        ? 'bg-accent text-white border-accent'
+                        : 'bg-surface border-border text-muted hover:border-accent'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
               </div>
             </div>
 
